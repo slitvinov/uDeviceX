@@ -23,7 +23,7 @@ OBJS = 	dpd-interactions.o \
 	simulation.o \
 	main.o 
 
-LIBS = -lcuda-dpd -lcuda-rbc -lcuda-ctc -lcudart -ldl -lz
+LIBS += -lcuda-dpd -lcuda-rbc -lcuda-ctc -lcudart -ldl -lz
 
 nvtx ?= 0
 ifneq "$(nvtx)" "0"
