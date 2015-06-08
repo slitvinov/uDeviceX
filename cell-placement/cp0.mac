@@ -1,0 +1,245 @@
+/* "stack" RBCs */
+load("basic") $
+load("distrib") $
+/* set random seed */
+set_random_state(make_random_state(1234356)) $
+
+enum_free  : 0 $
+enum_banned: 1 $
+enum_rbc   : 2 $
+enum_ctc   : 3 $
+
+/**
+ * Rotation around an arbitrary non-zero vector.
+ *
+ * For more details about the matrix, see:
+ * http://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
+ *
+ * Rotations around cordinate system axes are derived from this function.
+ *
+ * @param rx - x component of the vector
+ * @param ry - y component of the vector
+ * @param rz - z component of the vector
+ * @param theta - rotation angle around the vector
+ *
+ * @return homogenous rotation matrix
+ *
+ * @throw an error if r is a zero vector (rx=ry=rz=0)
+ * Copyright 2013, Jernej Kovacic
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * https://github.com/jkovacic/maxima-ht.git
+ */
+Rot(rx, ry, rz, theta) :=
+block (
+    [u, ux, uy, uz, cth, c1, sth],
+    cth: cos(theta),
+    sth: sin(theta),
+    c1: 1-cth,
+    u: sqrt(rx^2 + ry^2 + rz^2),
+    if u = 0 then
+        error("A non-zero vector is required."),
+    ux: rx/u,
+    uy: ry/u,
+    uz: rz/u,
+
+    matrix([cth+ux^2*c1, ux*uy*c1-uz*sth, ux*uz*c1+uy*sth, 0],
+           [uy*ux*c1+uz*sth, cth+uy^2*c1, uy*uz*c1-ux*sth, 0],
+           [uz*ux*c1-uy*sth, uz*uy*c1+ux*sth, cth+uz^2*c1 , 0],
+           [0, 0, 0, 1])
+         )$
+
+/**
+ * Rotation around the x-axis
+ *
+ * @param alpha - angle of rotation
+ *
+ * @return homogenous rotation matrix
+ * Copyright 2013, Jernej Kovacic
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * https://github.com/jkovacic/maxima-ht.git
+ */
+Rotx(alpha) :=
+    Rot(1, 0, 0, alpha)$
+
+/**
+ * Rotation around the y-axis
+ *
+ * @param beta - angle of rotation
+ *
+ * @return homogenous rotation matrix
+ * Copyright 2013, Jernej Kovacic
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * https://github.com/jkovacic/maxima-ht.git
+ */
+Roty(beta) :=
+    Rot(0, 1, 0, beta)$
+
+/**
+ * Rotation around the z-axis
+ *
+ * @param gamma - angle of rotation
+ *
+ * @return homogenous rotation matrix
+ * Copyright 2013, Jernej Kovacic
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * https://github.com/jkovacic/maxima-ht.git
+ */
+Rotz(gamma) :=
+    Rot(0, 0, 1, gamma)$
+
+rcu():=random_continuous_uniform(0, 1);
+
+nb(var):= not ?boundp(var);
+
+/* converts   a homogenous 4x4 transformation matrices
+to a list of 19 numbers:
+[T[1,4],T[2,4],T[3,4],
+ T[1,1],T[1,2],T[1,3],T[1,4],T[2,1],T[2,2],T[2,3],T[2,4],
+ T[3,1],T[3,2],T[3,3],T[3,4],T[4,1],T[4,2],T[4,3],T[4,4]]
+
+first 3 is translation + 16 components of T matrix */
+t2l(T):= block([l: makelist(0, i, 19), p: 3, com], local(m, l),
+  com: t2com(T), l[1]: com[1], l[2]: com[2], l[3]: com[3],
+  for i thru 4 do
+  for j thru 4 do (
+    p: p + 1,
+    l[p]: T[i,j]),
+  l);
+
+/* 4 elements column vector to 3 elements list */
+v4tol(v):= rest(apply('append, args(v)), -1);
+
+/* get a center of mass position as column vector and as a list */
+t2com_v(T):= T.[0, 0, 0, 1];
+t2com(T):= v4tol(t2com_v(T));
+
+/* 4x4 homogenous transformation matrix which represents translation
+by vector `v' */
+trans(v):= matrix(
+  [1, 0, 0, part(v, 1)],
+  [0, 1, 0, part(v, 2)],
+  [0, 0, 1, part(v, 3)],
+  [0, 0, 0, 1]);
+
+/* read coordinates of the points of RBC from file.
+output: R: [[x1, y1, z1], [x2, y2, z2], ... ] */
+rbc_coords(in_file):= block([nparticles, f],
+  f: openr(in_file),
+  nparticles: ?read(f),
+  ?read(f), ?read(f), ?read(f), ?readline(f),
+  R: [],
+  thru nparticles do block([],
+    ?read(f), ?read(f), ?read(f),
+    push([?read(f), ?read(f), ?read(f)], R)),
+  close(f),
+  reverse(R))$
+
+/* get extents of RBC */
+rbc_extents(R):= [lmax(map('first, R)) - lmin(map('first, R)),
+                  lmax(map('second, R)) - lmin(map('second, R)),
+                  lmax(map('third, R)) - lmin(map('third, R))];
+
+if nb('in_file) then in_file: "rbc2.atom_parsed";
+R: rbc_coords(in_file)$
+d: rbc_extents(R);
+printf(true, "(cp0.mac) RBC extents: ~{~e ~}~%", d);
+
+/* a bounding box for RBC is extents + tolerance */
+if nb('tol) then tol : 1/10;
+d      : d + tol;
+
+/* rotate RBC around x-axis by %pi/2 */
+Rot      : Rotx(%pi/2);
+d        : abs(v4tol(Rot .  endcons(1, d)));
+
+/* domain extents */
+L: if nb('rank) then [48, 48, 48] else map('parse_string, split(rank));
+
+/* number of RBC we can fit in every direction */
+N      : floor(L / d);
+frac(x):=round(floor(x));
+
+/* define wrapper functions for periodic boundary conditions*/
+block(dlist: ['wrx, 'wry, 'wrz],
+  for d thru 3 do
+  define(funmake(dlist[d], ['r]), buildq([rl: 0, rh: N[d]],
+      block([r: r - rl, Lr: rh - rl],
+        r: r - frac(r / Lr) * Lr,
+        r + rl))));
+
+if not every(lambda([e], e>0), N) then
+xerror("(cp0.mac) zero cells in one of the directions (too small domain or too big tolerance)");
+
+printf(true, "(cp0.mac) grid   ~{~d ~}~%", N) $
+printf(true, "(cp0.mac) maximum number of cells:  ~d~%", xreduce("*", N)) $
+
+/* increase extents */
+dr     : L/N;
+
+/* a fraction of CTC */
+if nb('fr) then fr: 0.01;
+
+/* free space for CTC in both directions */
+Nfree: [1, 2, 1];
+
+reg_ctc(ix, iy, iz):= block([nn: 0],
+  for dx: -Nfree[1]  thru Nfree[1] do
+  for dy: -Nfree[2]  thru Nfree[2] do
+  for dz: -Nfree[3]  thru Nfree[3] do (
+    if grid[ wrx(ix + dx), wry(iy + dy), wrz(iz + dz)]=enum_free then nn: nn + 1,
+    grid[ wrx(ix + dx), wry(iy + dy), wrz(iz + dz)]: enum_banned),
+  nn);
+
+grid: make_array(fixnum, N[1], N[2], N[3])  $
+fillarray(grid, [enum_free]) $
+
+place_ctc(fr):= block([n_nfree: 0, n_ctc: 0],
+  for ix: 0 thru N[1]-1 do
+  for iy: 0 thru N[2]-1 do
+  for iz: 0 thru N[3]-1 do
+  if rcu()<fr and grid[ix, iy, iz]=enum_free then
+  (n_nfree: n_nfree + reg_ctc(ix, iy, iz),
+    grid[ix, iy, iz]: enum_ctc,
+    n_ctc: n_ctc + 1),
+  [n_ctc, n_nfree]);
+
+[n_ctc, n_nfree] : place_ctc(fr);
+printf(true, "(cp0.mac) n_ctc : ~d~%", n_ctc) $
+printf(true, "(cp0.mac) n_free: ~d~%", xreduce("*", N) - n_nfree) $
+
+/* pre-compute the expression for faster execution
+Use global variables: N, dr, Rot, greed, fr
+*/
+define(get_d('grid),
+  buildq([nx: N[1], ny: N[2], nz: N[3], fr,
+    enum_ctc, enum_rbc, enum_free, enum_banned,
+    line: block([Rc, T],
+      Rc: ['ix, 'iy, 'iz] * dr + dr/2,
+      T : trans(Rc) . Rot,
+      T : t2l(T),
+      T : float(T))],
+    block([rbc: [], ctc: [], numer: true],
+      for ix: 0 thru nx-1 do
+      for iy: 0 thru ny-1 do
+      for iz: 0 thru nz-1 do
+      if      grid[ix, iy, iz]=enum_free then push(line, rbc)
+      elseif  grid[ix, iy, iz]=enum_ctc  then push(line, ctc),
+      [rbc, ctc])));
+
+compile(get_d);
+[rbc, ctc]: get_d(grid)$
+
+if nb('out_rbc) then out_rbc: "rbcs-ic.txt";
+if nb('out_ctc) then out_ctc: "ctcs-ic.txt";
+
+io(out, data):=
+with_stdout(out,
+  for line in data do (
+    for el in line do (?princ(el), ?princ(" ")),
+    ?terpri()));
+
+printf(true, "(cp0.mac) writing output to: ~a~%", out_rbc);
+io(out_rbc, rbc);
+
+printf(true, "(cp0.mac) writing output to: ~a~%", out_ctc);
+io(out_ctc, ctc);
