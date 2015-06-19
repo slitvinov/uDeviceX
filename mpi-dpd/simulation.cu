@@ -11,6 +11,9 @@
  */
 
 #include "simulation.h"
+#ifdef USE_CURRENT_AUTOCORRELATION
+#include <sys/stat.h>
+#endif
 
 std::vector<Particle> Simulation::_ic()
 {
@@ -480,6 +483,20 @@ void Simulation::_data_dump(const int idtimestep)
     timings["data-dump"] += MPI_Wtime() - tstart;
 }
 
+#ifdef USE_CURRENT_AUTOCORRELATION
+void Simulation::_current_autocorrelation_dump(const int idtimestep)
+{
+    NVTX_RANGE("current_autocorrelation");
+    double tstart = MPI_Wtime();
+    int n = particles.size;
+    Particle * p = new Particle[n];
+    CUDA_CHECK(cudaMemcpy(p, particles.xyzuvw.data, sizeof(Particle) * particles.size, cudaMemcpyDeviceToHost));
+    current_autocorrelation(activecomm, cartcomm, p, n, dt, idtimestep);
+    delete [] p;
+    timings["current_autocorrelation"] += MPI_Wtime() - tstart;
+}
+#endif
+
 void Simulation::_update_and_bounce()
 {
     double tstart = MPI_Wtime();
@@ -741,6 +758,17 @@ void Simulation::run()
 {
     if (rank == 0 && !walls)
 	printf("the simulation begins now and it consists of %.3e steps\n", (double)nsteps);	  
+
+#ifdef USE_CURRENT_AUTOCORRELATION
+    if (rank == 0) {
+      printf("use current autocorrelation analysis\n");
+      mkdir("vacf", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    }
+    if (rank != 0) {
+      printf("current autocorrelation analysis works only on a single processor\n");
+      exit(EXIT_FAILURE);
+    }
+#endif
     
     double time_simulation_start = MPI_Wtime();
     
@@ -796,7 +824,7 @@ void Simulation::run()
 	
 	_redistribute();
 
-#if 1
+#if 0
     lockstep_check:
 
 	const bool lockstep_OK =
@@ -848,6 +876,13 @@ void Simulation::run()
 	    _data_dump(it);
 	}
 	
+#ifdef USE_CURRENT_AUTOCORRELATION
+	{
+	  using namespace current_autocorrelation_module;
+	  if (it % collect_every == 0)
+	    _current_autocorrelation_dump(it);
+	}
+#endif
 	_update_and_bounce();
     }
     

@@ -47,6 +47,32 @@ const int steps_per_report = 1000;
 const int steps_per_dump = 10000;
 const int wall_creation_stepid = 5000;
 
+// computes transversal and longitudinal current autocorrelation, and
+// number density autocorrelation
+// Refs:
+// [1] Boon, Jean Pierre, and Sidney Yip. Molecular Hydrodynamics. New
+//     York: Dover Publications, 2013.
+// [2] http://manual.gromacs.org/programs/gmx-tcaf.html
+// [3] Palmer, Bruce J. “Transverse-Current Autocorrelation-Function
+// Calculations of the Shear Viscosity for Molecular Liquids.”
+// Physical Review E 49, no. 1
+// 359–66. doi:10.1103/PhysRevE.49.359.p
+#define USE_CURRENT_AUTOCORRELATION
+#ifdef  USE_CURRENT_AUTOCORRELATION
+namespace current_autocorrelation_module {
+    const  int nwave = 10; // the maximaum wave number
+    const  int ntime = 100; // maximum dt for autocorelation calculations
+    const  int collect_every = 50; // collect acf every `collect_every' time step
+    static int next_time = 20; // output files every at
+	          		 //   next_time*collect_every,
+				 // 2*next_time*collect_every,
+                                 // 4*next_time*collect_every, ...
+
+    const float Lx = XSIZE_SUBDOMAIN; // physical domain size [length]
+    const float Ly = YSIZE_SUBDOMAIN;
+}
+#endif
+
 extern bool is_mps_enabled;
 
 #include <cstdlib>
@@ -408,6 +434,10 @@ void diagnostics(MPI_Comm comm, MPI_Comm cartcomm, Particle * _particles, int n,
 
 void report_host_memory_usage(MPI_Comm comm, FILE * foutput);
 
+#ifdef  USE_CURRENT_AUTOCORRELATION
+void current_autocorrelation(MPI_Comm comm, MPI_Comm cartcomm, Particle * particles,
+			     int n, float dt, int idstep);
+#endif
 
 class LocalComm
 {

@@ -184,3 +184,84 @@ void LocalComm::print_particles(int np)
 	printf("Grank: %d node: %s particles: %d\n", rank, name, node_np); fflush(0);
     }
 }
+
+#ifdef  USE_CURRENT_AUTOCORRELATION
+#include "ring.h"
+enum { VXX = 0 , VXY = 1, RHO = 2};
+void current_autocorrelation(MPI_Comm comm, MPI_Comm cartcomm, Particle * particles,
+			     int n, float dt, int idstep)
+{
+    using namespace current_autocorrelation_module;
+    static float vft[nwave][ntime][3]; // Fourier transform of velocities
+    static float acv[nwave][ntime][3]; // velocities autocorelation
+    static   int count[nwave][ntime];
+    static  Ring r(ntime);
+    const  float pi = M_PI ;
+    //    const  float Ly = 48.0f;
+
+    int rank;
+    MPI_CHECK( MPI_Comm_rank(comm, &rank) );
+
+    // Fourier transfrom of velocity
+    /// vft [wave number][delta time][ vx || vy || rho ]
+    for (int iwave =0 ; iwave < nwave; ++iwave) {
+	vft[iwave][r(0)][VXX] = 0;
+	vft[iwave][r(0)][VXY] = 0;
+	vft[iwave][r(0)][RHO] = 0;
+    }
+
+    for (int iwave = 0; iwave < nwave; ++iwave)
+    for (int i = 0; i < n; ++i)
+    {
+	float  x = particles[i].x[0];
+	//	float  y = particles[i].x[1];
+	//	float  z = particles[i].x[2];
+	float vx = particles[i].u[0];
+	float vy = particles[i].u[1];
+	//	float vz = particles[i].u[2];
+	float  s = cos(2.0*pi*iwave*x/Lx);
+	vft[iwave][r(0)][VXX] += vx*s;
+	vft[iwave][r(0)][VXY] += vy*s;
+	vft[iwave][r(0)][RHO] +=    s;
+    }
+
+    // calculate auto-correlation
+    for (int iwave=0; iwave < nwave; ++iwave)
+    for (int di = 0; di < ntime; ++di)
+    {
+	count[iwave][di]++;
+	acv[iwave][di][VXX] += vft[iwave][r(0)][VXX] * vft[iwave][r(di)][VXX];
+	acv[iwave][di][VXY] += vft[iwave][r(0)][VXY] * vft[iwave][r(di)][VXY];
+	acv[iwave][di][RHO] += vft[iwave][r(0)][RHO] * vft[iwave][r(di)][RHO];
+    }
+    // shift indexies
+    // befor: 0 1 2 3 4 5
+    // after: 1 2 3 4 5 0
+    r.shift(-1);
+
+    // output
+    if (rank != 0) return;
+    if (idstep<next_time*collect_every) return;
+    next_time = next_time*2;
+
+    for (int iwave=0; iwave < nwave; ++iwave) {
+        char buf[1024];
+	sprintf(buf, "vacf/acf_all_xwave%03d.%09d.dat", iwave, idstep);
+	FILE * f = fopen(buf, "w");
+	if (f==NULL)
+	  perror ("The following error occurred");
+
+	// normalization factors
+	const float A_vxx = count[iwave][0]/acv[iwave][0][VXX];
+	const float A_vxy = count[iwave][0]/acv[iwave][0][VXY];
+	const float A_rho = count[iwave][0]/acv[iwave][0][RHO];
+	for (int di = 0; di < ntime; ++di)
+	    fprintf(f, "%d %g %g %g %d\n", di,
+		    count[iwave][di] != 0 ? A_vxx*acv[iwave][di][VXX]/count[iwave][di] : 0,
+		    count[iwave][di] != 0 ? A_vxy*acv[iwave][di][VXY]/count[iwave][di] : 0,
+		    count[iwave][di] != 0 ? A_rho*acv[iwave][di][RHO]/count[iwave][di] : 0,
+		    count[iwave][di]);
+	fclose(f);
+    }
+}
+#endif
