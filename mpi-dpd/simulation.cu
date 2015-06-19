@@ -742,6 +742,13 @@ void Simulation::run()
     if (rank == 0 && !walls)
 	printf("the simulation begins now and it consists of %.3e steps\n", (double)nsteps);	  
     
+
+#ifdef USE_KOLMOGOROV_FORCE
+    if (rank == 0)
+        printf("use Kolmogorov force in OX direction with amplitude: %g [length/time^2] \n",
+	       kolmogorov_force::F0);
+#endif
+
     double time_simulation_start = MPI_Wtime();
     
     _redistribute();

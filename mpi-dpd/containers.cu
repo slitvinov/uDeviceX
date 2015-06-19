@@ -19,6 +19,18 @@
 	    	    
 namespace ParticleKernels
 {
+
+#ifdef USE_KOLMOGOROV_FORCE
+    __host__ __device__ float kolmogorov_force(const float /* x */ , const float y,
+					       const float /* z */ , const int dim)
+    {
+	using namespace kolmogorov_force;
+	const float ky = 2.0f*M_PI/Ly;
+	if      (dim==0) return  F0*sin(ky*y);
+	else             return  0.0f;
+    }
+#endif
+
     __global__ void update_stage1(Particle * p, Acceleration * a, int n, float dt,
 				  const float driving_acceleration, const bool check = true)
     {
@@ -38,6 +50,11 @@ namespace ParticleKernels
 
 	for(int c = 0; c < 3; ++c)
 	    p[pid].u[c] += (a[pid].a[c] + (c == 0 ? driving_acceleration : 0)) * dt * 0.5;
+
+#ifdef USE_KOLMOGOROV_FORCE
+	for(int c = 0; c < 3; ++c)
+	    p[pid].u[c] += kolmogorov_force(p[pid].x[0], p[pid].x[1], p[pid].x[2], c) * dt * 0.5f;
+#endif
     
 	for(int c = 0; c < 3; ++c)
 	    p[pid].x[c] += p[pid].u[c] * dt;
@@ -66,7 +83,11 @@ namespace ParticleKernels
 	const int pid = gid / 3;
 	const int c = gid % 3;
 
-	const float mya = a[pid].a[c] + (c == 0 ? driving_acceleration : 0);
+	float mya = a[pid].a[c] + (c == 0 ? driving_acceleration : 0);
+#ifdef USE_KOLMOGOROV_FORCE
+	mya += kolmogorov_force(p[pid].x[0], p[pid].x[1], p[pid].x[2], c);
+#endif
+
 	
 	float myu = p[pid].u[c];
 	float myx = p[pid].x[c];

@@ -41,11 +41,33 @@ const bool pushtheflow = false;
 const bool rbcs = false;
 const bool ctcs = false;
 const bool xyz_dumps = false;
-const bool hdf5field_dumps = false;
+const bool hdf5field_dumps = true;
 const bool hdf5part_dumps = false;
 const int steps_per_report = 1000;
 const int steps_per_dump = 10000;
 const int wall_creation_stepid = 5000;
+
+
+/*Kolmogorov flow driven by body force
+
+  Steady state solution is
+  v = v0 * sin(ky*y) * ex                         (42)
+  where v0 = F0/(nu*ky^2), and `ex' is a unit vector in OX direction
+
+  Ellero, Marco, Mar Serrano, and Pep Espanol. "Incompressible
+  smoothed particle hydrodynamics." Journal of Computational
+  Physics 226.2 (2007): 1731-1752., page 1738, eq (41)  */
+#define USE_KOLMOGOROV_FORCE
+#ifdef USE_KOLMOGOROV_FORCE
+namespace kolmogorov_force {
+  const  float Ly = XSIZE_SUBDOMAIN; // physical domain size [length]
+                                     //
+                                     //  direction of the force is in
+                                     //  OX, the gradient of the force
+                                     //  is in OY
+  const  float F0 =  0.2f; // force amplitude [length/time^2]
+}
+#endif
 
 extern bool is_mps_enabled;
 
