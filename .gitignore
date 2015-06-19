@@ -9,3 +9,4 @@
 .DS*
 *.orig
 *.xyz
+/tags
