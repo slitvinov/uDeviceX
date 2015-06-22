@@ -256,7 +256,8 @@ void current_autocorrelation(MPI_Comm comm, MPI_Comm cartcomm, Particle * partic
 	const float A_vxy = count[iwave][0]/acv[iwave][0][VXY];
 	const float A_rho = count[iwave][0]/acv[iwave][0][RHO];
 	for (int di = 0; di < ntime; ++di)
-	    fprintf(f, "%d %g %g %g %d\n", di,
+	    fprintf(f, "%g %g %g %g %d\n",
+		    di*collect_every*dt,
 		    count[iwave][di] != 0 ? A_vxx*acv[iwave][di][VXX]/count[iwave][di] : 0,
 		    count[iwave][di] != 0 ? A_vxy*acv[iwave][di][VXY]/count[iwave][di] : 0,
 		    count[iwave][di] != 0 ? A_rho*acv[iwave][di][RHO]/count[iwave][di] : 0,
