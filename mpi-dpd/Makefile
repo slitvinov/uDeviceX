@@ -21,6 +21,8 @@ OBJS = 	dpd-interactions.o \
 	containers.o \
 	io.o \
 	simulation.o \
+	last_bit_float.o \
+	msd-aux.o \
 	main.o 
 
 LIBS = -lcuda-dpd -lcuda-rbc -lcuda-ctc -lcudart -ldl -lz
@@ -62,9 +64,20 @@ inquire: $(bash [ `cat slevel.txt` == "$(slevel)" ] || { echo "cleanall" ; } )
 
 test:  $(OBJS) libcuda-dpd libcuda-rbc libcuda-ctc
 	echo h5part is "$(h5part)"
-	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBS) -o test
+	$(NVCC) $(NVCCFLAGS) -dlink $(OBJS) $(LIBS) -o gpuCode.o # I have some device code in OBJS. I have to link it separatly
+	$(CXX)  $(CXXFLAGS) gpuCode.o $(OBJS) $(LIBS) -o test
 
 -include $(OBJS:.o=.d)
+
+# use `-dc' flag to do separate compilation of `last_bit_float'
+# Separate Compilation and Linking of CUDA C++ Device Code
+# http://devblogs.nvidia.com/parallelforall/separate-compilation-linking-cuda-device-code
+containers.o: containers.cu
+	$(NVCC) $(NVCCFLAGS) -dc $*.cu            -c -o $*.o
+	$(NVCC) $(NVCCFLAGS) -M  $*.cu           >      $*.d
+last_bit_float.o: last_bit_float.cu
+	$(NVCC) $(NVCCFLAGS) -dc $*.cu            -c -o $*.o
+	$(NVCC) $(NVCCFLAGS) -M  $*.cu           >      $*.d
 
 %.o: %.cu
 	$(NVCC) $(NVCCFLAGS) $*.cu -c -o $*.o 

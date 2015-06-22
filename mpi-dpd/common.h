@@ -19,9 +19,9 @@
 #endif
 
 enum { 
-    XSIZE_SUBDOMAIN = 48,
-    YSIZE_SUBDOMAIN = 48,
-    ZSIZE_SUBDOMAIN = 48,
+    XSIZE_SUBDOMAIN = 16,
+    YSIZE_SUBDOMAIN = 16,
+    ZSIZE_SUBDOMAIN = 16,
     XMARGIN_WALL = 6,
     YMARGIN_WALL = 6,
     ZMARGIN_WALL = 6,
@@ -46,6 +46,30 @@ const bool hdf5part_dumps = false;
 const int steps_per_report = 1000;
 const int steps_per_dump = 10000;
 const int wall_creation_stepid = 5000;
+
+// compute mean squared displacement MSD of DPD particles
+// writes msd to msd/msd.%d.dat files
+#define USE_MSD_CALCULATIONS
+#ifdef  USE_MSD_CALCULATIONS
+namespace msd_calculations_module {
+    const  int ntime         = 100;         // we use the following "deltas" in MSD calculations
+                                            // [0], [collect_every], [2*collect_every], ..., [ntime*collect_every]
+    const  int collect_every =  100; // collect MSD every `collect_every' time steps
+    const float Lx = XSIZE_SUBDOMAIN; // physical domain size [length]
+    const float Ly = YSIZE_SUBDOMAIN; // !!!NOTE!!! for a single processor
+    const float Lz = ZSIZE_SUBDOMAIN;
+    const int   n_tracers = 7;        // allocate an array for that
+                                      // many DPD particles
+                                      // cannot be changed without modifications
+                                      // mpi-dpd/msd-aux.cu
+     const int  i_tracer_save = 6;    // save trajectory for a tracer
+                                      // with number `i_tracer_save'
+                                      // (0 <= i_tracer_save < 7) if
+                                      // i_tracer_save == -1 do not
+                                      // save trajectory write traj to
+                                      // msd/trj.dat file
+}
+#endif
 
 extern bool is_mps_enabled;
 
@@ -407,7 +431,10 @@ struct ExpectedMessageSizes
 void diagnostics(MPI_Comm comm, MPI_Comm cartcomm, Particle * _particles, int n, float dt, int idstep, Acceleration * _acc);
 
 void report_host_memory_usage(MPI_Comm comm, FILE * foutput);
-
+#ifdef USE_MSD_CALCULATIONS
+void msd_calculations(MPI_Comm comm, MPI_Comm cartcomm, Particle * particles,
+		      int n, float dt, int idstep);
+#endif
 
 class LocalComm
 {

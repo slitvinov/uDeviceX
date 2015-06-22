@@ -184,3 +184,115 @@ void LocalComm::print_particles(int np)
 	printf("Grank: %d node: %s particles: %d\n", rank, name, node_np); fflush(0);
     }
 }
+
+#ifdef USE_MSD_CALCULATIONS
+#include "ring.h"
+#include "unwrappe.h"
+#include "msd-aux.h"
+#include "last_bit_float.h"
+#include <bitset>
+
+enum { XX = 0 , YY = 1, ZZ = 2, DD = 3};
+void msd_calculations(MPI_Comm comm, MPI_Comm cartcomm, Particle * particles,
+			     int n, float dt, int idstep)
+{
+    using namespace msd_calculations_module;
+    static bool    first_time_p = true;
+    static int     nfill        = 0;
+    static float   R[n_tracers][ntime][3]; // "unwrapped" coordinates of all DPD particles
+    static float MSD           [ntime][4]; // we calculate MSD for X, Y, Z,
+				           // and for displacement
+    static int next_time     =    1; // output MSD file at time step:
+                                     //   [next_time*collect_every], [2*next_time*collect_every], [4*next_time*collect_every], ...
+    static unsigned long long int  count[ntime];
+    static Ring r(ntime);
+
+    int rank;
+    MPI_CHECK( MPI_Comm_rank(comm, &rank) );
+
+    std::vector<int> idx = get_traced_list(n, particles);
+    if (first_time_p) {
+      for (int it = 0; it<n_tracers; ++it) {
+	const int i = idx[it];
+	R[it][r(0)][XX] = particles[i].x[XX];
+	R[it][r(0)][YY] = particles[i].x[YY];
+	R[it][r(0)][ZZ] = particles[i].x[ZZ];
+      }
+      first_time_p = false;
+    } else {
+      for (int it = 0; it<n_tracers; ++it) {
+	const int i = idx[it];
+
+	// unwrapp coordinates using a previously saved position
+	const float x_prev = R[it][r(1)][XX];
+	const float y_prev = R[it][r(1)][YY];
+	const float z_prev = R[it][r(1)][ZZ];
+
+	R[it][r(0)][XX] = unwrappe(particles[i].x[XX], x_prev, Lx);
+	R[it][r(0)][YY] = unwrappe(particles[i].x[YY], y_prev, Ly);
+	R[it][r(0)][ZZ] = unwrappe(particles[i].x[ZZ], z_prev, Lz);
+      }
+    }
+
+    nfill++;
+    // return if we do not have enough data
+    if (nfill<=ntime) {
+      r.shift(-1);
+      return;
+    }
+
+    for (int it = 0; it<n_tracers; ++it) {
+      // calculate auto-correlation
+      const float  x0 = R[it][r(0)][XX];
+      const float  y0 = R[it][r(0)][YY];
+      const float  z0 = R[it][r(0)][ZZ];
+      for (int di = 0; di < std::min(ntime, nfill); ++di) {
+	const float  x1 = R[it][r(di)][XX];
+	const float  y1 = R[it][r(di)][YY];
+	const float  z1 = R[it][r(di)][ZZ];
+
+	const float dx2 = (x0 - x1)*(x0 - x1);
+	const float dy2 = (y0 - y1)*(y0 - y1);
+	const float dz2 = (z0 - z1)*(z0 - z1);
+
+	MSD[di][XX] += dx2;
+	MSD[di][YY] += dy2;
+	MSD[di][ZZ] += dz2;
+	MSD[di][DD] += dx2 + dy2 + dz2;
+	count[di]++;
+      }
+    }
+
+    if (i_tracer_save!=-1) { /* write trajectory of one tracer DPD particle */
+      FILE * t = fopen("msd/trj.dat", "a");
+      if (t==NULL)
+	perror ("The following error occurred");
+      const int it = i_tracer_save;
+      fprintf(t, "%g %g %g\n", R[it][r(0)][XX], R[it][r(0)][YY], R[it][r(0)][ZZ]);
+      fclose(t);
+    }
+
+    r.shift(-1);
+    // output
+    if (rank != 0) return;
+    if (idstep<next_time*collect_every) return;
+
+    next_time = next_time*2;
+    char buf[1024];
+    sprintf(buf, "msd/msd.%09d.dat", idstep);
+    FILE * f = fopen(buf, "w");
+    if (f==NULL)
+      perror ("The following error occurred");
+
+    for (int di = 0; di < ntime; ++di)
+      // time, msd(x coord.), msd(y coord.), msd(z coord.), msd(displacement)
+      fprintf(f, "%g %g %g %g %g %g %llu\n",
+	      di*collect_every*dt,
+	      count[di] != 0 ? MSD[di][XX]/count[di] : 0,
+	      count[di] != 0 ? MSD[di][YY]/count[di] : 0,
+	      count[di] != 0 ? MSD[di][ZZ]/count[di] : 0,
+	      count[di] != 0 ? MSD[di][DD]/count[di] : 0,
+	      count[di]);
+    fclose(f);
+}
+#endif

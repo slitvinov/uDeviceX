@@ -1,6 +1,11 @@
 /* Set, get and preserve a last bit of a float
    Compile:
-   nvcc -std=c++11 main_last_bit_float.cu -o main_last_bit_float
+
+   (nvcc -std=c++11     last_bit_float.cu -c -dc -o last_bit_float.o ; \
+    nvcc -std=c++11     main_last_bit_float.cu -c -o main_last_bit_float.o; \
+    nvcc -dlink main_last_bit_float.o last_bit_float.o -o gpuCode.o; \
+    g++ gpuCode.o last_bit_float.o main_last_bit_float.o  -o main_last_bit_float -Wl,-rpath=/usr/local/cuda-6.5/bin/..//lib64 -L/usr/local/cuda-6.5/bin/..//lib64 -lcudart )
+
 */
 #include "last_bit_float.h"
 #include <iostream>

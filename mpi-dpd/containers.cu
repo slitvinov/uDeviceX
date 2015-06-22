@@ -16,6 +16,9 @@
 
 #include "containers.h"
 #include "io.h"
+#ifdef USE_MSD_CALCULATIONS
+#include "last_bit_float.h"
+#endif
 	    	    
 namespace ParticleKernels
 {
@@ -28,6 +31,12 @@ namespace ParticleKernels
 
 	if (pid >= n)
 	    return;
+#ifdef USE_MSD_CALCULATIONS
+	/// preserve a last bit of all component of the vector
+	last_bit_float::Preserver up0(p[pid].u[0]);
+	last_bit_float::Preserver up1(p[pid].u[1]);
+	last_bit_float::Preserver up2(p[pid].u[2]);
+#endif
     
 	for(int c = 0; c < 3; ++c)
 	{
@@ -62,10 +71,14 @@ namespace ParticleKernels
 
 	if (gid >= 3 * n)
 	    return;
+
 	
 	const int pid = gid / 3;
 	const int c = gid % 3;
-
+#ifdef USE_MSD_CALCULATIONS
+	/// preserve last bit of p[pid].u[c]
+	last_bit_float::Preserver up(p[pid].u[c]);
+#endif
 	const float mya = a[pid].a[c] + (c == 0 ? driving_acceleration : 0);
 	
 	float myu = p[pid].u[c];
@@ -101,6 +114,11 @@ namespace ParticleKernels
 
 	if (pid >= n)
 	    return;
+#ifdef USE_MSD_CALCULATIONS
+	last_bit_float::Preserver up0(p[pid].u[0]);
+	last_bit_float::Preserver up1(p[pid].u[1]);
+	last_bit_float::Preserver up2(p[pid].u[2]);
+#endif
 
 	for(int c = 0; c < 3; ++c)
 	    p[pid].u[c] = 0;
@@ -334,6 +352,9 @@ void CollectionRBC::dump(MPI_Comm comm, MPI_Comm cartcomm)
 	    assert(!isnan(a[i].a[c]));
 	    
 	    p[i].x[c] -= dt * p[i].u[c];
+
+	    last_bit_float::set(p[i].u[c], true);
+	    last_bit_float::Preserver up(p[i].u[c]);
 	    p[i].u[c] -= 0.5 * dt * a[i].a[c];
 	}
 

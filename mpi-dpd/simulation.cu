@@ -11,6 +11,11 @@
  */
 
 #include "simulation.h"
+#include <bitset>
+#ifdef USE_MSD_CALCULATIONS
+#include <sys/stat.h>
+#include "msd-aux.h"
+#endif
 
 std::vector<Particle> Simulation::_ic()
 {
@@ -34,6 +39,10 @@ std::vector<Particle> Simulation::_ic()
 		    ic[p].u[1] = 0;
 		    ic[p].u[2] = 0;
 		}
+#ifdef USE_MSD_CALCULATIONS
+    set_traced_particles(ic.size(), &ic[0]);
+#endif
+
 
     /* use this to check robustness 
     for(int i = 0; i < ic.size(); ++i)
@@ -480,6 +489,20 @@ void Simulation::_data_dump(const int idtimestep)
     timings["data-dump"] += MPI_Wtime() - tstart;
 }
 
+#ifdef USE_MSD_CALCULATIONS
+void Simulation::_msd_calculations_dump(const int idtimestep)
+{
+    NVTX_RANGE("msd_calculations");
+    double tstart = MPI_Wtime();
+    int n = particles.size;
+    Particle * p = new Particle[n];
+    CUDA_CHECK(cudaMemcpy(p, particles.xyzuvw.data, sizeof(Particle) * particles.size, cudaMemcpyDeviceToHost));
+    msd_calculations(activecomm, cartcomm, p, n, dt, idtimestep);
+    delete [] p;
+    timings["msd_calculations"] += MPI_Wtime() - tstart;
+}
+#endif
+
 void Simulation::_update_and_bounce()
 {
     double tstart = MPI_Wtime();
@@ -740,8 +763,14 @@ void Simulation::_lockstep()
 void Simulation::run()
 {
     if (rank == 0 && !walls)
-	printf("the simulation begins now and it consists of %.3e steps\n", (double)nsteps);	  
-    
+	printf("the simulation begins now and it consists of %.3e steps\n", (double)nsteps);
+
+#ifdef USE_MSD_CALCULATIONS
+    if (rank == 0) {
+      printf("use current MSD calculations\n");
+      mkdir("msd", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    }
+#endif
     double time_simulation_start = MPI_Wtime();
     
     _redistribute();
@@ -796,7 +825,7 @@ void Simulation::run()
 	
 	_redistribute();
 
-#if 1
+#if 0
     lockstep_check:
 
 	const bool lockstep_OK =
@@ -847,7 +876,14 @@ void Simulation::run()
 	    
 	    _data_dump(it);
 	}
-	
+
+#ifdef USE_MSD_CALCULATIONS
+	{
+	  using namespace msd_calculations_module;
+	  if (it % collect_every == 0)
+	    _msd_calculations_dump(it);
+	}
+#endif
 	_update_and_bounce();
     }
     

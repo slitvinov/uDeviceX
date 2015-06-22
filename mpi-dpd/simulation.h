@@ -75,6 +75,9 @@ class Simulation
     void _remove_bodies_from_wall(CollectionRBC * coll);
     void _forces();
     void _data_dump(const int idtimestep);
+#ifdef USE_MSD_CALCULATIONS
+    void _msd_calculations_dump(const int idtimestep);
+#endif
     void _update_and_bounce();
 
     void _lockstep();
