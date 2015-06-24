@@ -286,7 +286,7 @@ void msd_calculations(MPI_Comm comm, MPI_Comm cartcomm, Particle * particles,
 
     for (int di = 0; di < ntime; ++di)
       // time, msd(x coord.), msd(y coord.), msd(z coord.), msd(displacement)
-      fprintf(f, "%g %g %g %g %g %g %llu\n",
+      fprintf(f, "%g %g %g %g %g %llu\n",
 	      di*collect_every*dt,
 	      count[di] != 0 ? MSD[di][XX]/count[di] : 0,
 	      count[di] != 0 ? MSD[di][YY]/count[di] : 0,
