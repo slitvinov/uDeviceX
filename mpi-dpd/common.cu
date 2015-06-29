@@ -210,15 +210,26 @@ void current_autocorrelation(MPI_Comm comm, MPI_Comm cartcomm, Particle * partic
 	vft[iwave][r(0)][RHO] = 0;
     }
 
+    /// calculate velocity of the center of the mass (COM)
+    float vx_com = 0;
+    float vy_com = 0;
+    float vz_com = 0;
+    for (int i = 0; i < n; ++i)
+    {
+	vx_com += particles[i].u[0];
+	vy_com += particles[i].u[1];
+	vz_com += particles[i].u[2];
+    }
+    vx_com /= float(n);
+    vy_com /= float(n);
+    vz_com /= float(n);
+
     for (int iwave = 0; iwave < nwave; ++iwave)
     for (int i = 0; i < n; ++i)
     {
-	float  x = particles[i].x[0];
-	//	float  y = particles[i].x[1];
-	//	float  z = particles[i].x[2];
-	float vx = particles[i].u[0];
-	float vy = particles[i].u[1];
-	//	float vz = particles[i].u[2];
+        float  x = particles[i].x[0];
+	float vx = particles[i].u[0] - vx_com;
+	float vy = particles[i].u[1] - vy_com;
 	float  s = cos(2.0*pi*iwave*x/Lx);
 	vft[iwave][r(0)][VXX] += vx*s;
 	vft[iwave][r(0)][VXY] += vy*s;
