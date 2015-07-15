@@ -257,9 +257,9 @@ namespace PackingHalo
     }
 
     namespace PCIE {
-    const static uint word_size      = sizeof(float2) / sizeof(float);
-    const static uint particle_size  = 6 / word_size;
-    const static uint alignment      = 32 / sizeof(float) / word_size;
+		const static uint word_size      = sizeof(float2) / sizeof(float);
+		const static uint particle_size  = 6 / word_size;
+		const static uint alignment      = 32 / sizeof(float) / word_size;
     }
 
 	template<int warp_per_block, int thread_per_cell>
@@ -434,7 +434,7 @@ void HaloExchanger::_pack_all(const Particle * const p, const int n, const bool 
 #if 0 // old fill_all
     PackingHalo::fill_all<<< (PackingHalo::ncells + 1) / 2, 32, 0, stream>>>(p, n, required_send_bag_size);
 #else // new, aligned fill_all
-    PackingHalo::fill_all_aligned<2,4,64><<< (PackingHalo::ncells + 15) / 16, dim3(32,2), 0, stream>>>((float2*)p, n, required_send_bag_size);
+    PackingHalo::fill_all_aligned<2,2,128><<< (PackingHalo::ncells + 31) / 32, dim3(32,2), 0, stream>>>((float2*)p, n, required_send_bag_size);
 #endif
 
     CUDA_CHECK(cudaEventRecord(evfillall, stream));
