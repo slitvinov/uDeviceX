@@ -262,7 +262,56 @@ namespace PackingHalo
     const static uint alignment      = 32 / sizeof(float) / word_size;
     }
 
-    template<int warp_per_block, int thread_per_cell>
+	template<int warp_per_block, int thread_per_cell>
+	__inline__ __device__ void fill_all_kernel_classical(
+		const float2* const xyzuvw,
+		const int code, const int tid, const int base_dst,
+		const int base_src, const int nsrc )
+	{
+		const int nwords = nsrc * PCIE::particle_size;
+		const int offset = -(base_dst * PCIE::particle_size % PCIE::alignment);
+		float2* const __restrict dbag = (float2*) (baginfos[code].dbag);
+		float2* const __restrict hbag = (float2*) (baginfos[code].hbag);
+		for (int i = offset + tid; i < nwords; i += thread_per_cell) {
+			if (i >= 0) {
+				const int local_pid = i / PCIE::particle_size;
+				const int component = i % PCIE::particle_size;
+				const int spid = base_src + local_pid;
+				float2 word = xyzuvw[spid * PCIE::particle_size + component];
+				dbag[base_dst * PCIE::particle_size + i] = word;
+				hbag[base_dst * PCIE::particle_size + i] = word;
+			}
+		}
+	}
+
+	template<int warp_per_block, int thread_per_cell, int shlist_length>
+	__inline__ __device__ void fill_all_kernel_aligned(
+		const float2* const xyzuvw,
+		const int code, const int tid, const int warp_base_dst,
+		const int base_src, const int nsrc,
+		const int n_total, const int n_before )
+	{
+		// store source ids in a shared buffer
+		volatile __shared__ int spid[warp_per_block][shlist_length];
+		for (int i = tid; i < nsrc; i += thread_per_cell) {
+			spid[threadIdx.y][n_before + i] = base_src + i;
+		}
+		const int nwords = n_total * PCIE::particle_size;
+		// if the starting address is not aligned anyway, break it down by ourselves
+		// XK7 chip really hates to break it down by itself
+		const int offset = -(warp_base_dst * PCIE::particle_size % PCIE::alignment);
+		float2* const __restrict dbag = (float2*) (baginfos[code].dbag);
+		float2* const __restrict hbag = (float2*) (baginfos[code].hbag);
+		for (int i = offset + threadIdx.x; i < nwords; i += warpSize) {
+			if (i >= 0) {
+				float2 word = xyzuvw[spid[threadIdx.y][i / PCIE::particle_size] * PCIE::particle_size + i % PCIE::particle_size];
+				dbag[warp_base_dst * PCIE::particle_size + i] = word;
+				hbag[warp_base_dst * PCIE::particle_size + i] = word;
+			}
+		}
+	}
+
+    template<int warp_per_block, int thread_per_cell, int shlist_length>
     __global__ void fill_all_aligned(const float2 * const xyzuvw, const int np, int * const required_bag_size)
     {
     	const int qid = threadIdx.x / thread_per_cell;
@@ -297,61 +346,30 @@ namespace PackingHalo
     			if ( i < qid ) n_before += n;
     			n_total += n;
     		}
-    		// store source ids in a shared buffer
-    		volatile __shared__ int spid[warp_per_block][32/thread_per_cell*8];
-    		for(int i = tid ; i < nsrc ; i += thread_per_cell) {
-    			spid[threadIdx.y][ n_before + i ] = base_src + i;
-    		}
 
-    		const int nwords = n_total * PCIE::particle_size;
-    		// if the starting address is not aligned anyway, break it down by ourselves
-    		// XK7 chip really hates to break it down by itself
-    		const int offset = -( warp_base_dst * PCIE::particle_size % PCIE::alignment );
-    		float2 * __restrict const dbag = (float2*) baginfos[code].dbag;
-    		float2 * __restrict const hbag = (float2*) baginfos[code].hbag;
-    		for(int i = offset + threadIdx.x; i < nwords; i += warpSize ) {
-    			if ( i >= 0 ) {
-    				float2 word = xyzuvw[ spid[threadIdx.y][ i / PCIE::particle_size ] * PCIE::particle_size + i % PCIE::particle_size ];
-    				dbag[ warp_base_dst * PCIE::particle_size + i ] = word;
-    				hbag[ warp_base_dst * PCIE::particle_size + i ] = word;
-    			}
-    		}
+    		if ( n_total < shlist_length ) {
 
-    		for(int lpid = tid; lpid < nsrc; lpid += thread_per_cell) {
-    		    const int dpid = base_dst + lpid;
-    		    const int spid = base_src + lpid;
-    		    baginfos[code].scattered_entries[dpid] = spid;
-    		}
+    			fill_all_kernel_aligned<warp_per_block, thread_per_cell, shlist_length>(xyzuvw, code, tid, warp_base_dst, base_src, nsrc, n_total, n_before );
 
-    		if (gcid + 1 == cellpackstarts[code + 1]) required_bag_size[code] = base_dst;
+    		} else {
+
+    			fill_all_kernel_classical<warp_per_block, thread_per_cell>(xyzuvw, code, tid, base_dst, base_src, nsrc );
+
+    		}
 
     	} else { // if not all threads working on same bag, using the old way
 
-    		const int nwords = nsrc * PCIE::particle_size;
-    		const int offset = -( base_dst * PCIE::particle_size % PCIE::alignment );
-    		float2 * __restrict const dbag = (float2*) baginfos[code].dbag;
-    		float2 * __restrict const hbag = (float2*) baginfos[code].hbag;
-    		for(int i = offset + tid; i < nwords; i += thread_per_cell )
-    		{
-    		    if ( i >= 0 ) {
-    				const int local_pid = i / PCIE::particle_size;
-    				const int component = i % PCIE::particle_size;
-    				const int spid      = base_src + local_pid;
+    		fill_all_kernel_classical<warp_per_block, thread_per_cell>(xyzuvw, code, tid, base_dst, base_src, nsrc );
 
-    				float2 word = xyzuvw[ spid * PCIE::particle_size + component ];
-    				dbag[ base_dst * PCIE::particle_size + i ] = word;
-    				hbag[ base_dst * PCIE::particle_size + i ] = word;
-    		    }
-    		}
-
-    		for(int lpid = tid; lpid < nsrc; lpid += thread_per_cell) {
-    		    const int dpid = base_dst + lpid;
-    		    const int spid = base_src + lpid;
-    		    baginfos[code].scattered_entries[dpid] = spid;
-    		}
-
-    		if (gcid + 1 == cellpackstarts[code + 1]) required_bag_size[code] = base_dst;
     	}
+
+		for (int lpid = tid; lpid < nsrc; lpid += thread_per_cell) {
+			const int dpid = base_dst + lpid;
+			const int spid = base_src + lpid;
+			baginfos[code].scattered_entries[dpid] = spid;
+		}
+		if (gcid + 1 == cellpackstarts[code + 1])
+			required_bag_size[code] = base_dst;
     }
 
 
@@ -416,7 +434,7 @@ void HaloExchanger::_pack_all(const Particle * const p, const int n, const bool 
 #if 0 // old fill_all
     PackingHalo::fill_all<<< (PackingHalo::ncells + 1) / 2, 32, 0, stream>>>(p, n, required_send_bag_size);
 #else // new, aligned fill_all
-    PackingHalo::fill_all_aligned<2,4><<< (PackingHalo::ncells + 15) / 16, dim3(32,2), 0, stream>>>((float2*)p, n, required_send_bag_size);
+    PackingHalo::fill_all_aligned<2,4,64><<< (PackingHalo::ncells + 15) / 16, dim3(32,2), 0, stream>>>((float2*)p, n, required_send_bag_size);
 #endif
 
     CUDA_CHECK(cudaEventRecord(evfillall, stream));
