@@ -4,6 +4,7 @@
  *
  *  Created and authored by Diego Rossinelli on 2015-03-05.
  *  Major editing from Massimo-Bernaschi on 2015-03-20.
+ *  Aligned fill_all kernel by Yu-Hang Tang on 2015-07-15.
  *  Copyright 2015. All rights reserved.
  *
  *  Users are NOT authorized
@@ -255,6 +256,106 @@ namespace PackingHalo
 	    required_bag_size[code] = base_dst;
     }
 
+    namespace PCIE {
+    const static uint word_size      = sizeof(float2) / sizeof(float);
+    const static uint particle_size  = 6 / word_size;
+    const static uint alignment      = 32 / sizeof(float) / word_size;
+    }
+
+    template<int warp_per_block, int thread_per_cell>
+    __global__ void fill_all_aligned(const float2 * const xyzuvw, const int np, int * const required_bag_size)
+    {
+    	const int qid = threadIdx.x / thread_per_cell;
+    	const int tid = threadIdx.x % thread_per_cell;
+
+    	const int gcid = ( threadIdx.y * blockDim.x + threadIdx.x ) / thread_per_cell
+    			       + ( blockDim.x * blockDim.y ) / thread_per_cell * blockIdx.x;
+    	if (gcid >= cellpackstarts[26]) return;
+
+    	const int key9 = 9 * ((gcid >= cellpackstarts[9]) + (gcid >= cellpackstarts[18]));
+    	const int key3 = 3 * ((gcid >= cellpackstarts[key9 + 3]) + (gcid >= cellpackstarts[key9 + 6]));
+    	const int key1 = (gcid >= cellpackstarts[key9 + key3 + 1]) + (gcid >= cellpackstarts[key9 + key3 + 2]);
+    	const int code = key9 + key3 + key1;
+    	const int cellid = gcid - cellpackstarts[code];
+    	const int base_src = baginfos[code].start_src[cellid];
+    	const int base_dst = baginfos[code].start_dst[cellid];
+    	const int nsrc = min(baginfos[code].count_src[cellid], baginfos[code].bagsize - base_dst);
+
+    	// if all threads within a warp are moving data for the same bag
+    	// then merge their work and move cooperatively
+    	bool same_code = true;
+    	for( int i = 0 ; i < 32 / thread_per_cell ; i++)
+    		same_code = same_code && ( code == __shfl( code, i * thread_per_cell ) );
+    	if ( same_code ) {
+
+    		const int warp_base_dst = __shfl( base_dst, 0 );
+
+    		// a quick hack of prefix sum
+    		int n_before = 0, n_total = 0;
+    		for(int i = 0 ; i < 32 / thread_per_cell; i++) {
+    			int n = __shfl( nsrc, i * thread_per_cell );
+    			if ( i < qid ) n_before += n;
+    			n_total += n;
+    		}
+    		// store source ids in a shared buffer
+    		volatile __shared__ int spid[warp_per_block][32/thread_per_cell*8];
+    		for(int i = tid ; i < nsrc ; i += thread_per_cell) {
+    			spid[threadIdx.y][ n_before + i ] = base_src + i;
+    		}
+
+    		const int nwords = n_total * PCIE::particle_size;
+    		// if the starting address is not aligned anyway, break it down by ourselves
+    		// XK7 chip really hates to break it down by itself
+    		const int offset = -( warp_base_dst * PCIE::particle_size % PCIE::alignment );
+    		float2 * __restrict const dbag = (float2*) baginfos[code].dbag;
+    		float2 * __restrict const hbag = (float2*) baginfos[code].hbag;
+    		for(int i = offset + threadIdx.x; i < nwords; i += warpSize ) {
+    			if ( i >= 0 ) {
+    				float2 word = xyzuvw[ spid[threadIdx.y][ i / PCIE::particle_size ] * PCIE::particle_size + i % PCIE::particle_size ];
+    				dbag[ warp_base_dst * PCIE::particle_size + i ] = word;
+    				hbag[ warp_base_dst * PCIE::particle_size + i ] = word;
+    			}
+    		}
+
+    		for(int lpid = tid; lpid < nsrc; lpid += thread_per_cell) {
+    		    const int dpid = base_dst + lpid;
+    		    const int spid = base_src + lpid;
+    		    baginfos[code].scattered_entries[dpid] = spid;
+    		}
+
+    		if (gcid + 1 == cellpackstarts[code + 1]) required_bag_size[code] = base_dst;
+
+    	} else { // if not all threads working on same bag, using the old way
+
+    		const int nwords = nsrc * PCIE::particle_size;
+    		const int offset = -( base_dst * PCIE::particle_size % PCIE::alignment );
+    		float2 * __restrict const dbag = (float2*) baginfos[code].dbag;
+    		float2 * __restrict const hbag = (float2*) baginfos[code].hbag;
+    		for(int i = offset + tid; i < nwords; i += thread_per_cell )
+    		{
+    		    if ( i >= 0 ) {
+    				const int local_pid = i / PCIE::particle_size;
+    				const int component = i % PCIE::particle_size;
+    				const int spid      = base_src + local_pid;
+
+    				float2 word = xyzuvw[ spid * PCIE::particle_size + component ];
+    				dbag[ base_dst * PCIE::particle_size + i ] = word;
+    				hbag[ base_dst * PCIE::particle_size + i ] = word;
+    		    }
+    		}
+
+    		for(int lpid = tid; lpid < nsrc; lpid += thread_per_cell) {
+    		    const int dpid = base_dst + lpid;
+    		    const int spid = base_src + lpid;
+    		    baginfos[code].scattered_entries[dpid] = spid;
+    		}
+
+    		if (gcid + 1 == cellpackstarts[code + 1]) required_bag_size[code] = base_dst;
+    	}
+    }
+
+
+
 #ifndef NDEBUG
     __global__ void check_send_particles(Particle * p, int n, int code)
     {
@@ -312,7 +413,11 @@ void HaloExchanger::_pack_all(const Particle * const p, const int n, const bool 
 	    CUDA_CHECK(cudaMemcpyToSymbol(PackingHalo::baginfos, baginfos, sizeof(baginfos), 0, cudaMemcpyHostToDevice));
     }
 
+#if 0 // old fill_all
     PackingHalo::fill_all<<< (PackingHalo::ncells + 1) / 2, 32, 0, stream>>>(p, n, required_send_bag_size);
+#else // new, aligned fill_all
+    PackingHalo::fill_all_aligned<2,4><<< (PackingHalo::ncells + 15) / 16, dim3(32,2), 0, stream>>>((float2*)p, n, required_send_bag_size);
+#endif
 
     CUDA_CHECK(cudaEventRecord(evfillall, stream));
 }
