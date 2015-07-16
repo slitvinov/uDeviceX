@@ -319,22 +319,26 @@ namespace PackingHalo
 
     	const int gcid = ( threadIdx.y * blockDim.x + threadIdx.x ) / thread_per_cell
     			       + ( blockDim.x * blockDim.y ) / thread_per_cell * blockIdx.x;
-    	if (gcid >= cellpackstarts[26]) return;
 
-    	const int key9 = 9 * ((gcid >= cellpackstarts[9]) + (gcid >= cellpackstarts[18]));
-    	const int key3 = 3 * ((gcid >= cellpackstarts[key9 + 3]) + (gcid >= cellpackstarts[key9 + 6]));
-    	const int key1 = (gcid >= cellpackstarts[key9 + key3 + 1]) + (gcid >= cellpackstarts[key9 + key3 + 2]);
-    	const int code = key9 + key3 + key1;
-    	const int cellid = gcid - cellpackstarts[code];
-    	const int base_src = baginfos[code].start_src[cellid];
-    	const int base_dst = baginfos[code].start_dst[cellid];
-    	const int nsrc = min(baginfos[code].count_src[cellid], baginfos[code].bagsize - base_dst);
+    	int code = 27;
+    	int cellid, base_src, base_dst, nsrc = 0;
+    	if (gcid < cellpackstarts[26]) {
+			const int key9 = 9 * ((gcid >= cellpackstarts[9]) + (gcid >= cellpackstarts[18]));
+			const int key3 = 3 * ((gcid >= cellpackstarts[key9 + 3]) + (gcid >= cellpackstarts[key9 + 6]));
+			const int key1 = (gcid >= cellpackstarts[key9 + key3 + 1]) + (gcid >= cellpackstarts[key9 + key3 + 2]);
+			code = key9 + key3 + key1;
+	    	cellid = gcid - cellpackstarts[code];
+	    	base_src = baginfos[code].start_src[cellid];
+	    	base_dst = baginfos[code].start_dst[cellid];
+	    	nsrc = min(baginfos[code].count_src[cellid], baginfos[code].bagsize - base_dst);
+    	}
 
     	// if all threads within a warp are moving data for the same bag
     	// then merge their work and move cooperatively
     	bool same_code = true;
     	for( int i = 0 ; i < 32 / thread_per_cell ; i++)
     		same_code = same_code && ( code == __shfl( code, i * thread_per_cell ) );
+
     	if ( same_code ) {
 
     		const int warp_base_dst = __shfl( base_dst, 0 );
@@ -368,7 +372,8 @@ namespace PackingHalo
 			const int spid = base_src + lpid;
 			baginfos[code].scattered_entries[dpid] = spid;
 		}
-		if (gcid + 1 == cellpackstarts[code + 1])
+
+		if ( gcid < cellpackstarts[26] && gcid + 1 == cellpackstarts[code + 1] )
 			required_bag_size[code] = base_dst;
     }
 
