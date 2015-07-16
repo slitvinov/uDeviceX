@@ -439,31 +439,7 @@ void HaloExchanger::_pack_all(const Particle * const p, const int n, const bool 
 #if 0 // old fill_all
     PackingHalo::fill_all<<< (PackingHalo::ncells + 1) / 2, 32, 0, stream>>>(p, n, required_send_bag_size);
 #else // new, aligned fill_all
-	#if 0
     PackingHalo::fill_all_aligned<2,2,128><<< (PackingHalo::ncells + 31) / 32, dim3(32,2), 0, stream>>>((float2*)p, n, required_send_bag_size);
-	#else
-    uint hash1 = 0, hash2 = 0;
-    PackingHalo::fill_all<<< (PackingHalo::ncells + 1) / 2, 32, 0, stream>>>(p, n, required_send_bag_size);
-    cudaDeviceSynchronize();
-    for(int i=0;i<27;i++) {
-    	uint* ptr = (uint*) sendhalos[i].hbuf.data;
-    	for(int j=0;j<required_send_bag_size_host[i]*6;j++) {
-    		hash1 = hash1 * 3 + ptr[j];
-    	}
-    }
-    printf("hash1 %08X\n", hash1);
-
-    PackingHalo::fill_all_aligned<2,2,128><<< (PackingHalo::ncells + 31) / 32, dim3(32,2), 0, stream>>>((float2*)p, n, required_send_bag_size);
-    cudaDeviceSynchronize();
-    for(int i=0;i<27;i++) {
-    	uint* ptr = (uint*) sendhalos[i].hbuf.data;
-    	for(int j=0;j<required_send_bag_size_host[i]*6;j++) {
-    		hash2 = hash2 * 3 + ptr[j];
-    	}
-    }
-    printf("hash2 %08X\n", hash2);
-
-	#endif
 #endif
 
     CUDA_CHECK(cudaEventRecord(evfillall, stream));
