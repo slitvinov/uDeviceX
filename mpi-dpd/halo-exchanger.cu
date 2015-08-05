@@ -259,6 +259,7 @@ namespace PackingHalo
 
 	    if (warpid)
 		myscan += shdata[warpid - 1];
+        __syncthreads();
 
 	    if (sourceid < n)
 		start[sourceid] = myscan - mycount;

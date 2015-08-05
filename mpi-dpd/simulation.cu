@@ -254,7 +254,12 @@ void Simulation::_create_walls(const bool verbose, bool & termination_request)
 
     int nsurvived = 0;
     ExpectedMessageSizes new_sizes;
+
+    if (verbose)
+        printf("Ciao Diego uno\n");
     wall = new ComputeInteractionsWall(cartcomm, particles->xyzuvw.data, particles->size, nsurvived, new_sizes, verbose);
+    if (verbose)
+        printf("Ciao Diego duo\n");
 
     //adjust the message sizes if we're pushing the flow in x
     {
@@ -978,7 +983,7 @@ void Simulation::run()
 	ctcscoll->update_stage1(driving_acceleration, mainstream);
 
     int it;
-    enum { nvtxstart = 8981, nvtxstop = 9021 } ;
+    enum { nvtxstart = 9005, nvtxstop = 9055 } ;
 
     for(it = 0; it < nsteps; ++it)
     {
