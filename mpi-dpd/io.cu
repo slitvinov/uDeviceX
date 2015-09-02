@@ -223,18 +223,24 @@ void H5PartDump::dump(Particle * host_particles, int n)
 
     H5PartSetNumParticles(f, n);
 
-    string labels[] = {"x", "y", "z"};
-
+    string pos_labels[] = {"x", "y", "z"};
+    vector<float> data(n);
     for(int c = 0; c < 3; ++c)
     {
-	vector<float> data(n);
-
 	for(int i = 0; i < n; ++i)
 	    data[i] = host_particles[i].x[c] + origin[c];
 
-	H5PartWriteDataFloat32(f, labels[c].c_str(), &data.front());
+	H5PartWriteDataFloat32(f, pos_labels[c].c_str(), &data.front());
     }
 
+    string vel_labels[] = {"u", "v", "w"};
+    for(int c = 0; c < 3; ++c)
+    {
+	for(int i = 0; i < n; ++i)
+	  data[i] = host_particles[i].u[c];
+
+	H5PartWriteDataFloat32(f, vel_labels[c].c_str(), &data.front());
+    }
     tstamp++;
 #endif
 }
