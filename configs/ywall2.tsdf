@@ -1,0 +1,10 @@
+# two parallel walls in y-direction
+extent     48 48 48
+N          100
+obj_margin 3.0
+
+# normal goes from inside wall to outside
+# `xc', `yc' `zc' : center of the domain
+# `Ly'            : extent of the domain
+plane point xc 0.9*Ly zc normal 0 -1 0
+plane point xc 0.1*Ly zc normal 0  1 0
