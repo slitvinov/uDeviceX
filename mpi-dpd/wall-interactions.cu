@@ -59,7 +59,7 @@ namespace SolidWallsKernel
     texture<int, 1, cudaReadModeElementType> texWallCellStart, texWallCellCount;
 
     __global__ void interactions_3tpp(const float2 * const particles, const int np, const int nsolid,
-				     float * const acc, const float seed, const float sigmaf);
+				     float * const acc, const float seed, const float sigmaf, const float yzero_in_local);
     void setup()
     {
 	texSDF.normalized = 0;
@@ -374,7 +374,7 @@ namespace SolidWallsKernel
     }
 
     __global__ __launch_bounds__(128, 16) void interactions_3tpp(const float2 * const particles, const int np, const int nsolid,
-				     float * const acc, const float seed, const float sigmaf)
+				     float * const acc, const float seed, const float sigmaf, const float yzero_in_local)
     {
 	assert(blockDim.x * gridDim.x >= np * 3);
 
@@ -484,10 +484,11 @@ namespace SolidWallsKernel
 	    const float yr = _yr * invrij;
 	    const float zr = _zr * invrij;
 
+	    const float x_wall_vel = yq > yzero_in_local ? wall_couette::v : - wall_couette::v;
 	    const float rdotv =
-		xr * (dst1.y - 0) +
-		yr * (dst2.x - 0) +
-		zr * (dst2.y - 0);
+		xr * (dst1.y - x_wall_vel) +
+		yr * (dst2.x -          0) +
+		zr * (dst2.y -          0);
 
 	    const float myrandnr = Logistic::mean0var1(seed, pid, spid);
 
@@ -1118,7 +1119,8 @@ void ComputeInteractionsWall::interactions(const Particle * const p, const int n
 	assert(textureoffset == 0);
 
 	SolidWallsKernel::interactions_3tpp<<< (3 * n + 127) / 128, 128, 0, stream>>>
-	    ((float2 *)p, n, solid_size, (float *)acc, trunk.get_float(), sigmaf);
+	    ((float2 *)p, n, solid_size, (float *)acc, trunk.get_float(), sigmaf,
+	      0.5f*(dims[1]-2*coords[1]-1)*YSIZE_SUBDOMAIN);
 
 	CUDA_CHECK(cudaUnbindTexture(SolidWallsKernel::texWallParticles));
 	CUDA_CHECK(cudaUnbindTexture(SolidWallsKernel::texWallCellStart));
