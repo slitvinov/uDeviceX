@@ -330,7 +330,7 @@ void Simulation::_create_walls(const bool verbose, bool & termination_request)
     _remove_bodies_from_wall(ctcscoll);
 
     {
-	H5PartDump sd("survived-particles->h5part", activecomm, cartcomm);
+	H5PartDump sd("survived-particles.h5part", activecomm, cartcomm);
 	Particle * p = new Particle[particles->size];
 
 	CUDA_CHECK(cudaMemcpy(p, particles->xyzuvw.data, sizeof(Particle) * particles->size, cudaMemcpyDeviceToHost));
@@ -520,7 +520,7 @@ void Simulation::_datadump_async()
     MPI_CHECK(MPI_Comm_dup(activecomm, &myactivecomm) );
     MPI_CHECK(MPI_Comm_dup(cartcomm, &mycartcomm) );
 
-    H5PartDump dump_part("allparticles->h5part", activecomm, cartcomm), *dump_part_solvent = NULL;
+    H5PartDump dump_part("allparticles.h5part", activecomm, cartcomm), *dump_part_solvent = NULL;
     H5FieldDump dump_field(cartcomm);
 
     MPI_CHECK(MPI_Comm_rank(myactivecomm, &rank));
@@ -564,7 +564,7 @@ void Simulation::_datadump_async()
 		if (rank == 0)
 		{
 		    if( access("xyz/particles-equilibration.xyz", F_OK ) == -1 )
-			rename ("xyz/particles->xyz", "xyz/particles-equilibration.xyz");
+			rename ("xyz/particles.xyz", "xyz/particles-equilibration.xyz");
 
 		    if( access( "xyz/rbcs-equilibration.xyz", F_OK ) == -1 )
 			rename ("xyz/rbcs.xyz", "xyz/rbcs-equilibration.xyz");
@@ -578,7 +578,7 @@ void Simulation::_datadump_async()
 		wallcreated = true;
 	    }
 
-	    xyz_dump(myactivecomm, mycartcomm, "xyz/particles->xyz", "all-particles", p, n, datadump_idtimestep > 0);
+	    xyz_dump(myactivecomm, mycartcomm, "xyz/particles.xyz", "all-particles", p, n, datadump_idtimestep > 0);
 	}
 
 	if (hdf5part_dumps)
@@ -589,7 +589,7 @@ void Simulation::_datadump_async()
 	    {
 		dump_part.close();
 
-		dump_part_solvent = new H5PartDump("solvent-particles->h5part", activecomm, cartcomm);
+		dump_part_solvent = new H5PartDump("solvent-particles.h5part", activecomm, cartcomm);
 	    }
 
 	    if (dump_part_solvent)
