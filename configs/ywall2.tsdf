@@ -1,5 +1,5 @@
 # two parallel walls in y-direction
-extent     48 48 48
+extent     32 32 32
 N          100
 obj_margin 3.0
 

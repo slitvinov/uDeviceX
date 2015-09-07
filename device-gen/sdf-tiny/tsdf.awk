@@ -40,6 +40,9 @@ function randint(n) { return int(rand()*n)+1 }
 function init() {
     config_dir     = ENVIRON["TSDF_CONFIG_DIR"] ? ENVIRON["TSDF_CONFIG_DIR"] : "."
     processor_file = config_dir "/processor.tmp.cpp"
+
+    sdf2vtk_file   =config_dir "/sdf2vtk.cpp"
+    
     CXX="g++"
     CPPFLAGS="-O2 -g"
 
@@ -292,7 +295,7 @@ END {
     wsystem(run_cmd)
 
     if (vtk_file) {
-	compile_sdf2vtk = sprintf("%s %s sdf2vtk.cpp -o %s/sdf2vtk", CXX, CPPFLAGS, TMPDIR)
+	compile_sdf2vtk = sprintf("%s %s %s -o %s/sdf2vtk", CXX, CPPFLAGS, sdf2vtk_file, TMPDIR)
 	wsystem(compile_sdf2vtk)
 	sdf2vtk_cmd     = sprintf("%s/sdf2vtk %s %s", TMPDIR, sdf_file, vtk_file)
 	wsystem(sdf2vtk_cmd)

@@ -20,9 +20,9 @@
 
 enum
 {
-    XSIZE_SUBDOMAIN = 48,
-    YSIZE_SUBDOMAIN = 48,
-    ZSIZE_SUBDOMAIN = 48,
+    XSIZE_SUBDOMAIN = 32,
+    YSIZE_SUBDOMAIN = 32,
+    ZSIZE_SUBDOMAIN = 32,
     XMARGIN_WALL = 6,
     YMARGIN_WALL = 6,
     ZMARGIN_WALL = 6,
@@ -36,10 +36,13 @@ const float sigma = sqrt(2 * gammadpd * kBT);
 const float sigmaf = sigma / sqrt(dt);
 const float aij = 25;
 const float hydrostatic_a = 0.05;
+#define USE_WALL_COUETTE
+#ifdef USE_WALL_COUETTE
 namespace wall_couette {
   // velocity of the walls
-  const float v = -10.0;
+  const float v = -5.0;  //=   const float v = -%v%;
 }
+#endif
 
 extern float tend;
 extern bool walls, pushtheflow, doublepoiseuille, rbcs, ctcs, xyz_dumps, hdf5field_dumps, hdf5part_dumps, is_mps_enabled;

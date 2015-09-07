@@ -23,6 +23,7 @@
 #include <algorithm>
 
 #include "helper_math.h"
+//#include "config.h"
 
 using namespace std;
 
@@ -118,7 +119,57 @@ namespace CudaRBC
 
     template <int nvertices>
     __global__ __launch_bounds__(128, 12)
+#ifdef DO_STRETCHING
+    void fall_kernel(const int nrbcs, float* const __restrict__ av, float * const acc,
+		const float stretchingForce);
+#else
     void fall_kernel(const int nrbcs, float* const __restrict__ av, float * const acc);
+#endif
+
+#ifdef DO_STRETCHING
+	__host__ __device__ float check_pid_stretching(int pid)
+	{
+#include "check_pid_stretching_body.h"
+	}
+#endif
+
+#ifdef DO_STRETCHING
+	__global__ void diameter_kernel(const float * device_xyzuvw, int nvertices)
+	{
+        float3 border[2]; // min and max for each direction
+		border[0].x = +1e6;
+		border[0].y = +1e6;
+		border[0].z = +1e6;
+		border[1].x = -1e6;
+		border[1].y = -1e6;
+		border[1].z = -1e6;
+
+		float t;
+        for (int i=0; i<nvertices; i++)
+        {
+			t = device_xyzuvw[6*i+0];
+            if(t < border[0].x) // min x
+				border[0].x = t;
+            else if(t > border[1].x) // max x
+				border[1].x = t;
+
+			t = device_xyzuvw[6*i+1];
+            if(t < border[0].y) // min y
+				border[0].y = t;
+            else if(t > border[1].y) // max y
+				border[1].y = t;
+
+			t = device_xyzuvw[6*i+2];
+            if(t < border[0].z) // min z
+				border[0].z = t;
+            else if(t > border[1].z) // max z
+				border[1].z = t;
+        }
+
+		printf("RBC diameters: %g %g %g\n", border[1].x-border[0].x,
+			border[1].y-border[0].y, border[1].z-border[0].z);
+	}
+#endif
 
     void setup(int& nvertices, Extent& host_extent)
     {
@@ -309,7 +360,12 @@ namespace CudaRBC
         maxCells = 0;
         CUDA_CHECK( cudaMalloc(&host_av, 1 * 2 * sizeof(float)) );
 
-        unitsSetup(1.64, 0.001412, 19.0476, 35, 2500, 3500, 50, 135, 91, 1e-6, 2.4295e-6, 4, report);
+        unitsSetup(
+			1.64,	0.001412,	19.0476	, //= %lmax%,	%p%,	%cq%	,
+			35	,	2500	,	3500	, //= %kb%	,	%ka%,	%kv%	,
+			50	,	135		,	91		, //= %gammaC%,	%totArea0%,	%totVolume0%	,
+			// non-modifiable
+			1e-6, 2.4295e-6, 4, report);
 
         CUDA_CHECK( cudaFuncSetCacheConfig(fall_kernel<498>, cudaFuncCachePreferL1) );
     }
@@ -405,14 +461,14 @@ namespace CudaRBC
     }
 
 
-    __device__ __forceinline__ float3 tex2vec(int id)
+    __device__  float3 tex2vec(int id)
     {
         float2 tmp0 = tex1Dfetch(texVertices, id+0);
         float2 tmp1 = tex1Dfetch(texVertices, id+1);
         return make_float3(tmp0.x, tmp0.y, tmp1.x);
     }
 
-    __device__ __forceinline__ float2 warpReduceSum(float2 val)
+    __device__  float2 warpReduceSum(float2 val)
     {
         for (int offset = warpSize/2; offset > 0; offset /= 2)
         {
@@ -450,7 +506,7 @@ namespace CudaRBC
 
     // **************************************************************************************************
 
-    __device__ __forceinline__ float3 _fangle(const float3 v1, const float3 v2, const float3 v3,
+    __device__  float3 _fangle(const float3 v1, const float3 v2, const float3 v3,
             const float area, const float volume)
     {
         assert(devParams.q == 1);
@@ -477,7 +533,7 @@ namespace CudaRBC
         return addFArea + addFVolume + IbforceI * x21;
     }
 
-    __device__ __forceinline__ float3 _fvisc(const float3 v1, const float3 v2, const float3 u1, const float3 u2)
+    __device__  float3 _fvisc(const float3 v1, const float3 v2, const float3 u1, const float3 u2)
     {
         const float3 du = u2 - u1;
         const float3 dr = v1 - v2;
@@ -527,11 +583,11 @@ namespace CudaRBC
         return make_float3(-1.0e10f, -1.0e10f, -1.0e10f);
     }
 
-    //======================================
-    //======================================
+    // ======================================
+    // ======================================
 
     template<int update>
-    __device__  __forceinline__  float3 _fdihedral(float3 v1, float3 v2, float3 v3, float3 v4)
+    __device__    float3 _fdihedral(float3 v1, float3 v2, float3 v3, float3 v4)
     {
         const float3 ksi   = cross(v1 - v2, v1 - v3);
         const float3 dzeta = cross(v3 - v4, v2 - v4);
@@ -619,8 +675,14 @@ namespace CudaRBC
     }
 
     template <int nvertices>
+#ifdef DO_STRETCHING
+    __global__ __launch_bounds__(128, 12)
+    void fall_kernel(const int nrbcs, float* const __restrict__ av, float * const acc,
+		const float stretchingForce)
+#else
     __global__ __launch_bounds__(128, 12)
     void fall_kernel(const int nrbcs, float* const __restrict__ av, float * const acc)
+#endif
     {
         const int degreemax = 7;
         const int pid = (threadIdx.x + blockDim.x * blockIdx.x) / degreemax;
@@ -633,6 +695,11 @@ namespace CudaRBC
             float3 f = _fangle_device<nvertices>(tmp0, tmp1, av);
             f += _fdihedral_device<nvertices>(tmp0, tmp1);
 
+			// Lina: should I check for (pid % nvertices) and add a force here?
+#ifdef DO_STRETCHING
+	    const int lid = pid % nvertices;
+	    f.x += stretchingForce*check_pid_stretching(lid);
+#endif
             if (f.x > -1.0e9f)
             {
                 atomicAdd(&acc[3*pid+0], f.x);
@@ -644,7 +711,12 @@ namespace CudaRBC
 
     // **************************************************************************************************
 
+#ifdef DO_STRETCHING
+    void forces_nohost(cudaStream_t stream, int ncells, const float * const device_xyzuvw, float * const device_axayaz,
+		       const float stretchingForce)
+#else
     void forces_nohost(cudaStream_t stream, int ncells, const float * const device_xyzuvw, float * const device_axayaz)
+#endif
     {
         if (ncells == 0) return;
 
@@ -675,8 +747,21 @@ namespace CudaRBC
         int threads = 128;
         int blocks  = (ncells*params.nvertices*7 + threads-1) / threads;
 
+#ifdef DO_STRETCHING
+        fall_kernel<498><<<blocks, threads, 0, stream>>>(ncells, host_av, device_axayaz,
+							 stretchingForce);
+#else
         fall_kernel<498><<<blocks, threads, 0, stream>>>(ncells, host_av, device_axayaz);
+#endif
     }
+
+#ifdef DO_STRETCHING
+// Lina: compute diameters of an RBC here (only one thread computes)
+  void compute_diameter(const float * const device_xyzuvw)
+	{
+		diameter_kernel<<<1,1>>>(device_xyzuvw, params.nvertices);
+	}
+#endif
 
     void get_triangle_indexing(int (*&host_triplets_ptr)[3], int& ntriangles)
     {

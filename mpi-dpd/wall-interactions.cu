@@ -484,11 +484,18 @@ namespace SolidWallsKernel
 	    const float yr = _yr * invrij;
 	    const float zr = _zr * invrij;
 
+#ifdef USE_WALL_COUETTE
 	    const float x_wall_vel = yq > yzero_in_local ? wall_couette::v : - wall_couette::v;
 	    const float rdotv =
 		xr * (dst1.y - x_wall_vel) +
 		yr * (dst2.x -          0) +
 		zr * (dst2.y -          0);
+#else
+	    const float rdotv =
+		xr * (dst1.y -          0) +
+		yr * (dst2.x -          0) +
+		zr * (dst2.y -          0);
+#endif
 
 	    const float myrandnr = Logistic::mean0var1(seed, pid, spid);
 
