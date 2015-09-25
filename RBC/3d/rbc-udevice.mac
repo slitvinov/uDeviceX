@@ -1,0 +1,113 @@
+pow(A, n):=A^n;
+powf(A, n):=pow(A, n);
+
+rsqrtf(x):=1 / sqrt(x);
+
+
+unitsSetup(lmax, p, cq, kb, ka, kv, gammaC,
+  totArea0, totVolume0, lunit, tunit, ndens):= block([],
+
+/*
+  lrbc : 1.000000e-06,
+  trbc : 3.009441e-03,
+  */
+  
+  ll : lunit / lrbc,
+  tt : tunit / trbc,
+
+  params%kbT : 580 * 250 * pow(ll, -2) * pow(tt, 2),
+  params%p : p / ll,
+  params%lmax : lmax / ll,
+  params%q : 1,
+  params%Cq : cq * params%kbT * pow(ll, -2),
+  params%totArea0 : totArea0 * pow(ll, -2),
+  params%totVolume0 : totVolume0 * pow(ll, -3),
+  params%l0 : sqrt(params%totArea0 / (2*params%nvertices - 4) * 4/sqrt(3)),
+  params%ka : ka * params%kbT / (params%totArea0 * params%l0 * params%l0),
+  params%kv : kv * params%kbT / (6 * params%totVolume0 * powf(params%l0, 3)),
+  params%gammaC : gammaC * 580 * pow(tt, 1),
+  params%gammaT : 3 * params%gammaC,
+  
+  phi : 6.97 / 180*%pi,
+  params%sinTheta0 : sin(phi),
+  params%cosTheta0 : cos(phi),
+  params%kb : kb * params%kbT,
+  
+  params%kbToverp : params%kbT / params%p,
+  params%sint0kb : params%sinTheta0 * params%kb,
+  params%cost0kb : params%cosTheta0 * params%kb);
+
+/*
+unitsSetup(1.64, 0.001412, 19.0476,
+  35*20, 2500, 3500,
+  50, 135, 91,
+  1e-6, 2.4295e-6, 4); */
+
+fangle(v1, v2, v3, area, volume):=block([],
+  x21 : v2 - v1,
+  x32 : v3 - v2,
+  x31 : v3 - v1,
+  
+  normal : cross(x21, x31),
+  
+  n_2 : 2 * rsqrtf(dot(normal, normal)),
+  n_2to3 : n_2*n_2*n_2,
+  coefArea : 1/4 * (params%Cq * n_2to3 -
+    params%ka * (area - params%totArea0) * n_2),
+  
+  coeffVol : params%kv * (volume - params%totVolume0),
+  addFArea : coefArea * cross(normal, x32),
+  addFVolume : coeffVol * cross(v3, v2),
+  
+  r : length(v2 - v1),
+  xx : r/params%lmax,
+  IbforceI : params%kbToverp * ( 1/4/((1-xx)*(1-xx)) - 1/4 + xx ) / r,
+  
+  addFArea + addFVolume + IbforceI * x21);
+
+
+fdihedral(v1, v2, v3, v4):=block([],
+  ksi   : cross(v1 - v2, v1 - v3),
+  dzeta : cross(v3 - v4, v2 - v4),
+  
+  overIksiI   : rsqrtf(dot(ksi, ksi)),
+  overIdzetaI : rsqrtf(dot(dzeta, dzeta)),
+  
+  cosTheta : dot(ksi, dzeta) * overIksiI*overIdzetaI,
+  IsinThetaI2 : 1 - cosTheta*cosTheta,
+  /*        sinTheta_1 : copysignf( rsqrtf(max(IsinThetaI2, 1.0e-6)), dot(ksi - dzeta, v4 - v1) ), */
+  sinTheta_1: rsqrtf(IsinThetaI2),
+  
+  beta : params%cost0kb - cosTheta * params%sint0kb * sinTheta_1,
+  
+  b11 : -beta * cosTheta * overIksiI*overIksiI,
+  b12 : beta * overIksiI*overIdzetaI,
+  b22 : -beta * cosTheta * overIdzetaI*overIdzetaI,
+  cross(ksi, v1 - v3)*b11 +
+  ( cross(ksi, v3 - v4) + cross(dzeta, v1 - v3) )*b12
+  + cross(dzeta, v3 - v4)*b22);
+
+fvisc(v1, v2, u1, u2):= block([],
+  du : u2 - u1,
+  dr : v1 - v2,
+  du*params%gammaT + dr * params%gammaC*dot(du, dr) / dot(dr, dr));
+
+
+/*
+unitsSetup(lmax, p, cq, kb, ka, kv, gammaC,
+  totArea0, totVolume0, lunit, tunit, ndens); */
+
+fvisc(v1, v2, u1, u2);
+fangle(v1, v2, v3, area, volume);
+
+
+listofvars(fdihedral(v1, v2, v3, v4));
+listofvars(fangle(v1, v2, v3, area, volume));
+
+fangle(v1, v2, v3, area, volume);
+
+Nv: 498;
+
+/* Nv: 361; */
+Omega0: acos(  (sqrt(3)*(Nv-2)-5*%pi)/(sqrt(3)*(Nv-2)-3*%pi));
+Omega0 * 180 / %pi, numer;

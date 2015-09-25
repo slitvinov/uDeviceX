@@ -29,10 +29,9 @@ klist: [1, 2, 5, 10];
 
 %z%: 0;
 define(rshift(), buildq([mt],
-    %z%: %z% - 1, z: mod(z, mt), if %z%<0 then %z% + mt));
+    (%z%: %z% - 1, z: mod(z, mt), if %z%<0 then %z% + mt)));
 define(  ring(i), buildq([mt],
   block([aux:   mod(%z% +i, mt)],
     if aux<0 then aux + mt else aux)));
-
 
 array(vk, flonum, length(klist), mt);

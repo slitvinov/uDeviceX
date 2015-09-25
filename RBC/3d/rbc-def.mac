@@ -1,0 +1,42 @@
+/*
+
+[1] Fedosov, Dmitry A. Multiscale modeling of blood flow and soft
+matter. Brown University, 2010.
+
+[42] Dao, M., J. Li, and S. Suresh. "Molecularly based analysis of
+deformation of spectrin network and human erythrocyte." Materials
+Science and Engineering: C 26.8 (2006): 1232-1244.
+
+*/
+
+load ("scifac") $
+load("abs_integrate");
+load("scifac");
+load("multiadditive") $
+
+declare(membrane_constant, feature);
+declare([ka, kb, A0tot], membrane_constant) $
+declare([lm, kp, lp], membrane_constant) $
+
+declare([p1_v, p2_v, p3_v, p4_v], nonscalar) $
+declare([a12_v, a32_v, a34_v, a21_v], nonscalar) $
+
+constrains: [
+      a21_v  = (p2_v - p1_v),
+      a31_v  = (p3_v - p1_v),
+      a32_v  = (p3_v - p2_v),  /* See Fig A.1 and Fig. A.2 [1]  */
+      a34_v  = (p3_v - p4_v),
+      a24_v  = (p2_v - p4_v),
+      tc_v   = (p1_v  + p2_v + p3_v)/3,
+      ksi_v  = cp(a21_v, a31_v),
+      sig_v  = cp(a34_v, a24_v),
+      cos(theta) = dot(ksi_v,sig_v)/sqrt( dot(ksi_v,ksi_v)) / sqrt(dot(sig_v,sig_v)),
+      4*Ak^2 = dot(ksi_v,ksi_v),
+      Vk     = 1/6*dot(ksi_v,tc_v),
+      Varea  = ka*(Ak - A0tot)^2/(2*A0tot),
+      Vvol   = kv*(Vk-V0tot)^2/(2*V0tot),      
+      Vst    = Cq/Ak^q,
+      Vb     = kb*(1-cos(theta - theta0))];
+
+%cvars%: ['p1_v, 'p2_v, 'p3_v, 'p4_v];
+evars  : ['Varea, 'Vvol, 'Vst, 'Vb];

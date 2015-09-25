@@ -1,0 +1,18 @@
+load("membr_utils.mac") $
+
+
+un('Velocity        , 'length/'time           , "velocity units") $
+un('Energy          , 'mass*di('Velocity)^2   , "energy units") $
+un('r   ,             'length                 , "atom distance");
+
+un('E   , di(Energy), "bending energy");
+
+
+un('lj_epsioln   , false,       "depth of the potential well");
+un('lj_sigma     , false,       "finite distance at which potential is zero");
+
+eq: E = 4*lj_epsioln*( (lj_sigma/r)^12 - (lj_sigma/r)^6);
+di_set(di_solve(mdi(eq)));
+
+map(who, ['lj_sigma, 'lj_epsioln])$
+

@@ -17,42 +17,24 @@ un('Force        , di('Acceleration)*'mass , "force units") $
 un('Stress       , di('Force)/length^2     , "units of stress in 3D") $
 un('rho          , 'mass/'length^3         , "physical density of DPD in 3D") $
 un('Ly           , 'length                 , "domain size in OY") $
-un('nu           , 'length^2/'time         , "kinematic static viscosity of DPD solvent") $
+un('nu0          , 'length^2/'time         , "kinematic static viscosity of DPD solvent") $
 un('f0           , di('Acceleration)       , "amplitude of a body acceleration") $
 un('tau_xy       , di('Stress)             , "stress component") $
 un('y            , 'length                 , "coordinate") $
 un('vmax         , di('Velocity)           , "maximum velocity") $
 un('Re           , 1                       , "Reynolds number") $
 
-mu    : 'nu*'rho;
+mu0    : 'nu0*'rho;
 
 /* define the only non-zero component of a stress tensor */
-depends(vx, y);
-tau_xy:  mu*diff('vx, 'y);
+assume('y>0);
+gradef(ker(z), dker('z));
+tau_xy:  integrate(ker('z-'y)*vx('z), 'z, 0, 'y);
 
 eq: diff(tau_xy, y) = - 'f0*'rho;
 assume(Ly>0);
 
-so: ode2(eq, 'vx, 'y);
-vx_expr: rhs(bc2(so, 'y=0, 'vx=0, 'y='Ly, 'vx=0));
+atvalue(vx('y),           'y=0,     0);
+atvalue(diff(vx('y), 'y), 'y=0, 'vmax);
 
-/* check dimension */
-di(vx_expr);
-
-vmax_expr: 'vmax = subst('y='Ly/2, vx_expr);
-Re: subst(vmax_expr, 'Ly*'vmax/'nu);
-
-/* check dimension */
-di('Re);
-
-/* example of parameters */
-var: [Ly=48, nu=1.7, f0=10^(-4)];
-e: explicit(vx_expr, 'y, 0, 'Ly);
-e: subst(var, e);
-draw2d(e);
-
-/* Re */
-subst(var, Re), numer;
-
-/* solve for `nu' if we know `vmax' */
-solve(vmax_expr = 'vmax, 'nu)[1];
+laplace(eq, 'y, 'k); 

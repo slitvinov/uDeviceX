@@ -1,33 +1,72 @@
 load("draw") $
+load("opsubst");
 
 /* size of the domain */
 L: 1;
 
-/* one half of "Kolmogorov" profile */
-v(x):= x*(L-x);
-
 /* basis functions */
-s(n):= sin(2*%pi*n*x/(2*L));
+s(n):= sin(2*%pi*n*'x/(2*L));
 
-/* fourier coefficient */
+/* `nth' fourier coefficient */
 A(n, expr):=block([expr0: expr, expr1: subst('x='x-L, expr)],
   1/L*(integrate(expr0*s(n), x, 0, L) + integrate(-expr1*s(n), x, L, 2*L)));
 
-/* take `nmax' functions */
-nmax: 5;
+/* how many modes we take */
+nmax_f: 30;
 
-/* fourier approximation of "Kolmogorov" profile */
-v_fourier: sum(A('n, v(x))*'s('n), n, 1, nmax);
+/* an expression for a force */
+force_expr: 1;
+
+/* force in fourier */
+f_fourier: sum(A('n, force_expr)*'s('n), n, 1, nmax_f);
+
+/* apply reverse 'G operator */
+Grev(e):= opsubst(lambda([n], 's(n)/n^2/'eta(n)), s, e);
+
+/* velocity in fourier */
+v_fourier : Grev(f_fourier);
+
+/* define the law of eta vs n */
+eta0 : lambda([n], 11);
+eta00: lambda([n], 10);
+
+eta1: subst([a=-0.0430628928595529, b=1.07354382818538],
+  lambda([n], if n<20 then a*n + b else a*20 + b));
+
+eta1: subst([A=15.1186191652887, B=-0.4934821993921],
+  lambda([n], if n<20 then   A*(1/(n-B)) else A*(1/(20-B))));
+
+/* return an expression for velocity in real space
+   eta_in : the law of viscosity */
+gf(eta_in, nmax):= block([ans],
+  ans: sum(A('n, force_expr)*'s('n), n, 1, nmax),
+  ans : Grev(ans),
+  ans : opsubst( eta_in, eta, ans),
+  ans : opsubst( lambda([n], s(n)), s, ans));
+
+/* plot amplitude of the mode vs 'n for the fourier of the force */
 
 /*
-G s(n) = eta(n) * s(n) */
-
-nn: create_list( [n, A(n)], n, 1, nmax);
+nn: create_list( [n, A(n, force_expr)], n, 1, nmax_f);
 nn: sublist(nn, lambda([e], second(e)#0));
 nn: map( lambda([e], e/nn[1]), nn);
+draw2d ( 'points_joined=true, 'logy=true, points(nn) ); */
 
-draw2d ( logy=true, 'points_joined=true, points(nn));
-draw2d ( explicit(v(x), x, 0, L), explicit(-v(x-L), x, L, 2*L),
-  'color='red, explicit(v_fourier, x, 0, 2*L) );
+/* force and fourier approximation of the force  */
+draw2d (
+  'color='grey, explicit(1, x, 0, L), explicit(-1, x, L, 2*L),
+  'color='red,  explicit(ev(f_fourier, s), x, 0, 2*L));
 
 
+draw2d (
+  'terminal     = png,
+  'file_name    = "preved.png",
+  'line_width = 2,
+/*  'color='grey, explicit(1, x, 0, L), explicit(-1, x, L, 2*L), */
+  'line_type = 'dots,
+  'color='red,    explicit(gf(eta0, 8), x, 0, 2*L),
+  'color='green,  explicit(gf(eta1, 8), x, 0, 2*L),
+  'line_type = 'solid,
+  'color='blue,   explicit(gf(eta00, 40), x, 0, 2*L),  
+  'color='red,    explicit(gf( eta0, 40), x, 0, 2*L),
+  'color='green,  explicit(gf( eta1, 40), x, 0, 2*L));

@@ -78,3 +78,31 @@ dot(A, cp(del(B), C));
 
 dot(A, cp(B, del(C)));
 dot(cp(A, B), del(C)) $
+
+mdi(a+b = c);
+[di(b) = di(c),di(a) = di(b)]$
+
+mdi(a-b = c);
+[di(b) = di(c),di(a) = di(b)]$
+
+mdi(a*b = c);
+[di(a)*di(b) = di(c)]$
+
+mdi(c*(a-b) = 1);
+[di(b)*di(c) = 1,di(a) = di(b)]$
+
+di_solve(mdi(a-b = 1));
+[di(a) = 1,di(b) = 1]$
+
+di_solve(mdi(a-b = 1));
+[di(a) = 1,di(b) = 1]$
+
+block(local(c),
+  put(c, 'length, 'di),
+  di_solve(mdi(a-b = c)));
+[di(a) = length,di(b) = length]$
+
+block(local(c),
+  di_set([di(c)='time]),
+  di(c));
+'time$

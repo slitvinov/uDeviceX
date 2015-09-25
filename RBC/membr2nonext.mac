@@ -44,7 +44,8 @@ adef_bnd: ['lj2         =  dot('a12_v, 'a12_v),
 
 rdef:     ['Acurrent    =  'A + 'Arest,
            'Vb          =  'kb*(1+'ctheta),
-           'Va          =  'ka*('Acurrent - 'A0)^2/2 + 'kl*'Acurrent^2/2 + 'ksp*('lj - 'l0)^2/2];
+           'lj          =  'l0,
+           'Va          =  'ka*('Acurrent - 'A0)^2/2 + 'kl*'Acurrent^2/2];
            
 %cvars%:  ['p1_v, 'p2_v, 'p3_v];
 ee: append(adef_gen, adef_ang, adef_bnd, rdef);

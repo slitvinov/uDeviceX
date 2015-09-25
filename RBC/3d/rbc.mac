@@ -1,0 +1,126 @@
+/*
+
+[1] Fedosov, Dmitry A. Multiscale modeling of blood flow and soft
+matter. Brown University, 2010.
+
+[42] Dao, M., J. Li, and S. Suresh. "Molecularly based analysis of
+deformation of spectrin network and human erythrocyte." Materials
+Science and Engineering: C 26.8 (2006): 1232-1244.
+
+*/
+
+load ("scifac") $
+load("abs_integrate");
+load("scifac");
+load("multiadditive") $
+load("membr_utils.mac") $
+
+declare(membrane_constant, feature);
+declare([ka, kb, A0tot], membrane_constant) $
+declare([lm, kp, lp], membrane_constant) $
+
+declare([p1_v, p2_v, p3_v, p4_v], nonscalar) $
+declare([a12_v, a32_v, a34_v, a21_v], nonscalar) $
+
+/*
+(%i1) pred_partition([1, 2, 3, 4, 5], oddp);
+(%o1)                         [[1, 3, 5], [2, 4]]
+*/
+pred_partition(expr, pr):= block([yes: [], no: [], inflag: true], local(pr),
+  for e in expr do if pr(e) then push(e, yes) else push(e, no),
+  [reverse(yes), reverse(no)]);
+
+
+safe_op(e) := block([inflag : true],
+  if mapatom(e) then false else op(e));
+
+
+mdiff(e):= block([prederror: true, inflag: true, op: safe_op(e), arg],
+  if op="+" or op="[" or op="=" then map(mdiff, e)
+  else if op="*"     then mdiff(first(e))*rest(e) + first(e)*mdiff(rest(e))
+  else if op='dot    then block([a: first(e), b: second(e)],
+    dot(mdiff(a), b) + dot(a, mdiff(b)))
+  else if op='cp     then block([a: first(e), b: second(e)],
+    cp(mdiff(a), b) + cp(a, mdiff(b)))
+                                                         /* diff(a^n) */
+  else if op="^"  then block([a: first(e), n: second(e)], a^n*log(a)*mdiff(n)+a^(n-1)*n*mdiff(a))
+  else if op='cos then block([a: first(e)],
+    -sin(a)*mdiff(a))
+  else if op=false then diff(e)
+  else (print(op),
+    error("I am confused, teach me how to diff this")));
+
+args_of(e, f):=block([ans: []], local(f),
+  subst( lambda([[L]], push(L, ans), funmake(f , L)), f, e),
+  ans);
+
+funp(f, e):=block([ans: false], local(f),
+  subst( lambda([[L]], ans: true, funmake(f , L)), f, e),
+  ans);
+
+ldifference(A, B):= listify(setdifference( setify(A), setify(B)));
+  
+
+declare([Cq, q, ka, kb, kd, kv, A0tot, V0tot, A0, theta0],    constant)  $
+declare([p1_v, p2_v, p3_v, p4_v],                             nonscalar) $
+declare([a21_v, a13_v, a31_v, a32_v, a34_v, a24_v],           nonscalar) $
+declare([ksi_v, sig_v, tc_v ],                                nonscalar) $
+
+declare(cp , multiadditive);
+declare(dot, multiadditive);
+
+matchdeclare(CC, constantp);
+matchdeclare(ANY, all);
+matchdeclare(XX, lambda([e], not constantp(e)));
+tellsimpafter( cp(CC*XX, ANY), CC*cp(XX, ANY));
+tellsimpafter(dot(CC*XX, ANY), CC*dot(XX, ANY));
+tellsimpafter( cp(ANY, CC*XX), CC*cp(ANY, XX));
+tellsimpafter(dot(ANY, CC*XX), CC*dot(ANY, XX));
+
+
+constrains: [
+/*1*/ a21_v  - (p2_v - p1_v),
+      a31_v  - (p3_v - p1_v),
+      a32_v  - (p3_v - p2_v),  /* See Fig A.1 and Fig. A.2 [1]  */
+      a34_v  - (p3_v - p4_v),
+/*5*/ a24_v  - (p2_v - p4_v),
+      tc_v   - (p1_v  + p2_v + p3_v)/3,
+      ksi_v  - cp(a21_v, a31_v),
+      sig_v  - cp(a34_v, a24_v),
+      cos(theta) - dot(ksi_v,sig_v)/sqrt( dot(ksi_v,ksi_v)) / sqrt(dot(sig_v,sig_v)),
+/*10*/4*Ak^2 - dot(ksi_v,ksi_v),
+      Varea  - ka*(Ak - A0tot)^2/(2*A0tot),
+      Vvol   - kv*(Vk-V0tot)^2/(2*V0tot),      
+      Vst    - Cq/Ak^q,
+      Vk     - 1/6*dot(ksi_v,tc_v),
+/*15*/Vb     - kb*(1-cos(theta - theta0))];
+
+%cvars%: ['p1_v, 'p2_v, 'p3_v, 'p4_v];
+
+cp_and_dot_vars(e):= block([A, B],
+  A: listofvars(args_of(args_of( e,  'cp ), 'del)),
+  B: listofvars(args_of(args_of( e,  'dot), 'del)),
+  ldifference(append(A, B), %cvars%));
+cp_and_dot_vars_emptyp(e):= emptyp(cp_and_dot_vars(e));
+
+eq: mdiff(constrains);
+lvars: ldifference( listofvars(args_of(eq, del)), %cvars%);
+lvars: map('del, lvars);
+
+good: [];
+bad : linsolve(eq, lvars);
+
+while not emptyp(bad) do  (
+  [good, bad] : pred_partition(append(good, bad), cp_and_dot_vars_emptyp),
+  bad: subst(good, bad));
+
+/* list of energies */
+evars: ['Varea, 'Vvol, 'Vst, 'Vk, 'Vb];
+
+for v in %cvars% do (
+  for e in evars do (
+    d: assoc( del(e), good),
+    d: resimp(d),
+    Force[e, v]: gcfac(fullratsimp( -sdiff(d, del(v))))));
+
+expand(Force['Vb, 'p2_v]);

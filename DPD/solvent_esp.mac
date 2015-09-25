@@ -11,7 +11,6 @@ simulation." Journal of Chemical Physics 107.11 (1997): 4423.
 
 */
 
-load ("scifac")       $
 load("dimension")     $
 load("draw")          $
 load("dscale.mac")    $
@@ -47,7 +46,7 @@ usubst(so, [L]):= for el in L do block([name, descr],
   [name, descr]: el,
   usubst_aux(so, name, descr));
 
-assume('k>0, 'rc>0, 'm>0);
+assume('k>0, 'rc>0);
 
 un('Velocity     , 'length/'time            , "velocity units") $
 un('Acceleration , di('Velocity)/'time      , "acceleration units") $
@@ -69,11 +68,12 @@ un('kk           , 1/'length                , "spacial wave vector" )$          
 un('nu           , 'length^2/'time          , "static viscosity") $
 un('zz           , 1/'time                  , "energy decay rate") $                   /* Eq. (13) [3] */
 
-wint(e):= if      %ndim%=3 then 4*%pi*integrate(e*'rij^2, 'rij, 0, 'rc)               /* operator [..]; defined in [3] */
-          else if %ndim%=2 then 2*%pi*integrate(e*'rij  , 'rij, 0, 'rc)               /* on page 7273  */
+/* operator [..]; defined in [3] */
+wint(e):= if      %ndim%=3 then 4*%pi*integrate(e*'rij^2, 'rij, 0, 'rc)               
+          else if %ndim%=2 then 2*%pi*integrate(e*'rij  , 'rij, 0, 'rc)               
           else                        integrate(e       , 'rij, 0, 'rc) $
-/* DPD kernel */
 wD_expr:  (1-'rij/'rc)^'k;
+
 I: wint(wD_expr) $
 
 eq <- Fc =   m*aij * (1-rij/rc)*eij $ /* not in [3] */
@@ -92,8 +92,8 @@ eq_s <- l0 = v0 * t0             $
 eq_s <- Omega0 = rc/l0           $
 eq_s <-     ls = 1/n^(1/%ndim%)  $ 
 eq_s <- OmegaS = rc/ls           $
-eq_s <- ta     = sqrt(m*rc/aij)  $
-eq_s <- OmegaA = aij*rc*m / kT     $    /* Table 1 */
+eq_s <- ta     = sqrt(l0/aij)    $
+eq_s <- OmegaA = t0/ta           $    /* Table 1 */
 
 /* a system of equations for dimension */
 eq_d: append(mdi(eq), mdi(eq_fd), mdi(eq_s));
@@ -119,48 +119,19 @@ usubst(so,
   ['ta    ,      "conservative force time"],
   ['OmegaA,      "dimensionless conservative interaction"])$
 
-so_s: solve(append(eq_s, eq_fd),
-  ['v0, 'om0, 't0, 'l0, 'Omega0, 'ls, 'OmegaS, 'ta, 'OmegaA, 'gamma])[2];
+so_s: solve(append(eq_s, eq_fd), ['v0, 'om0, 't0, 'l0, 'Omega0, 'ls, 'OmegaS, 'ta, 'OmegaA, 'sigma])[3];
 
-un(A, 'length^2/'time, "parameter of autocorrelation") $
-un(B, 'time          , "parameter of autocorrelation") $
+o(e):= e = ev(e, so_s, infeval, k=1/2);
 
-o(e):= funmake("=", [e,  ev(e, p_fed, so_s, infeval)]);
+e: map(o, ['OmegaA, 'OmegaS, 'Omega0]);
 
 
-sigma_expr: rhs(solve(eq_fd, sigma)[2]);
+/* fixed: ['rc=1, 'm=1, 'kT=1]; */
+fixed: ['m=1, 'rc=1, 'kT=1];
 
-p_fed: [aij = 50, gamma = 12, rc = 1, m = 1, kT = 1, n = 4, k=1, 'sigma=sigma_expr];
+logexpand: all;
+leq: log(subst(fixed, e));
 
-map(o, ['Omega0, 'OmegaA, 'OmegaS, 'kk*'l0, 'zz/'om0, 'B*'om0, 'A/('om0*'rc^2) ]), numer;
+s: solve( leq, [log(gamma), log(n), log(aij)])[1];
 
-
-/* Eq. (35) in [3]
-a2 : wint('rij^2*wD_expr)/ (2*(%ndim%+2)*'rc^2 *wint(wD_expr));
-zz_first: - (1/2 + a2*Omega0^2)*'q^2;
-subst([sigma=3, kT=1, k=1, rc=1, m=1, n=4], subst (so_s, -zz_first/'q^2*om0*l0^2*'n)), numer;
-
-subst([sigma=3, kT=1, k=1, rc=1, m=1, n=4], subst (so_s, -zz_first/'q^2)), numer;
-
-
-*/
-
-/*
-draw2d ( 'xrange=[0, 2], 'yrange=[-5, 0], terminal='png, file_name = printf(false, "ndim~d", %ndim%),
-  explicit( subst(['k=1/100, 'Omega0= 1], zz_first), 'q, 0, 2),
-  explicit( subst(['k=1/100, 'Omega0= 5], zz_first), 'q, 0, 2),
-  explicit( subst(['k=1/100, 'Omega0=10], zz_first), 'q, 0, 2),
-  explicit( subst(['k=1/100, 'Omega0=20], zz_first), 'q, 0, 2),  
-  'color = 'red,
-  explicit( subst(['k=1, 'Omega0= 1], zz_first), 'q, 0, 2),
-  explicit( subst(['k=1, 'Omega0= 5], zz_first), 'q, 0, 2),
-  explicit( subst(['k=1, 'Omega0=10], zz_first), 'q, 0, 2),
-  explicit( subst(['k=1, 'Omega0=20], zz_first), 'q, 0, 2));
-*/
-
-/*
-dl(e):= subst(endcons(k=1, so_s), e);
-p    : [Omega0='Omega0_in, OmegaA='OmegaA_in, OmegaS='OmegaS_in] ;
-p    : dl(p) ;
-d    : dscale(p, ['rc=1, 'm=1, 'kT=1], ['nu, 'gamma, 'aij, 'kT, 'n, 'rc, 'm, 'kk, dl('zz/'om0)]);
-*/
+map(lambda([e], map('exp, e)), s);
