@@ -25,7 +25,6 @@
 | sigma_xz_c = (f0*gd_c*Lz_p^2*m*numberdensity)/(8*vmax_p) |
 | div_sigma_xz_p = -f0*m*numberdensity                     |
 | mu = (f0*Lz_p^2*m*numberdensity)/(8*vmax_p)              |
-|----------------------------------------------------------|
 | sigma_xz_c_ud = (f0*gd_c*Lz_p^2*m)/(8*vmax_p)            |
 | div_sigma_xz_p_ud = -f0*m                                |
 
