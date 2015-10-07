@@ -1,5 +1,7 @@
 * Stresses for Poiseuille and Couette flows
 
+** Notation
+
 |                   | units                  |                                             |
 |-------------------+------------------------+---------------------------------------------|
 | Vp                | length^3               | Volume of DPD particle                      |
@@ -18,6 +20,8 @@
 | sigma_xz_c_ud     | (length^2*mass)/time^2 | stress component (Couette, uDeviceX)        |
 | div_sigma_xz_p_ud | (length*mass)/time^2   | divergence of stress (Poiseuille, uDeviceX) |
 
+
+** Derived and measured variables
 
 | Vp = 1/numberdensity                                     |
 | V = Np/numberdensity                                     |
