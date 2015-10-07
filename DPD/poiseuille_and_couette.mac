@@ -50,12 +50,14 @@ sigma_xz: mu*diff('vx, 'z);
 
 /* divergence(sigma) = -F */
 deq  : diff(sigma_xz, 'z) = - 'f0*'rho;
+
+/* solve for velocity */
 vsol : ode2(deq, 'vx, 'z);
 
 /* Poiseuille */
 vx_p: rhs(bc2(vsol, 'z=0, 'vx=0, 'z='Lz_p, 'vx=0));
 
-/* Couette */
+/* For Couette we know velocity profile */
 vx_c: 'gd_c*'z;
 
 sigma_xz_p: subst('vx = vx_p, sigma_xz);
@@ -64,14 +66,15 @@ sigma_xz_p: expand(ev(sigma_xz_p, diff));
 sigma_xz_c: subst('vx = vx_c, sigma_xz);
 sigma_xz_c: expand(ev(sigma_xz_c, diff));
 
+/* maximum velocity is in the center */
 eq1: 'vmax_p = subst('z='Lz_p/2, vx_p);
 eq2: 'sigma_xz_c      = sigma_xz_c;
 eq3: div_sigma_xz_p = diff(sigma_xz_p, z);
 
-eq_ud1: 'Np = 'V*'numberdensity;
-eq_ud2: 'Vp = 'V/'Np;
-eq_ud3: 'sigma_xz_c_ud / 'Vp  = 'sigma_xz_c ;
-eq_ud4: 'div_sigma_xz_p_ud / 'Vp = 'div_sigma_xz_p;
+eq_ud1: 'Np = 'V*'numberdensity; /* count the number of DPD particles */
+eq_ud2: 'Vp = 'V/'Np;            /* volume per one particle */
+eq_ud3: 'sigma_xz_c_ud / 'Vp  = 'sigma_xz_c ; /* convert stress from viral expression to stress in Pressure units */
+eq_ud4: 'div_sigma_xz_p_ud / 'Vp = 'div_sigma_xz_p; 
 eq_ud5: 'rho = 'm*'numberdensity;
 
 ans: block([sigma_xz_c],
