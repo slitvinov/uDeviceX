@@ -1,5 +1,7 @@
 * Stresses for Poiseuille and Couette flows
 
+[[poiseuille_and_couette.mac][source]]
+
 ** Notation
 
 |                   | units                  |                                             |
