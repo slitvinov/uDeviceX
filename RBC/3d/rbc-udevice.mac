@@ -1,21 +1,26 @@
+assume(lunit>0);
+assume(lrbc>0);
+assume(trbc>0);
+assume(l0>0);
+assume(rr>0);
+
 pow(A, n):=A^n;
 powf(A, n):=pow(A, n);
-
 rsqrtf(x):=1 / sqrt(x);
 
+/* params%nvertices: 498;*/
 
 unitsSetup(lmax, p, cq, kb, ka, kv, gammaC,
   totArea0, totVolume0, lunit, tunit, ndens):= block([],
 
 /*
   lrbc : 1.000000e-06,
-  trbc : 3.009441e-03,
-  */
+  trbc : 3.009441e-03, */
   
   ll : lunit / lrbc,
   tt : tunit / trbc,
 
-  params%kbT : 580 * 250 * pow(ll, -2) * pow(tt, 2),
+/*  params%kbT : 580 * 250 * pow(ll, -2) * pow(tt, 2), */
   params%p : p / ll,
   params%lmax : lmax / ll,
   params%q : 1,
@@ -28,22 +33,24 @@ unitsSetup(lmax, p, cq, kb, ka, kv, gammaC,
   params%gammaC : gammaC * 580 * pow(tt, 1),
   params%gammaT : 3 * params%gammaC,
   
-  phi : 6.97 / 180*%pi,
+  /*  phi : 6.97 / 180*%pi, */
+  phi     : phirbc,
   params%sinTheta0 : sin(phi),
   params%cosTheta0 : cos(phi),
   params%kb : kb * params%kbT,
   
   params%kbToverp : params%kbT / params%p,
   params%sint0kb : params%sinTheta0 * params%kb,
-  params%cost0kb : params%cosTheta0 * params%kb);
+  params%cost0kb : params%cosTheta0 * params%kb,
+  'done);
 
-/*
-unitsSetup(1.64, 0.001412, 19.0476,
-  35*20, 2500, 3500,
-  50, 135, 91,
-  1e-6, 2.4295e-6, 4); */
+fWLC(v1, v2):= block([r, xx],
+  r : vabs(v2 - v1),
+  xx : r/params%lmax,
+  params%kbToverp * ( 1/4/((1-xx)*(1-xx)) - 1/4 + xx ) / r);
 
-fangle(v1, v2, v3, area, volume):=block([],
+fangle(v1, v2, v3, area, volume):=block([x21, x32, x31, normal, n_2, n_2to3,
+  coefArea, coeffVol, addFArea, addFVolu],
   x21 : v2 - v1,
   x32 : v3 - v2,
   x31 : v3 - v1,
@@ -58,12 +65,9 @@ fangle(v1, v2, v3, area, volume):=block([],
   coeffVol : params%kv * (volume - params%totVolume0),
   addFArea : coefArea * cross(normal, x32),
   addFVolume : coeffVol * cross(v3, v2),
-  
-  r : length(v2 - v1),
-  xx : r/params%lmax,
-  IbforceI : params%kbToverp * ( 1/4/((1-xx)*(1-xx)) - 1/4 + xx ) / r,
-  
-  addFArea + addFVolume + IbforceI * x21);
+
+  /* add and extra fWLC. In the code it comes from another triangle */
+  addFArea + addFVolume + fWLC(v1, v2) * x21 + fWLC(v1, v3) * x31);
 
 
 fdihedral(v1, v2, v3, v4):=block([],
@@ -93,21 +97,66 @@ fvisc(v1, v2, u1, u2):= block([],
   du*params%gammaT + dr * params%gammaC*dot(du, dr) / dot(dr, dr));
 
 
-/*
 unitsSetup(lmax, p, cq, kb, ka, kv, gammaC,
-  totArea0, totVolume0, lunit, tunit, ndens); */
+  totArea0, totVolume0, lunit, tunit, ndens);
 
-fvisc(v1, v2, u1, u2);
-fangle(v1, v2, v3, area, volume);
+/*
+unitsSetup(1.64, 0.001412, 19.0476,
+  35, 2500, 3500,
+  50, 135, 91,
+  1e-6, 2.4295e-6, 4); */
 
+sqrt(3)*params%totArea0 * params%kbT *(4*params%l0^2 - 9*params%l0 + 6)/
+(4*params%p*params%q*params%lmax*(1-params%l0)^2), params%nvertices: 498, numer;
 
-listofvars(fdihedral(v1, v2, v3, v4));
-listofvars(fangle(v1, v2, v3, area, volume));
-
-fangle(v1, v2, v3, area, volume);
-
-Nv: 498;
-
-/* Nv: 361; */
-Omega0: acos(  (sqrt(3)*(Nv-2)-5*%pi)/(sqrt(3)*(Nv-2)-3*%pi));
+Omega0: acos(  (sqrt(3)*(Nv-2)-5*%pi)/(sqrt(3)*(Nv-2)-3*%pi)), Nv=498;
 Omega0 * 180 / %pi, numer;
+
+load("vect");
+
+defrule(r_volume, volume, params%totVolume0);
+defrule(r_area  , area  , params%totArea0);
+
+matchdeclare(a, true);
+defrule(r_vabs2dot, vabs(a), sqrt(dot(a, a)));
+
+/* assume equilatera triangle with size rr*/
+defrule(r_v1eq, v1, [0, 0, 0]);
+defrule(r_v2eq, v2, [rr, 0, 0]);
+defrule(r_v3eq, v3, [rr/2, rr*sin(%pi/3), 0]);
+matchdeclare(a, true);
+defrule(r_veq,  a, block([listarith: false], apply1(a, r_v1eq, r_v2eq, r_v3eq)));
+
+defrule(r_rr,   rr, l0);
+
+matchdeclare([L1, L2], listp);
+defrule(r_dot, dot(L1, L2), L1.L2);
+
+defrule(r_l0, params%l0, l0);
+
+cross_fun(L1, L2):=express(L1 ~ L2);
+matchdeclare([L1, L2], listp);
+defrule(r_cross, cross(L1, L2), block([listarith: false], cross_fun(L1, L2)));
+
+fa: fangle(v1, v2, v3, area, volume);
+fa0: apply1(fa, r_veq, r_vabs2dot, r_dot, r_cross, r_cross, r_dot, r_volume, r_area, r_rr);
+
+/* solve for `cq' assuming we are in equailibrium */
+factor(rhs(linsolve(fa0[1], cq)[1]));
+grind(%);
+
+
+x21 : v2 - v1;
+fw: fWLC(v1, v2) * x21;
+
+fw0: apply1(fw, r_veq, r_vabs2dot, r_dot)[1];
+mu: - A0/l0 * diff(fw0/rr, rr) - 3*fw0*rr/(4*A0);
+defrule(r_A0, A0, sqrt(3)*l0^2/4);
+mu0: factor(apply1(mu, r_rr, r_A0));
+
+/* mu0 = 152 */
+
+p0: rhs(solve(mu0 = mu0_ref, p)[1]);
+
+grind(p = factor(subst([params%kbT = kBT, l0=x0*lmax], -p0)));
+

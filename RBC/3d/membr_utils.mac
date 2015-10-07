@@ -153,3 +153,11 @@ devector1(e):=subst(lambda([A, B],
   "=",
   devector2(e));
 devector (e):=devector1(e);
+
+
+plus_p(e) := is(safe_op(e) = "+");
+matchdeclare(S, plus_p);
+tellsimp(dot(S, A), map( lambda([e], dot(e, A)), S));
+tellsimp(dot(A, S), map( lambda([e], dot(A, e)), S));
+
+declare(sk, linear);

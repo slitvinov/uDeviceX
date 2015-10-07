@@ -1,0 +1,43 @@
+/*
+1D Poiseuille flow */
+
+load("dimension") $
+load("draw") $
+alias(di,  dimension) $
+
+/* print info */
+who(e):= printf(true, "~8a :  ~12a : ~40a~%", e , get(e, 'di), get(e, 'de))$
+
+/* register units and description of a parameter */
+un(e, u, d):= (put(e, u, 'di), put(e, d, 'de)) $
+un('Velocity     , 'length/'time           , "velocity units") $
+un('Acceleration , di('Velocity)/'time     , "acceleration units") $
+un('Force        , di('Acceleration)*'mass , "force units") $
+un('Stress       , di('Force)/length^2     , "units of stress in 3D") $
+un('rho          , 'mass/'length^3         , "physical density of DPD in 3D") $
+un('Ly           , 'length                 , "domain size in OY") $
+un('nu           , 'length^2/'time         , "kinematic static viscosity of DPD solvent") $
+un('f0           , di('Acceleration)       , "amplitude of a body acceleration") $
+un('tau_xy       , di('Stress)             , "stress component") $
+un('tau_c        , di('Stress)             , "stress component") $
+un('Vp           , length^3                , "particle volume")  $
+
+un('y            , 'length                 , "coordinate") $
+un('vmax         , di('Velocity)           , "maximum velocity") $
+un('Re           , 1                       , "Reynolds number") $
+
+mu    : 'nu*'rho;
+
+/* poiseuille flow */
+depends(vx, y);
+tau_xy:  mu*diff('vx, 'y);
+eq: diff(tau_xy, y) = - 'f0*'rho;
+assume(Ly>0);
+so: ode2(eq, 'vx, 'y);
+vx_expr: rhs(bc2(so, 'y=0, 'vx=0, 'y='Ly, 'vx=0));
+vmax_expr: 'vmax = subst('y='Ly/2, vx_expr);
+Re: subst(vmax_expr, 'Ly*'vmax/'nu);
+
+vx: 'vmax * 'y / 'Ly;
+eq:  mu*diff(vx, 'y) = 'tau_c;
+tau_c : tau_udx / Vp;

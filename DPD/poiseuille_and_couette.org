@@ -1,0 +1,29 @@
+|                   | units                  |                                             |
+|-------------------+------------------------+---------------------------------------------|
+| Vp                | length^3               | Volume of DPD particle                      |
+| numberdensity     | 1/length^3             | Number density of DPD particles             |
+| V                 | length^3               | Volume of system                            |
+| Np                | 1                      | number of DPD particles                     |
+| rho               | mass/length^3          | mass density                                |
+| m                 | mass                   | mass of DPD particles                       |
+| sigma_xz_c        | mass/(length*time^2)   | stress component (Couette)                  |
+| f0                | length/time^2          | body force (in units of acceleration)       |
+| gd_c              | 1/time                 | shear rate (gamma dot, Couette)             |
+| Lz_p              | length                 | domain size in Z (Poiseuille)               |
+| vmax_p            | length/time            | maximum velocity in Poiseuille              |
+| div_sigma_xz_p    | mass/(length^2*time^2) | divergence of stress (Poiseuille)           |
+| mu                | mass/(length*time)     | dynamic viscosity                           |
+| sigma_xz_c_ud     | (length^2*mass)/time^2 | stress component (Couette, uDeviceX)        |
+| div_sigma_xz_p_ud | (length*mass)/time^2   | divergence of stress (Poiseuille, uDeviceX) |
+
+
+| Vp = 1/numberdensity                                     |
+| V = Np/numberdensity                                     |
+| rho = m*numberdensity                                    |
+| sigma_xz_c = (f0*gd_c*Lz_p^2*m*numberdensity)/(8*vmax_p) |
+| div_sigma_xz_p = -f0*m*numberdensity                     |
+| mu = (f0*Lz_p^2*m*numberdensity)/(8*vmax_p)              |
+|----------------------------------------------------------|
+| sigma_xz_c_ud = (f0*gd_c*Lz_p^2*m)/(8*vmax_p)            |
+| div_sigma_xz_p_ud = -f0*m                                |
+

@@ -1,0 +1,86 @@
+/* Poiseuille and Couette flow */
+load("dimension") $
+alias(di,  dimension) $
+
+/* print info */
+who(e):= printf(true, "| ~8a |   ~12a |  ~40a | ~%", e , get(lhs(e), 'di), get(lhs(e), 'de))$
+one(e):= printf(true, "| ~a | ~%", e);
+
+
+/* register units and description of a parameter */
+un(e, u, d):= (put(e, u, 'di), put(e, d, 'de)) $
+
+un('Velocity     , 'length/'time           , "velocity units") $
+un('Acceleration , di('Velocity)/'time     , "acceleration units") $
+un('Force        , di('Acceleration)*'mass , "force units") $
+un('Stress       , di('Force)/length^2     , "units of stress") $
+un('rho          , 'mass/'length^3         , "mass density") $
+un('Lz_c           , 'length                 , "domain size in Z (Couette)") $
+un('Lz_p           , 'length                 , "domain size in Z (Poiseuille)") $
+
+un('nu           , 'length^2/'time         , "kinematic viscosity") $
+un('mu           , di('nu)*di('rho)        , "dynamic viscosity") $
+un('gd_c         , di('Velocity)/'length   , "shear rate (gamma dot, Couette)") $
+
+un('f0           , di('Acceleration)       , "body force (in units of acceleration)") $
+un('sigma_xz         , di('Stress)           , "stress component") $
+un('sigma_xz_c       , di('Stress)           , "stress component (Couette)") $
+un('div_sigma_xz_p   , di('Stress)/length    , "divergence of stress (Poiseuille)") $
+
+un('sigma_xz_c_ud       , di('Force)*length           , "stress component (Couette, uDeviceX)") $
+un('div_sigma_xz_p_ud   , di('Force)*length/length    , "divergence of stress (Poiseuille, uDeviceX)") $
+
+un('x            , 'length                 , "coordinate") $
+un('y            , 'length                 , "coordinate") $
+un('z            , 'length                 , "coordinate") $
+un('vmax_c       , di('Velocity)           , "maximum velocity in Couette") $
+un('vmax_p       , di('Velocity)           , "maximum velocity in Poiseuille") $
+un('Re           , 1                       , "Reynolds number") $
+
+un('V              , 'length^3               , "Volume of system") $
+un('Vp             , 'length^3               , "Volume of DPD particle") $
+un('numberdensity  , 1/'length^3             , "Number density of DPD particles") $
+un('Np             , 1                       , "number of DPD particles") $
+un('m              , 'mass                   , "mass of DPD particles") $
+
+depends('vx, 'z);
+
+/* define the only non-zero component of a stress tensor */
+sigma_xz: mu*diff('vx, 'z);
+
+/* divergence(sigma) = -F */
+deq  : diff(sigma_xz, 'z) = - 'f0*'rho;
+vsol : ode2(deq, 'vx, 'z);
+
+/* Poiseuille */
+vx_p: rhs(bc2(vsol, 'z=0, 'vx=0, 'z='Lz_p, 'vx=0));
+
+/* Couette */
+vx_c: 'gd_c*'z;
+
+sigma_xz_p: subst('vx = vx_p, sigma_xz);
+sigma_xz_p: expand(ev(sigma_xz_p, diff));
+
+sigma_xz_c: subst('vx = vx_c, sigma_xz);
+sigma_xz_c: expand(ev(sigma_xz_c, diff));
+
+eq1: 'vmax_p = subst('z='Lz_p/2, vx_p);
+eq2: 'sigma_xz_c      = sigma_xz_c;
+eq3: div_sigma_xz_p = diff(sigma_xz_p, z);
+
+eq_ud1: 'Np = 'V*'numberdensity;
+eq_ud2: 'Vp = 'V/'Np;
+eq_ud3: 'sigma_xz_c_ud / 'Vp  = 'sigma_xz_c ;
+eq_ud4: 'div_sigma_xz_p_ud / 'Vp = 'div_sigma_xz_p;
+eq_ud5: 'rho = 'm*'numberdensity;
+
+ans: block([sigma_xz_c],
+  solve([eq1, eq2, eq3, eq_ud1, eq_ud2, eq_ud3, eq_ud4, eq_ud5],
+    ['Vp, 'V, 'rho, 'sigma_xz_c, 'div_sigma_xz_p, 'mu,
+    'sigma_xz_c_ud, 'div_sigma_xz_p_ud]))[1];
+
+map('who, listofvars(ans)) $
+
+map('string, ans);
+
+

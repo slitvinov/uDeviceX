@@ -123,4 +123,15 @@ for v in %cvars% do (
     d: resimp(d),
     Force[e, v]: gcfac(fullratsimp( -sdiff(d, del(v))))));
 
-expand(Force['Vb, 'p2_v]);
+
+matchdeclare([A1, A2], true);
+
+defrule(rcp, dot(sk(A1), A2), cp(A1, A2));
+defrule(ta31s1, a31_v, a32_v + a21_v);
+defrule(ta24s1, a24_v, a23_v + a34_v);
+defrule(ta34s1, a34_v, a31_v + a14_v);
+
+fullratsimp(trigexpand(expand(apply1(factor(fullratsimp(Force['Vb, 'p1_v])), ta31s1, rcp))));
+fullratsimp(trigexpand(expand(apply1(factor(fullratsimp(Force['Vb, 'p2_v])), rcp))));
+fullratsimp(trigexpand(expand(apply1(factor(fullratsimp(Force['Vb, 'p3_v])), rcp))));
+fullratsimp(trigexpand(expand(apply1(factor(fullratsimp(Force['Vb, 'p4_v])), rcp, ta24s1, ta34s1))));
