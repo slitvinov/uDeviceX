@@ -1,3 +1,5 @@
+* Stresses for Poiseuille and Couette flows
+
 |                   | units                  |                                             |
 |-------------------+------------------------+---------------------------------------------|
 | Vp                | length^3               | Volume of DPD particle                      |
