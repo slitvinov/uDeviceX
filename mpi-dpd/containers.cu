@@ -47,8 +47,9 @@ namespace ParticleKernels
 	 if (doublePoiseuille && p[pid].x[1] <= threshold)
 	     driving_acceleration *= -1;
 
-	for(int c = 0; c < 3; ++c)
-	    p[pid].u[c] += (a[pid].a[c] + (c == 0 ? driving_acceleration : 0)) * dt * 0.5;
+	 p[pid].u[0] += (a[pid].a[0] + cos(phi)*driving_acceleration) * dt * 0.5;
+	 p[pid].u[1] += (a[pid].a[1] + sin(phi)*driving_acceleration) * dt * 0.5;
+	 p[pid].u[2] += (a[pid].a[2]                             ) * dt * 0.5;
 
 	for(int c = 0; c < 3; ++c)
 	    p[pid].x[c] += p[pid].u[c] * dt;
@@ -157,9 +158,9 @@ namespace ParticleKernels
 	 if (doublePoiseuille && s0.y <= threshold)
 	     driving_acceleration *= -1;
 
-	 s1.y += (ax + driving_acceleration) * dt;
-	 s2.x += ay * dt;
-	 s2.y += az * dt;
+	 s1.y += (ax + cos(phi)*driving_acceleration) * dt;
+	 s2.x += (ay + sin(phi)*driving_acceleration) * dt;
+	 s2.y += (az                             ) * dt;
 
 	 s0.x += s1.y * dt;
 	 s0.y += s2.x * dt;
