@@ -210,9 +210,8 @@ namespace CudaRBC
         for(int i = 0; i < nvertices; ++i)
             maxldeg.push_back(adjacentPairs[i].size());
 
-        const int degreemax = *max_element(maxldeg.begin(), maxldeg.end());
+        const int degreemax = 7;
         assert(degreemax == 7);
-        assert(nvertices == 498);
 
         vector<int> adjVert(nvertices * degreemax, -1);
 
@@ -309,9 +308,14 @@ namespace CudaRBC
         maxCells = 0;
         CUDA_CHECK( cudaMalloc(&host_av, 1 * 2 * sizeof(float)) );
 
-        unitsSetup(1.64, 0.001412, 19.0476, 35, 2500, 3500, 50, 135, 91, 1e-6, 2.4295e-6, 4, report);
+        unitsSetup(
+			1.64,	0.001412,	19.0476	, //= %lmax%,	%p%,	%cq%	,
+			35  ,	2500	,	3500	, //= %kb%	,	%ka%,	%kv%	,
+			50  ,	135	,	91	, //= %gammaC%,	%totArea0%,	%totVolume0%	,
+			// non-modifiable
+			1e-6, 2.4295e-6, 4, report);
 
-        CUDA_CHECK( cudaFuncSetCacheConfig(fall_kernel<498>, cudaFuncCachePreferL1) );
+        CUDA_CHECK( cudaFuncSetCacheConfig(fall_kernel<498>, cudaFuncCachePreferL1) ); //=         CUDA_CHECK( cudaFuncSetCacheConfig(fall_kernel<%Nv%>, cudaFuncCachePreferL1) );
     }
 
     void unitsSetup(float lmax, float p, float cq, float kb, float ka, float kv, float gammaC,
@@ -337,7 +341,7 @@ namespace CudaRBC
         params.gammaC = gammaC * 580 * pow(tt, 1.0);
         params.gammaT = 3.0 * params.gammaC;
 
-        float phi = 6.97 / 180.0*M_PI;
+        float phi = 6.97 / 180.0*M_PI; //=        float phi = %phirbc% / 180.0*M_PI;
         params.sinTheta0 = sin(phi);
         params.cosTheta0 = cos(phi);
         params.kb = kb * params.kbT;
@@ -527,8 +531,8 @@ namespace CudaRBC
         return make_float3(-1.0e10f, -1.0e10f, -1.0e10f);
     }
 
-    //======================================
-    //======================================
+    // ======================================
+    // ======================================
 
     template<int update>
     __device__  __forceinline__  float3 _fdihedral(float3 v1, float3 v2, float3 v3, float3 v4)
@@ -675,7 +679,7 @@ namespace CudaRBC
         int threads = 128;
         int blocks  = (ncells*params.nvertices*7 + threads-1) / threads;
 
-        fall_kernel<498><<<blocks, threads, 0, stream>>>(ncells, host_av, device_axayaz);
+        fall_kernel<498><<<blocks, threads, 0, stream>>>(ncells, host_av, device_axayaz); //=        fall_kernel<%Nv%><<<blocks, threads, 0, stream>>>(ncells, host_av, device_axayaz);
     }
 
     void get_triangle_indexing(int (*&host_triplets_ptr)[3], int& ntriangles)
