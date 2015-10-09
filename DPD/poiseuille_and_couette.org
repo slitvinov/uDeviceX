@@ -35,7 +35,9 @@
 | div_sigma_xz_p_ud = -f0*m                                |
 
 
-* Run
+* Runs
+** aij=0
+
 #+BEGIN_EXAMPLE
 numberdensity = 4
 dt = 0.001
@@ -48,6 +50,10 @@ domain 48 x 48 x 48
 hydrostatic_a = 0.05 (Poiseuille)
 couette       = 9.0  (Couette)
 #+END_EXAMPLE
+
+| red   | DPD result |
+| blue  | fit        |
+| green | thory      |
 
 #+CAPTION: Poiseuille and Couette flow simulation
 #+NAME:   fig:aij0
