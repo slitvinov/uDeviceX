@@ -56,7 +56,7 @@ couette       = 9.0  (Couette)
 | green | thory      |
 
 Velocity (left) and stress (right)
-
+ 
 #+CAPTION: Poiseuille and Couette flow simulation
 #+NAME:   fig:aij0
 [[./img/aij0.png]]
