@@ -34,3 +34,21 @@
 | sigma_xz_c_ud = (f0*gd_c*Lz_p^2*m)/(8*vmax_p)            |
 | div_sigma_xz_p_ud = -f0*m                                |
 
+
+* Run
+#+BEGIN_EXAMPLE
+numberdensity = 4
+dt = 0.001
+kBT = 0.0945
+aij = 0
+gamma = 45
+
+domain 48 x 48 x 48
+
+hydrostatic_a = 0.05 (Poiseuille)
+couette       = 9.0  (Couette)
+#+END_EXAMPLE
+
+#+CAPTION: Poiseuille and Couette flow simulation
+#+NAME:   fig:aij0
+[[./aij0.svg]]
