@@ -51,5 +51,5 @@ couette       = 9.0  (Couette)
 
 #+CAPTION: Poiseuille and Couette flow simulation
 #+NAME:   fig:aij0
-[[./img/aij0.svg]]
+[[./img/aij0.png]]
 
