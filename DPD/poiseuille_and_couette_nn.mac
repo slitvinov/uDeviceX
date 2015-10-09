@@ -42,48 +42,35 @@ un('numberdensity  , 1/'length^3             , "Number density of DPD particles"
 un('Np             , 1                       , "number of DPD particles") $
 un('m              , 'mass                   , "mass of one DPD particle") $
 
+depends('gd, 'z);
 depends('vx, 'z);
 
 /* define the only non-zero component of a stress tensor */
-sigma_xz: mu*diff('vx, 'z);
+sigma_xz: 'mu*'gd^'n;
 
 /* divergence(sigma) = -F */
 deq  : diff(sigma_xz, 'z) = - 'f0*'rho;
 
 /* solve for velocity */
-vsol : ode2(deq, 'vx, 'z);
+declare('n, real);
+assume('n>0);
+gdsol : ode2(deq, 'gd, 'z);
 
 /* Poiseuille */
-vx_p: rhs(bc2(vsol, 'z=0, 'vx=0, 'z='Lz_p, 'vx=0));
+gd_p: ic1(gdsol, 'z='Lz_p/2, 'gd=0);
 
-/* For Couette we know velocity profile */
-vx_c: 'gd_c*'z;
+assume('Lz_p > 2*'z);
+assume('f0>0, 'mu>0, 'rho>0);
+gd_p: solve(gd_p, gd)[1];
 
-sigma_xz_p: subst('vx = vx_p, sigma_xz);
-sigma_xz_p: expand(ev(sigma_xz_p, diff));
+veq : subst(gd = diff('vx, 'z), gd_p);
+vsol: ode2(veq, 'vx, 'z);
+vsol: ic1(vsol, 'z=0, 'vx=0);
 
-sigma_xz_c: subst('vx = vx_c, sigma_xz);
-sigma_xz_c: expand(ev(sigma_xz_c, diff));
+e: rhs(factor(subst([f0=1, rho=1, Lz_p=1, mu=1], vsol)));
 
-/* maximum velocity is in the center */
-eq1: 'vmax_p = subst('z='Lz_p/2, vx_p);
-eq2: 'sigma_xz_c      = sigma_xz_c;
-eq3: div_sigma_xz_p = diff(sigma_xz_p, z);
+n0: 7/10;
+e0: subst(n=n0, e);
+e1: subst([n=n0, z = 1 - z], e);
 
-eq_ud1: 'Np = 'V*'numberdensity; /* count the number of DPD particles */
-eq_ud2: 'Vp = 'V/'Np;            /* volume per one particle */
-eq_ud3: 'sigma_xz_c_ud / 'Vp  = 'sigma_xz_c ; /* convert stress from viral expression to stress in Pressure units */
-eq_ud4: 'div_sigma_xz_p_ud / 'Vp = 'div_sigma_xz_p; 
-eq_ud5: 'rho = 'm*'numberdensity;
-
-ans: block([sigma_xz_c],
-  solve([eq1, eq2, eq3, eq_ud1, eq_ud2, eq_ud3, eq_ud4, eq_ud5],
-    ['Vp, 'V, 'rho, 'sigma_xz_c, 'div_sigma_xz_p, 'mu,
-    'sigma_xz_c_ud, 'div_sigma_xz_p_ud]))[1] $
-
-map('who, listofvars(ans)) $
-map('one, ans) $
-
-var: [f0 = 0.05, Lz_p = 48*0.8, m=1, vmax_p=1.08, numberdensity=4, gd_c = 0.23];
-subst(var, ans);
-
+draw2d( explicit(e0, z, 0, 1/2), explicit(e1, z, 1/2, 1));
