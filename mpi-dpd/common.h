@@ -20,9 +20,9 @@
 
 enum
 {
-    XSIZE_SUBDOMAIN = 24, //=    XSIZE_SUBDOMAIN = %XS%,
-    YSIZE_SUBDOMAIN = 120,//=    YSIZE_SUBDOMAIN = %YS%,
-    ZSIZE_SUBDOMAIN = 24,//=    ZSIZE_SUBDOMAIN = %ZS%,
+    XSIZE_SUBDOMAIN = 48,//=    XSIZE_SUBDOMAIN = %XS%,
+    YSIZE_SUBDOMAIN = 48,//=    YSIZE_SUBDOMAIN = %YS%,
+    ZSIZE_SUBDOMAIN = 48,//=    ZSIZE_SUBDOMAIN = %ZS%,
     XMARGIN_WALL = 6,
     YMARGIN_WALL = 6,
     ZMARGIN_WALL = 6,
@@ -36,7 +36,7 @@ const float sigma = sqrt(2 * gammadpd * kBT);
 const float sigmaf = sigma / sqrt(dt);
 const float aij = 25; //=const float aij = %aij%;
 const float hydrostatic_a = 0.00; //=const float hydrostatic_a = %ha%;
-const float phi           = 1.570796326794897 ; //=const float phi           = %phi% ;
+const float phi           = -1.570796326794897f;
 
 extern float tend, couette;
 extern bool walls, pushtheflow, doublepoiseuille, rbcs, ctcs, xyz_dumps, hdf5field_dumps, hdf5part_dumps, is_mps_enabled, contactforces, stress;
