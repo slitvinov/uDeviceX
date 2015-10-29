@@ -63,7 +63,7 @@ void Simulation::_update_helper_arrays()
 
 std::vector<Particle> Simulation::_ic()
 {
-    srand48(rank);
+    srand48(rank); //= srand48(%seed%);
 
     std::vector<Particle> ic(XSIZE_SUBDOMAIN * YSIZE_SUBDOMAIN * ZSIZE_SUBDOMAIN * numberdensity);
 
