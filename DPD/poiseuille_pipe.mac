@@ -1,0 +1,61 @@
+/* Poiseuille and Couette flow */
+load("dimension") $
+alias(di,  dimension) $
+
+/* print info */
+who(e):= printf(true, "| ~8a |   ~12a |  ~40a | ~%", e , get(lhs(e), 'di), get(lhs(e), 'de))$
+one(e):= printf(true, "| ~a | ~%", e);
+
+/* register units and description of a parameter */
+un(e, u, d):= (put(e, u, 'di), put(e, d, 'de)) $
+
+un('Velocity     , 'length/'time           , "velocity units") $
+un('Acceleration , di('Velocity)/'time     , "acceleration units") $
+un('Force        , di('Acceleration)*'mass , "force units") $
+un('Stress       , di('Force)/length^2     , "units of stress") $
+un('rho          , 'mass/'length^3         , "mass density") $
+
+un('nu           , 'length^2/'time         , "kinematic viscosity") $
+un('mu           , di('nu)*di('rho)        , "dynamic viscosity") $
+
+un('f0           , di('Acceleration)       , "body force (in units of acceleration)") $
+un('sigma_xz         , di('Stress)           , "stress component") $
+
+un('x            , 'length                 , "axial  coordinate") $
+un('y            , 'length                 , "       coordinate") $
+un('z            , 'length                 , "       coordinate") $
+un('r            , 'length                 , "radial coordinate") $
+un('R            , 'length                 , "radious of pipe") $
+
+un('vmax         , di('Velocity)           , "maximum velocity") $
+un('Re           , 1                       , "Reynolds number") $
+
+un('numberdensity  , 1/'length^3             , "Number density of DPD particles") $
+un('m              , 'mass                   , "mass of one DPD particle") $
+
+depends('vx, ['y, 'z]);
+
+sigma_xy: mu*diff('vx, 'y);
+sigma_xz: mu*diff('vx, 'z);
+
+/* divergence(sigma) = -F */
+deq  : diff(sigma_xz, 'z) + diff(sigma_xy, 'y) = - 'f0*'rho;
+
+/* solve for velocity */
+vsol : C1 * (z^2 + y^2) + C2;
+
+deq_sb: subst(vx = vsol, deq);
+deq_sb: ev(deq_sb, diff);
+assume(r>0);
+
+zy2r(e):=ratsubst(r^2, z^2+y^2, e);
+bc(e)  :=subst(r=R, e);
+
+deq_sb: zy2r(deq_sb);
+bc_sb : bc(zy2r(vsol = 0));
+
+C_sol  : linsolve([deq_sb, bc_sb], [C1, C2]);
+vsol_sb: zy2r(subst(C_sol, vsol));
+
+vavg   : integrate(2*%pi*r*vsol_sb, r, 0, R)/integrate(2*%pi*r, r, 0, R);
+eq_dp: dP * L * S = S * L * rho * fa;
