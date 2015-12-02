@@ -1,0 +1,84 @@
+load("dimension") $
+ratprint: false   $ /* supress 'rat: replaced' */
+
+alias(di, dimension) $
+
+put(Force , mass*length/time^2, di) $
+put(Enegry, di(Force)*length, di) $
+put(Stress, di(Force/length^2), di) $
+put(Y,      di(Force)/length, di) $ /* 2D Young's modulus */
+
+put(D , length, di) $               /* diameter of RBC */
+put(eta, di(Stress)*time, di) $     /* dynamics viscoisyt */
+put(kbT, di(Enegry), di) $
+
+put(p ,   length, di) $             /* persistence length */
+put(lm,   length, di) $             /* maximum length */
+put(x0,   1     , di) $
+put(ka,   di(Enegry)/length^2, di) $
+put(kd,   di(Enegry)/length^2, di) $
+put(K ,   di(Enegry)/length^2, di) $
+put(mu0 ,   di(Enegry)/length^2, di) $ /* 2D shear modules */
+
+put(q ,   1,      di) $
+
+put(kb , di(Enegry), di) $
+put(rho , mass/length^3, di) $        /* mass density */
+
+D_m_num : 8.267 $
+D_p_num : 7.82e-6 $
+
+/* (3.10) */
+mu0_expr: mu0 = sqrt(3)*kbT/(4*p*lm*x0) * (
+  3/(4*(1-x0)^2) - 3/4 + 4*x0 + x0/(2*(1-x0)^3)
+  ) $
+
+K_expr  : K   = sqrt(3)*kbT/(4*p*lm*(1-x0)^2) * (
+    (q+1/2)*(4*x0^2-9*x0 + 6) +
+    (1 + 2*(1-x0)^3)/(1-x0)
+  )
+  + ka + kd $
+
+Y_expr: Y = 4*K*mu0/(K+mu0) $
+
+x0_expr: x0 = l0/lm $
+lm_expr: lm = 22/10*l0 $
+q_expr: q = 1 $
+
+k: D_m_num / D_p_num $
+
+eql1   : totArea0 = Nt * sqrt(3)/4 * l0^2 $
+eql2   : Nt    = 2*Nv - 4 $
+eql3   : totArea0 = 135e-12 * k^2 $
+eql4   : Nv =       498 $
+l0_expr: last(solve([eql1, eql2, eql3, eql4], [totArea0, Nt, Nv, l0])[2]) $
+p_expr :  p   = 2.53e-9 * k $
+kd_expr:  kd  = 0 $
+ka_expr:  ka  = 5000 $
+
+kbT_expr : kbT = kbT_num  $
+sb: [mu0_expr, K_expr, x0_expr, lm_expr, q_expr, l0_expr, p_expr, kd_expr, ka_expr, kbT_expr] $
+
+di_m(e):= subst([length=length_m, time=time_m, mass=mass_m], di(e)) $
+di_p(e):= subst([length=length_p, time=time_p, mass=mass_p], di(e)) $
+eq1: di_m(D)  = D_m $
+eq2: di_m(Y) = Y_m $
+eq3: di_m(rho) = rho_m $
+eq4: di_p(D)  = D_p $
+eq5: di_p(Y) = Y_p $
+eq6: di_p(rho) = rho_p $
+
+eq7a : kbT_m = kbT_p/ di_p(kbT) * di_m(kbT)  $
+eq7b : Y_m = Y_p/ di_p(Y) * di_m(Y)  $
+
+so: solve( [eq1, eq2, eq3, eq4, eq5, eq6], [length_p, time_p, mass_p, length_m, time_m, mass_m])[1] $
+
+eq7a_s : subst(so, eq7a) $
+eq7b_s : subst(so, eq7b) $
+
+k_boltz: 1.38064852e-23 $
+subst(
+  [D_m=D_m_num ,      Y_m   = 392.453,
+   D_p=D_p_num ,      Y_p   = 18.9e-6,   kbT_p = 296 * k_boltz, mu0_p = 6.3e-6
+  ],
+  [eq7a_s, eq7b_s]) ;

@@ -58,4 +58,20 @@ C_sol  : linsolve([deq_sb, bc_sb], [C1, C2]);
 vsol_sb: zy2r(subst(C_sol, vsol));
 
 vavg   : integrate(2*%pi*r*vsol_sb, r, 0, R)/integrate(2*%pi*r, r, 0, R);
-eq_dp: dP * L * S = S * L * rho * fa;
+
+eq_dp: dP * L * S = S * L * rho * fa; /* force balance equation */
+
+eq_re: Re = (R*vavg_sim*rho)/mu;
+eq_vavg : vavg_sim = vavg;
+
+so_re: solve([eq_re, eq_vavg], [Re, mu])[1];
+
+Rb: 12;
+Rs: 36/5;
+
+solve(0.06*Rb^2  = 2*x*Rs^2, x);
+
+subst([vavg_sim=0.06, R=Rb  , f0=0.3], so_re);
+subst([vavg_sim=1/12, R=Rs  , f0=0.3], so_re);
+
+eq_vavg;

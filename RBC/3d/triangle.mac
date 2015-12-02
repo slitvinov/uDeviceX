@@ -1,0 +1,106 @@
+/*
+
+Analysis of 2D triangle
+
+*/
+
+
+a_v: [ax, ay];
+b_v: [bx, by];
+c_v: [cx, cy];
+
+vabs[a_v]: a;
+vabs[b_v]: b;
+vabs[c_v]: c;
+/* vabs[c]:=sqrt(lsum(e^2, e, c)); */
+tau_s(v):= block([d: vabs[v]],
+  f(d) * (transpose(v) . v ) / d);
+
+l_eq(v):= vabs[v]^2 -  (v[1]^2 + v[2]^2);
+
+gradef(f(x), df(x));
+declare([A0tot, A0, Cq, ka, kd], constant);
+
+I  : ident(2);
+tau: -1/(2*A) * (tau_s(a_v) + tau_s(b_v) + tau_s(c_v)) -
+       ( q*Cq/A^(q+1) + ka*(A0tot - Nt*A)/A0tot + kd*(A0-A)/A0 ) * I;
+
+J: matrix([1, gamma/2], [gamma/2 ,1]);
+e_shear(v):= flatten(args(J . v));
+
+equilateral_triangle0(e):=
+subst([
+  ax =  l0*sin(%pi/3), ay = l0*cos(%pi/3),
+  bx =  0            , by = l0,
+  cx = -l0*sin(%pi/3), cy = l0*cos(%pi/3),
+  a = l0, b = l0, c = l0, A = A0], e);
+
+equilateral_triangleA(e):= block([so: solve('A = 1/2*'a^2*sin(%pi/3), 'a)[2]],
+  e: subst([bx = b*cos(phib), by = b*sin(phib)], e),
+  e: subst([ax = a*cos(phia), ay = a*sin(phia)], e),
+  e: subst([cx = c*cos(phic), cy = c*sin(phic)], e),
+  e: trigsimp(e),
+  e: subst([b = a, c = a], e),
+  e: subst(so, e));
+
+
+tauxy: diff(tau[1,2]);
+
+eq1a: a_v + diff(a_v) - e_shear(a_v);
+eq1b: b_v + diff(b_v) - e_shear(b_v);
+eq1c: c_v + diff(c_v) - e_shear(c_v);
+eq2a: diff(l_eq(a_v));
+eq2b: diff(l_eq(b_v));
+eq2c: diff(l_eq(c_v));
+
+eq: flatten([eq1a, eq1b, eq1c, eq2a, eq2b, eq2c]);
+va: map('del, [a, b, c, ax, ay, bx, by, cx, cy]);
+so: linsolve(eq, va);
+
+tauxy0: subst(so, tauxy);
+mu0   : diff(tauxy0, gamma);
+mu0   : fullratsimp(equilateral_triangle0(mu0));
+
+depends(x, l);
+tellsimp('diff(x, l), 1/lm);
+
+Uwlc  : kbT*lm/(4*p) * (3*x^2 - 2*x^3)/(1-x);
+Ufene : -ks/2*lm^2 * log(1-x^2);
+
+define( F(l), subst(x=l/lm, diff(Uwlc, l, 1)));
+define(dF(l), subst(x=l/lm, diff(Uwlc, l, 2)));
+
+matchdeclare(A, true);
+defrule(rf1,  f(A), F(A));
+defrule(rf2, df(A), dF(A));
+defrule(rl02x0, l0, x0*lm);
+defrule(rA0tot2A0, A0tot, A0*Nt);
+defrule(rA02l0,    A0,    1/2*l0^2*sin(%pi/3));
+
+mu0: factor(apply1(mu0,  rf1, rf2, rl02x0));
+scanmap('factor, mu0);
+
+/*
+mu0_book_wlc: sqrt(3)*kbT/(4*p*lm*x0) * ( 3/(4*(1-x0)^2) - 3/4 + 4*x0 + x0/(2*(1-x0)^3));
+mu0_book_fene: sqrt(3)*ks/2*(x0^2/(1-x0^2)^2 + 2/(1-x0^2)); */
+
+/* factor(mu0 + mu0_book_wlc); */
+P: 1/2*expand(tau[1,1] + tau[2, 2]);
+P: equilateral_triangleA(P);
+P: expand(fullratsimp(P));
+
+K: expand(fullratsimp(- A*diff(P, A)));
+K: subst(A=A0, K);
+assume(l0>0);
+K: subst(A0 = 1/2*l0^2*sin(%pi/3), K);
+K: apply1(expand(K), rf1, rf2, rl02x0);
+
+Cq_expr: apply1(solve(equilateral_triangle0(tau[1,1]), Cq)[1],
+  rf1, rf2, rA0tot2A0, rl02x0);
+
+K1: factor(fullratsimp(apply1(subst([kd=0, ka=0, Cq=rhs(Cq_expr), q=1],  K), rA02l0, rl02x0)));
+K_book: sqrt(3)*kbT/(4*p*lm*(1-x0)^2) * ( (q+1/2)*(4*x0^2-9*x0 + 6) + (1+2*(1-x0)^3)/(1-x0)) + ka + kd;
+K2: factor(subst([kd=0, ka=0, Cq=rhs(Cq_expr), q=1],  K_book));
+
+sort(listofvars(K1));
+sort(listofvars(K2));

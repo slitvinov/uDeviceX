@@ -13,8 +13,7 @@ rsqrtf(x):=1 / sqrt(x);
 unitsSetup(lmax, p, cq, kb, ka, kv, gammaC,
   totArea0, totVolume0, lunit, tunit, ndens):= block([],
 
-/*
-  lrbc : 1.000000e-06,
+/*  lrbc : 1.000000e-06,
   trbc : 3.009441e-03, */
   
   ll : lunit / lrbc,

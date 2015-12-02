@@ -46,7 +46,7 @@ Re: subst(vmax_expr, 'Ly*'vmax/'nu);
 di('Re);
 
 /* example of parameters */
-var: [Ly=48, nu=1.7, f0=10^(-4)];
+var: [Ly=48, f0=0.05];
 e: explicit(vx_expr, 'y, 0, 'Ly);
 e: subst(var, e);
 draw2d(e);
