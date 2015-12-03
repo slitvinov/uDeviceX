@@ -34,10 +34,16 @@ BEGIN {
 	if (tok == "(eof)" || tok == ")") break
 	args = args tok
     }
-    
-    printf "%s(%s):=", fn, args
 
     for (;;) {
+	advance()
+	if (tok == "(eof)" || tok == "(") break
+	after = after tok
+    }
+    
+    printf "%s(%s):= %s block([], ", fn, args, after
+
+    for (;;) { # rest
 	advance()
 	if (tok == "(eof)") break
 	rst = rst tok
