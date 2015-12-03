@@ -1,0 +1,54 @@
+    void unitsSetup(float lmax, float p, float cq, float kb, float ka, float kv, float gammaC,
+            float totArea0, float totVolume0, float lunit, float tunit, int ndens, bool prn)
+    {
+        const float lrbc = 1.000000e-06;
+        const float trbc = 3.009441e-03;
+        //const float mrbc = 3.811958e-13;
+
+        float ll = lunit / lrbc;
+        float tt = tunit / trbc;
+
+        params.kbT = 580 * 250 * pow(ll, -2.0) * pow(tt, 2.0);
+        params.p = p / ll;
+        params.lmax = lmax / ll;
+        params.q = 1;
+        params.Cq = cq * params.kbT * pow(ll, -2.0);
+        params.totArea0 = totArea0 * pow(ll, -2.0);
+        params.totVolume0 = totVolume0 * pow(ll, -3.0);
+        params.l0 = sqrt(params.totArea0 / (2.0*params.nvertices - 4.) * 4.0/sqrt(3.0));
+        params.ka = ka * params.kbT / (params.totArea0 * params.l0 * params.l0);
+        params.kv = kv * params.kbT / (6 * params.totVolume0 * powf(params.l0, 3));
+        params.gammaC = gammaC * 580 * pow(tt, 1.0);
+        params.gammaT = 3.0 * params.gammaC;
+
+        float phi = 6.97 / 180.0*M_PI;
+        params.sinTheta0 = sin(phi);
+        params.cosTheta0 = cos(phi);
+        params.kb = kb * params.kbT;
+
+        params.kbToverp = params.kbT / params.p;
+        params.sint0kb = params.sinTheta0 * params.kb;
+        params.cost0kb = params.cosTheta0 * params.kb;
+        CUDA_CHECK( cudaMemcpyToSymbol  (devParams, &params, sizeof(Params)) );
+
+        if (prn)
+        {
+            printf("\n************* Parameters setup *************\n");
+            printf("Started with <RBC space (DPD space)>:\n");
+            printf("    DPD unit of time:  %e\n",   tunit);
+            printf("    DPD unit of length:  %e\n\n", lunit);
+            printf("\t Lmax    %12.5f  (%12.5f)\n", lmax,   params.lmax);
+            printf("\t l0      %12.5f\n",           params.l0);
+            printf("\t p       %12.5f  (%12.5f)\n", p,      params.p);
+            printf("\t Cq      %12.5f  (%12.5f)\n", cq,     params.Cq);
+            printf("\t kb      %12.5f  (%12.5f)\n", kb,     params.kb);
+            printf("\t ka      %12.5f  (%12.5f)\n", ka,     params.ka);
+            printf("\t kv      %12.5f  (%12.5f)\n", kv,     params.kv);
+            printf("\t gammaC  %12.5f  (%12.5f)\n\n", gammaC, params.gammaC);
+
+            printf("\t kbT     %12e in dpd\n", params.kbT);
+            printf("\t area    %12.5f  (%12.5f)\n", totArea0,  params.totArea0);
+            printf("\t volume  %12.5f  (%12.5f)\n", totVolume0, params.totVolume0);
+            printf("************* **************** *************\n\n");
+        }
+    }

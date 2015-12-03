@@ -95,7 +95,6 @@ fvisc(v1, v2, u1, u2):= block([],
   dr : v1 - v2,
   du*params%gammaT + dr * params%gammaC*dot(du, dr) / dot(dr, dr));
 
-
 unitsSetup(lmax, p, cq, kb, ka, kv, gammaC,
   totArea0, totVolume0, lunit, tunit, ndens);
 
@@ -112,7 +111,6 @@ Omega0: acos(  (sqrt(3)*(Nv-2)-5*%pi)/(sqrt(3)*(Nv-2)-3*%pi)), Nv=498;
 Omega0 * 180 / %pi, numer;
 
 load("vect");
-
 defrule(r_volume, volume, params%totVolume0);
 defrule(r_area  , area  , params%totArea0);
 
@@ -143,7 +141,6 @@ fa0: apply1(fa, r_veq, r_vabs2dot, r_dot, r_cross, r_cross, r_dot, r_volume, r_a
 /* solve for `cq' assuming we are in equailibrium */
 factor(rhs(linsolve(fa0[1], cq)[1]));
 grind(%);
-
 
 x21 : v2 - v1;
 fw: fWLC(v1, v2) * x21;

@@ -123,7 +123,6 @@ for v in %cvars% do (
     d: resimp(d),
     Force[e, v]: gcfac(fullratsimp( -sdiff(d, del(v))))));
 
-
 matchdeclare([A1, A2], true);
 
 defrule(rcp, dot(sk(A1), A2), cp(A1, A2));
