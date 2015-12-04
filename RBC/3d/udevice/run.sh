@@ -19,7 +19,9 @@ one () {
 
 rm -rf rbc-cuda
 
-./fsplit.awk data/rbc-cuda.cu
+./fsplit.awk data/rbc-cuda.tag.cu
+./fsplit.awk data/helper_math.tag.h
+
 for f in rbc-cuda/*.cpp
 do
     one $f

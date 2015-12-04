@@ -26,7 +26,7 @@ function advance() {      # lexical analyzer; returns next token
 
 BEGIN {
     identifier = "[A-Za-z_][A-Za-z_0-9]*"
-    asplit("void __global__ __device__ float float3 float2 int int4 bool double" \
+    asplit("void __global__ __device__ float float3 float2 int int4 bool double inline" \
 	   " __forceinline__ const", wrds)
     
     for (;;) {

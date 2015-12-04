@@ -37,7 +37,7 @@ function asplit(str, arr,    temp) {  # make an assoc array from str
 }
 
 BEGIN {
-    asplit("void __global__ __device__ float float3 float2 int bool double" \
+    asplit("void __global__ __device__ float float3 float2 int bool double inline" \
 	   " __forceinline__", wrds)
     
     d = "rbc-cuda"
