@@ -23,3 +23,6 @@ for f in rbc-cuda/*.cpp
 do
     one $f
 done
+
+mkdir -p maxima
+cp       rbc-cuda/*.mac maxima/

@@ -19,28 +19,33 @@ function advance() {      # lexical analyzer; returns next token
     }
 }
 
-function ws(c) { # is whitespace?
-    return c == " " || c == "\n" || c == "\t"
+function error(s) { print "Error: " s | "cat 1>&2"; exit 1 }
+
+function eat(s) {     # read next token if s == tok
+    if (tok != s) error("line " NF ": saw " tok ", expected " s)
+    advance()
 }
 
 function expr(   e) {
     for (;;) {
-	advance()
-	if      (tok == "(eof)") break
-	else if (tok == ";")     break
-	else if (tok == "}")     break	
-	else if (tok == "{")     e = e "(" exprlist() ")"
+	if      (tok == ";")     {eat(";"); break}
+	else if (tok == "(eof)") break
+	else if (tok == "}")     break
+	else if (tok == "{")     e = e "(" exprlist() ")\n"        # TODO: why \n?
 	else     e = e tok
+	advance()
     }
     return e
 }
 
 function exprlist(   e, c, sep) {
-    e = expr() # at least one expression
-    for (  ; tok == ";"  ;) {
-	c = expr()
-	sep = tok == "}" ? "" : ","
-	e = e sep c
+    eat("{")
+    for (;;) {
+	c   = expr()
+	sep =  e  && c !~ /^[ \t\n]*$/ ? "," : ""
+	e   = e sep c
+	if (tok == "}")     {eat("}"); return e}
+	if (tok == "(eof)")  return e
     }
     return e
 }

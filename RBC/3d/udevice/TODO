@@ -1,7 +1,11 @@
 - [X] assert
 - [ ] ternary operator
+  http://en.cppreference.com/w/cpp/language/operator_other#Conditional_operator
 - [ ] block/return
 - [ ] if
+- [ ] for
 - [ ] += etc.
 - [ ] conditionals
 - [ ] % -> mod
+- [ ] * in argument list
+- [ ] template parameters
