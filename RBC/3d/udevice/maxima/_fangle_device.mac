@@ -35,5 +35,5 @@ _fangle_device(  tmp0,   tmp1, * av):=
             f += _fvisc(v1, v2, u1, u2),
             return f
         )
-        return make_float3(-1.0e10, -1.0e10, -1.0e10)
+        return make_float3(-10000000000, -10000000000, -10000000000)
     )$

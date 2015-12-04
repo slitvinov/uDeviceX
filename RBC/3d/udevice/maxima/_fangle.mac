@@ -8,9 +8,9 @@ _fangle(  v1,   v2,   v3,
 
           normal : cross(x21, x31),
 
-          n_2 : 2.0 * rsqrtf(dot(normal, normal)),
+          n_2 : 2 * rsqrtf(dot(normal, normal)),
           n_2to3 : n_2*n_2*n_2,
-          coefArea : 0.25 * (devParams%Cq * n_2to3 -
+          coefArea : 1/4 * (devParams%Cq * n_2to3 -
                 devParams%ka * (area - devParams%totArea0) * n_2),
 
           coeffVol : devParams%kv * (volume - devParams%totVolume0),
@@ -18,9 +18,9 @@ _fangle(  v1,   v2,   v3,
           addFVolume : coeffVol * cross(v3, v2),
 
          r : length(v2 - v1),
-        r : r < 0.0001 ? 0.0001 : r,
+        r : r < 1/10000 ? 1/10000 : r,
           xx : r/devParams%lmax,
-          IbforceI : devParams%kbToverp * ( 0.25/((1.0-xx)*(1.0-xx)) - 0.25 + xx ) / r,
+          IbforceI : devParams%kbToverp * ( 1/4/((1-xx)*(1-xx)) - 1/4 + xx ) / r,
 
         return addFArea + addFVolume + IbforceI * x21
     )$

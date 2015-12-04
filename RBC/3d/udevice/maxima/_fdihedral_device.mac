@@ -55,5 +55,5 @@ _fdihedral_device(  tmp0,   tmp1):=
 
             return _fdihedral<1>(v0, v2, v1, v4) + _fdihedral<2>(v1, v0, v2, v3)
         )
-        return make_float3(-1.0e10, -1.0e10, -1.0e10)
+        return make_float3(-10000000000, -10000000000, -10000000000)
     )$

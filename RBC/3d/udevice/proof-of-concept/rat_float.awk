@@ -10,7 +10,7 @@ function advance() {      # lexical analyzer; returns next token
     sep = "\n"
 
     if (match(line, "^" identifier) ||
-	match(line, ff)             ||
+	match(line, float)          ||
 	match(line, /^./)) {                    # everything else
 	tok = substr(line, 1, RLENGTH)
 	line = substr(line, RLENGTH+1)
@@ -18,9 +18,18 @@ function advance() {      # lexical analyzer; returns next token
     }
 }
 
+function float2rat(e,   ans) {
+    cmd = "proof-of-concept/rat.sh " e
+    cmd | getline ans
+
+    print "(rat_float.awk) " e "->" ans > "/dev/stderr"
+
+    close(cmd)
+    return ans
+}
+
 BEGIN {
     float="^[-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][+-]?[0-9]+)?"
-    ff   = float "f"
     identifier = "[A-Za-z_][A-Za-z_0-9]*"
     
     for (;;) {
@@ -28,8 +37,9 @@ BEGIN {
 	if (tok == "(eof)") break	
 
 	sym = tok
-	if (tok ~ ff)
-	    sym = substr(tok, 1, length(tok)-1) # cut `f'
+	if (tok ~ float "$") {
+	    sym = float2rat(sym)
+	}
 
 	ans = ans sym
     }
