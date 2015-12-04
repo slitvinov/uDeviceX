@@ -17,9 +17,9 @@ _fangle(  v1,   v2,   v3,
           addFArea : coefArea * cross(normal, x32),
           addFVolume : coeffVol * cross(v3, v2),
 
-         r : length(v2 - v1),
+         r : vlength(v2 - v1),
           xx : r/params%lmax,
           IbforceI : params%kbToverp * ( 1/4/((1-xx)*(1-xx)) - 1/4 + xx ) / r,
 
-        return(addFArea + addFVolume + IbforceI * x21)
+        return([addFArea, addFVolume, IbforceI * x21])
     )$

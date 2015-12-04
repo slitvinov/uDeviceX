@@ -1,0 +1,80 @@
+push("../$$$.mac", file_search_maxima);
+load("rbc.mac");
+kill(allbut(Force, %cvars%, %evars%));
+
+push("maxima/$$$.mac", file_search_maxima);
+load("unitsSetup.mac");
+load("_fangle.mac");
+load("_fdihedral_device.mac");
+load("_fdihedral.mac");
+load("rsqrtf.mac");
+
+pow(a, b):= a^b;
+powf(a, b):= a^b;
+sqrtf(x):=sqrt(x);
+
+assume(ll>0);
+
+unitsSetup( lmax,  p,  cq,  kb,  ka,  kv,  gammaC,
+  totArea0,  totVolume0,  lunit,  tunit,  ndens,  prn);
+
+fa: _fangle(  v1,   v2,   v3,
+  area,   volume);
+
+fd: _fdihedral(v1, v2, v3, v4), update=1;
+
+/* deposit rules to `rl' (rule list) */
+mdefrule(N, A, B)::=buildq([N, A, B],
+  (if not listp(rl) then rl: [],
+    push(N, rl),
+    defrule(N, A, B)));
+
+mdefrule(rq, q, 1);
+mdefrule(rkb, kb, params%kb);
+mdefrule(rtheta0, theta0,   phi);
+mdefrule(rAk, Ak,    sqrt(dot(ksi_v,ksi_v))/2);
+
+mdefrule(rksi_v, ksi_v, cp(a21_v, a31_v));
+mdefrule(rsig_v, sig_v, cp(a34_v, a24_v));
+mdefrule(rtc_v , tc_v ,(p1_v  + p2_v + p3_v)/3);
+
+mdefrule(ra21,   a21_v, (p2_v - p1_v));
+mdefrule(ra31,   a31_v, (p3_v - p1_v));
+mdefrule(ra32,   a32_v, (p3_v - p2_v));
+mdefrule(ra34,   a34_v, (p3_v - p4_v));
+mdefrule(ra24,   a24_v, (p2_v - p4_v));
+
+mdefrule(rp1,    p1_v , v1); mdefrule(rp2,    p2_v , v2);
+mdefrule(rp3,    p3_v , v3); mdefrule(rp4,    p4_v , v4);
+
+matchdeclare([AA, BB], all);
+mdefrule(rcp,    cp(AA, BB), cross(AA, BB));
+
+mdefrule(rA0tot, A0tot, params%totArea0);
+mdefrule(rAtot,  Atot,  area);
+
+mdefrule(rVtot,  V0tot, params%totVolume0);
+mdefrule(rVtot,  Vtot,  volume           );
+
+/* maxima to uDevice */
+m2u(e):= apply(apply1, cons(e, reverse(copylist(rl))));
+
+m2u(Force['Varea , 'p1_v]);
+subst([params%Cq=0], fa[1]);
+
+m2u(Force['Vst , 'p1_v]);
+subst([params%ka=0], fa[1]);
+
+m2u(Force['Vvol , 'p1_v]);
+fa[2];
+
+matchdeclare([AA, BB], all);
+defrule(rcopysignf, copysignf(AA, BB), AA);
+
+u2m(e):= apply1(e, rcopysignf);
+
+u2m(fd)$
+sort(listofvars(%));
+
+m2u(Force['Vb, 'p1_v]) $
+sort(listofvars(%));

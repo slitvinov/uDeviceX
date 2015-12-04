@@ -8,7 +8,8 @@ _fdihedral( v1,  v2,  v3,  v4):=
 
           cosTheta : dot(ksi, dzeta) * overIksiI*overIdzetaI,
           IsinThetaI2 : 1 - cosTheta*cosTheta,
-          sinTheta_1 : copysignf( rsqrtf(max(IsinThetaI2, 1/1000000)), dot(ksi - dzeta, v4 - v1) ),  
+          /*          sinTheta_1 : copysignf( rsqrtf(max(IsinThetaI2, 1/1000000)), dot(ksi - dzeta, v4 - v1) ),   */
+          sinTheta_1 : copysignf( rsqrtf(IsinThetaI2), dot(ksi - dzeta, v4 - v1) ),
           beta : params%cost0kb - cosTheta * params%sint0kb * sinTheta_1,
 
          b11 : -beta * cosTheta * overIksiI*overIksiI,

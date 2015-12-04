@@ -1,4 +1,4 @@
 rsqrtf( x):= 
  block([], 
-    return 1 / sqrtf(x)
+    return(1 / sqrtf(x))
 )$

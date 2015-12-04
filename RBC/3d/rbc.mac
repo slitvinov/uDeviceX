@@ -15,68 +15,10 @@ load("scifac");
 load("multiadditive") $
 load("membr_utils.mac") $
 
-declare(membrane_constant, feature);
-declare([ka, kb, A0tot], membrane_constant) $
-declare([lm, kp, lp], membrane_constant) $
-
-declare([p1_v, p2_v, p3_v, p4_v], nonscalar) $
-declare([a12_v, a32_v, a34_v, a21_v], nonscalar) $
-
-/*
-(%i1) pred_partition([1, 2, 3, 4, 5], oddp);
-(%o1)                         [[1, 3, 5], [2, 4]]
-*/
-pred_partition(expr, pr):= block([yes: [], no: [], inflag: true], local(pr),
-  for e in expr do if pr(e) then push(e, yes) else push(e, no),
-  [reverse(yes), reverse(no)]);
-
-
-safe_op(e) := block([inflag : true],
-  if mapatom(e) then false else op(e));
-
-
-mdiff(e):= block([prederror: true, inflag: true, op: safe_op(e), arg],
-  if op="+" or op="[" or op="=" then map(mdiff, e)
-  else if op="*"     then mdiff(first(e))*rest(e) + first(e)*mdiff(rest(e))
-  else if op='dot    then block([a: first(e), b: second(e)],
-    dot(mdiff(a), b) + dot(a, mdiff(b)))
-  else if op='cp     then block([a: first(e), b: second(e)],
-    cp(mdiff(a), b) + cp(a, mdiff(b)))
-                                                         /* diff(a^n) */
-  else if op="^"  then block([a: first(e), n: second(e)], a^n*log(a)*mdiff(n)+a^(n-1)*n*mdiff(a))
-  else if op='cos then block([a: first(e)],
-    -sin(a)*mdiff(a))
-  else if op=false then diff(e)
-  else (print(op),
-    error("I am confused, teach me how to diff this")));
-
-args_of(e, f):=block([ans: []], local(f),
-  subst( lambda([[L]], push(L, ans), funmake(f , L)), f, e),
-  ans);
-
-funp(f, e):=block([ans: false], local(f),
-  subst( lambda([[L]], ans: true, funmake(f , L)), f, e),
-  ans);
-
-ldifference(A, B):= listify(setdifference( setify(A), setify(B)));
-  
-
-declare([Cq, q, ka, kb, kd, kv, A0tot, V0tot, A0, theta0],    constant)  $
+declare([Cq, q, ka, kb, kd, kv, A0tot, V0tot, A0, theta0],    membrane_constant)  $
 declare([p1_v, p2_v, p3_v, p4_v],                             nonscalar) $
 declare([a21_v, a13_v, a31_v, a32_v, a34_v, a24_v],           nonscalar) $
 declare([ksi_v, sig_v, tc_v ],                                nonscalar) $
-
-declare(cp , multiadditive);
-declare(dot, multiadditive);
-
-matchdeclare(CC, constantp);
-matchdeclare(ANY, all);
-matchdeclare(XX, lambda([e], not constantp(e)));
-tellsimpafter( cp(CC*XX, ANY), CC*cp(XX, ANY));
-tellsimpafter(dot(CC*XX, ANY), CC*dot(XX, ANY));
-tellsimpafter( cp(ANY, CC*XX), CC*cp(ANY, XX));
-tellsimpafter(dot(ANY, CC*XX), CC*dot(ANY, XX));
-
 
 constrains: [
 /*1*/ a21_v  - (p2_v - p1_v),
@@ -89,8 +31,8 @@ constrains: [
       sig_v  - cp(a34_v, a24_v),
       cos(theta) - dot(ksi_v,sig_v)/sqrt( dot(ksi_v,ksi_v)) / sqrt(dot(sig_v,sig_v)),
 /*10*/4*Ak^2 - dot(ksi_v,ksi_v),
-      Varea  - ka*(Ak - A0tot)^2/(2*A0tot),
-      Vvol   - kv*(Vk-V0tot)^2/(2*V0tot),      
+      Varea  - ka*(Ak+Arest-A0tot)^2/(2*A0tot),
+      Vvol   - kv*(Vk+Vrest-V0tot)^2/(2*V0tot),      
       Vst    - Cq/Ak^q,
       Vk     - 1/6*dot(ksi_v,tc_v),
 /*15*/Vb     - kb*(1-cos(theta - theta0))];
@@ -115,22 +57,31 @@ while not emptyp(bad) do  (
   bad: subst(good, bad));
 
 /* list of energies */
-evars: ['Varea, 'Vvol, 'Vst, 'Vk, 'Vb];
+%evars%: ['Varea, 'Vvol, 'Vst, 'Vb];
 
 for v in %cvars% do (
-  for e in evars do (
+  for e in %evars% do (
     d: assoc( del(e), good),
     d: resimp(d),
     Force[e, v]: gcfac(fullratsimp( -sdiff(d, del(v))))));
 
 matchdeclare([A1, A2], true);
-
 defrule(rcp, dot(sk(A1), A2), cp(A1, A2));
 defrule(ta31s1, a31_v, a32_v + a21_v);
 defrule(ta24s1, a24_v, a23_v + a34_v);
 defrule(ta34s1, a34_v, a31_v + a14_v);
+defrule(Aback , Arest, Atot - Ak);
+defrule(Vback , Vrest, Vtot - Vk);
 
-fullratsimp(trigexpand(expand(apply1(factor(fullratsimp(Force['Vb, 'p1_v])), ta31s1, rcp))));
-fullratsimp(trigexpand(expand(apply1(factor(fullratsimp(Force['Vb, 'p2_v])), rcp))));
-fullratsimp(trigexpand(expand(apply1(factor(fullratsimp(Force['Vb, 'p3_v])), rcp))));
-fullratsimp(trigexpand(expand(apply1(factor(fullratsimp(Force['Vb, 'p4_v])), rcp, ta24s1, ta34s1))));
+FOO(e):= scanmap('factor,
+  fullratsimp(trigexpand(expand(apply1(factor(fullratsimp(e)),
+          ta31s1, rcp, Aback, Vback)))));
+
+for v in %cvars% do
+for e in %evars% do
+Force[e,v]: FOO(Force[e,v]);
+
+/*
+factor(FOO(Force['Varea, 'p1_v]));
+factor(FOO(Force['Vst,   'p1_v]));
+factor(FOO(Force['Vvol,   'p1_v])); */

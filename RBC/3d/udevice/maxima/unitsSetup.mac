@@ -1,30 +1,30 @@
 unitsSetup( lmax,  p,  cq,  kb,  ka,  kv,  gammaC,
              totArea0,  totVolume0,  lunit,  tunit,  ndens,  prn):= 
      block([], 
-          lrbc : 1/1000000,
-          trbc : 73/24257,
+/*          lrbc : 1/1000000, */
+/*          trbc : 73/24257,  */
         
 
-         ll : lunit / lrbc,
-         tt : tunit / trbc,
+/*         ll : lunit / lrbc, */
+/*         tt : tunit / trbc, */
 
-        params%kbT : 580 * 250 * pow(ll, -2) * pow(tt, 2),
+/*        params%kbT : 580 * 250 * pow(ll, -2) * pow(tt, 2), */
         params%p : p / ll,
         params%lmax : lmax / ll,
         params%q : 1,
-        params%Cq : cq * params%kbT * pow(ll, -2),
-        params%totArea0 : totArea0 * pow(ll, -2),
-        params%totVolume0 : totVolume0 * pow(ll, -3),
-        params%l0 : sqrt(params%totArea0 / (2*params%nvertices - 4) * 4/sqrt(3)),
-        params%ka : ka * params%kbT / (params%totArea0 * params%l0 * params%l0),
+/*        params%Cq : cq * params%kbT * pow(ll, -2), */
+/*        params%totArea0 : totArea0 * pow(ll, -2),  */
+/*        params%totVolume0 : totVolume0 * pow(ll, -3), */
+/*        params%l0 : sqrt(params%totArea0 / (2*params%nvertices - 4) * 4/sqrt(3)), */
+/*        params%ka : ka * params%kbT / (params%totArea0 * params%l0 * params%l0),  */
         params%kv : kv * params%kbT / (6 * params%totVolume0 * powf(params%l0, 3)),
         params%gammaC : gammaC * 580 * pow(tt, 1),
         params%gammaT : 3 * params%gammaC,
 
-         phi : 697/100 / 180*M_PI,
+/*         phi : 697/100 / 180*M_PI, */
         params%sinTheta0 : sin(phi),
         params%cosTheta0 : cos(phi),
-        params%kb : kb * params%kbT,
+/*        params%kb : kb * params%kbT, */
 
         params%kbToverp : params%kbT / params%p,
         params%sint0kb : params%sinTheta0 * params%kb,

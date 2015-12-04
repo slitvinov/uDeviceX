@@ -3,6 +3,9 @@ load("dimension") $
 alias(di,  dimension) $
 declare(di, posfun);
 
+declare(membrane_constant, feature);
+declare(sk, linear);
+
 /*
 (%i1) pred_partition([1, 2, 3, 4, 5], oddp);
 (%o1)                         [[1, 3, 5], [2, 4]]
@@ -123,7 +126,6 @@ who(e):= (printf(true, "~12a :  ~24a : ~40a~%", e , get(e, 'di), get(e, 'de)), '
 /* register units and description of a parameter */
 un(e, u, d):= (put(e, u, 'di), put(e, d, 'de)) $
 
-
 %ndim%: 2;
 co[1]: co['x]: 'x;
 co[2]: co['y]: 'y;
@@ -154,10 +156,8 @@ devector1(e):=subst(lambda([A, B],
   devector2(e));
 devector (e):=devector1(e);
 
-
 plus_p(e) := is(safe_op(e) = "+");
 matchdeclare(S, plus_p);
 tellsimp(dot(S, A), map( lambda([e], dot(e, A)), S));
 tellsimp(dot(A, S), map( lambda([e], dot(A, e)), S));
 
-declare(sk, linear);
