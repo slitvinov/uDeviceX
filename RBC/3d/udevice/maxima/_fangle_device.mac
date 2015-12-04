@@ -1,0 +1,39 @@
+_fangle_device(  tmp0,   tmp1, * av):= 
+     block([], 
+          degreemax : 7,
+          pid : (threadIdx%x + blockDim%x * blockIdx%x) / degreemax,
+          lid : pid % nvertices,
+          idrbc : pid / nvertices,
+          offset : idrbc * nvertices * 3,
+          neighid : (threadIdx%x + blockDim%x * blockIdx%x) % degreemax,
+
+          tmp2 : tex1Dfetch(texVertices, pid * 3 + 2),
+          v1 : make_float3(tmp0%x, tmp0%y, tmp1%x),
+          u1 : make_float3(tmp1%y, tmp2%x, tmp2%y),
+
+          idv2 : tex1Dfetch(texAdjVert, neighid + degreemax * lid),
+         valid : idv2 # -1,
+
+         idv3 : tex1Dfetch(texAdjVert, ((neighid + 1) % degreemax) + degreemax * lid),
+
+        if (idv3 = -1  and  valid)
+            idv3 : tex1Dfetch(texAdjVert, 0 + degreemax * lid),
+
+        if (valid)
+        (
+              tmp0 : tex1Dfetch(texVertices, offset + idv2 * 3 + 0),
+              tmp1 : tex1Dfetch(texVertices, offset + idv2 * 3 + 1),
+              tmp2 : tex1Dfetch(texVertices, offset + idv2 * 3 + 2),
+              tmp3 : tex1Dfetch(texVertices, offset + idv3 * 3 + 0),
+              tmp4 : tex1Dfetch(texVertices, offset + idv3 * 3 + 1),
+
+              v2 : make_float3(tmp0%x, tmp0%y, tmp1%x),
+              u2 : make_float3(tmp1%y, tmp2%x, tmp2%y),
+              v3 : make_float3(tmp3%x, tmp3%y, tmp4%x),
+
+             f : _fangle(v1, v2, v3, av[2*idrbc], av[2*idrbc+1]),
+            f += _fvisc(v1, v2, u1, u2),
+            return f
+        )
+        return make_float3(-1.0e10, -1.0e10, -1.0e10)
+    )$

@@ -1,0 +1,23 @@
+_fdihedral( v1,  v2,  v3,  v4):= 
+     block([], 
+          ksi   : cross(v1 - v2, v1 - v3),
+          dzeta : cross(v3 - v4, v2 - v4),
+
+          overIksiI   : rsqrtf(dot(ksi, ksi)),
+          overIdzetaI : rsqrtf(dot(dzeta, dzeta)),
+
+          cosTheta : dot(ksi, dzeta) * overIksiI*overIdzetaI,
+          IsinThetaI2 : 1.0 - cosTheta*cosTheta,
+          sinTheta_1 : copysignf( rsqrtf(max(IsinThetaI2, 1.0e-6)), dot(ksi - dzeta, v4 - v1) ),  
+          beta : devParams%cost0kb - cosTheta * devParams%sint0kb * sinTheta_1,
+
+         b11 : -beta * cosTheta * overIksiI*overIksiI,
+         b12 : beta * overIksiI*overIdzetaI,
+         b22 : -beta * cosTheta * overIdzetaI*overIdzetaI,
+
+        if (update = 1)
+            return cross(ksi, v3 - v2)*b11 + cross(dzeta, v3 - v2)*b12,
+        else if (update = 2)
+            return cross(ksi, v1 - v3)*b11 + ( cross(ksi, v3 - v4) + cross(dzeta, v1 - v3) )*b12 + cross(dzeta, v3 - v4)*b22,
+        else return make_float3(0, 0, 0)
+    )$

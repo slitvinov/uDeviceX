@@ -1,0 +1,25 @@
+areaAndVolumeKernel(* totA_V):= 
+     block([], 
+         a_v : make_float2(0.0, 0.0),
+          cid : blockIdx%y,
+
+        for( i : blockIdx%x * blockDim%x + threadIdx%x, i < devParams%ntriangles, i += blockDim%x * gridDim%x)
+        (
+             ids : tex1Dfetch(texTriangles4, i),
+
+             v0( tex2vec(3*(ids%x+cid*devParams%nvertices)) ),
+             v1( tex2vec(3*(ids%y+cid*devParams%nvertices)) ),
+             v2( tex2vec(3*(ids%z+cid*devParams%nvertices)) ),
+
+            a_v%x += 0.5 * length(cross(v1 - v0, v2 - v0)),
+            a_v%y += 0.1666666667 * (- v0%z*v1%y*v2%x + v0%z*v1%x*v2%y + v0%y*v1%z*v2%x
+                    - v0%x*v1%z*v2%y - v0%y*v1%x*v2%z + v0%x*v1%y*v2%z)
+        )
+
+        a_v : warpReduceSum(a_v),
+        if ((threadIdx%x & (warpSize - 1)) = 0)
+        (
+            atomicAdd(&totA_V[2*cid+0], a_v%x),
+            atomicAdd(&totA_V[2*cid+1], a_v%y)
+        )
+    )$

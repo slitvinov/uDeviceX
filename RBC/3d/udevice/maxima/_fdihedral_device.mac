@@ -1,0 +1,59 @@
+_fdihedral_device(  tmp0,   tmp1):= 
+     block([], 
+          degreemax : 7,
+          pid : (threadIdx%x + blockDim%x * blockIdx%x) / degreemax,
+          lid : pid % nvertices,
+          offset : (pid / nvertices) * nvertices * 3,
+          neighid : (threadIdx%x + blockDim%x * blockIdx%x) % degreemax,
+
+          v0 : make_float3(tmp0%x, tmp0%y, tmp1%x),
+
+        
+        
+        
+        
+        
+        
+
+        
+
+         idv1, idv2, idv3, idv4,
+        idv1 : tex1Dfetch(texAdjVert, neighid + degreemax * lid),
+          valid : idv1 # -1,
+
+        idv2 : tex1Dfetch(texAdjVert, ((neighid + 1) % degreemax) +  degreemax * lid),
+
+        if (idv2 = -1  and  valid)
+        (
+            idv2 : tex1Dfetch(texAdjVert, 0 + degreemax * lid),
+            idv3 : tex1Dfetch(texAdjVert, 1 + degreemax * lid)
+        )
+        else
+        (
+            idv3 : tex1Dfetch(texAdjVert, ((neighid + 2) % degreemax) +  degreemax * lid),
+            if (idv3 = -1  and  valid)
+                idv3 : tex1Dfetch(texAdjVert, 0 + degreemax * lid)
+        )
+
+        idv4 : tex1Dfetch(texAdjVert2, neighid + degreemax * lid),
+
+        if (valid)
+        (
+              tmp0 : tex1Dfetch(texVertices, offset + idv1 * 3 + 0),
+              tmp1 : tex1Dfetch(texVertices, offset + idv1 * 3 + 1),
+              tmp2 : tex1Dfetch(texVertices, offset + idv2 * 3 + 0),
+              tmp3 : tex1Dfetch(texVertices, offset + idv2 * 3 + 1),
+              tmp4 : tex1Dfetch(texVertices, offset + idv3 * 3 + 0),
+              tmp5 : tex1Dfetch(texVertices, offset + idv3 * 3 + 1),
+              tmp6 : tex1Dfetch(texVertices, offset + idv4 * 3 + 0),
+              tmp7 : tex1Dfetch(texVertices, offset + idv4 * 3 + 1),
+
+              v1 : make_float3(tmp0%x, tmp0%y, tmp1%x),
+              v2 : make_float3(tmp2%x, tmp2%y, tmp3%x),
+              v3 : make_float3(tmp4%x, tmp4%y, tmp5%x),
+              v4 : make_float3(tmp6%x, tmp6%y, tmp7%x),
+
+            return _fdihedral<1>(v0, v2, v1, v4) + _fdihedral<2>(v1, v0, v2, v3)
+        )
+        return make_float3(-1.0e10, -1.0e10, -1.0e10)
+    )$

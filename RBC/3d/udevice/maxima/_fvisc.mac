@@ -1,0 +1,7 @@
+_fvisc(  v1,   v2,   u1,   u2):= 
+     block([], 
+          du : u2 - u1,
+          dr : v1 - v2,
+
+        return du*devParams%gammaT + dr * devParams%gammaC*dot(du, dr) / dot(dr, dr)
+    )$
