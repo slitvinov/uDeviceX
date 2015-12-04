@@ -29,5 +29,26 @@ unitsSetup( lmax,  p,  cq,  kb,  ka,  kv,  gammaC,
         params%kbToverp : params%kbT / params%p,
         params%sint0kb : params%sinTheta0 * params%kb,
         params%cost0kb : params%cosTheta0 * params%kb,
-        CUDA_CHECK( cudaMemcpyToSymbol  (devParams, params, sizeof(Params)) )
+        CUDA_CHECK( cudaMemcpyToSymbol  (devParams, &params, sizeof(Params)) ),
+
+        if (prn)
+        (
+            printf("\n************* Parameters setup *************\n"),
+            printf("Started with <RBC space (DPD space)>:\n"),
+            printf("    DPD unit of time:  %e\n",   tunit),
+            printf("    DPD unit of length:  %e\n\n", lunit),
+            printf("\t Lmax    %12.5  (%12.5)\n", lmax,   params%lmax),
+            printf("\t l0      %12.5\n",           params%l0),
+            printf("\t p       %12.5  (%12.5)\n", p,      params%p),
+            printf("\t Cq      %12.5  (%12.5)\n", cq,     params%Cq),
+            printf("\t kb      %12.5  (%12.5)\n", kb,     params%kb),
+            printf("\t ka      %12.5  (%12.5)\n", ka,     params%ka),
+            printf("\t kv      %12.5  (%12.5)\n", kv,     params%kv),
+            printf("\t gammaC  %12.5  (%12.5)\n\n", gammaC, params%gammaC),
+
+            printf("\t kbT     %12e in dpd\n", params%kbT),
+            printf("\t area    %12.5  (%12.5)\n", totArea0,  params%totArea0),
+            printf("\t volume  %12.5  (%12.5)\n", totVolume0, params%totVolume0),
+            printf("************* **************** *************\n\n")
+        )
     )$

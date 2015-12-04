@@ -1,7 +1,7 @@
 _fangle(  v1,   v2,   v3,
               area,   volume):= 
      block([], 
-        assert(params%q = 1),
+        assert(devParams%q = 1),
           x21 : v2 - v1,
           x32 : v3 - v2,
           x31 : v3 - v1,
@@ -10,16 +10,17 @@ _fangle(  v1,   v2,   v3,
 
           n_2 : 2.0 * rsqrtf(dot(normal, normal)),
           n_2to3 : n_2*n_2*n_2,
-          coefArea : 0.25 * (params%Cq * n_2to3 -
-                params%ka * (area - params%totArea0) * n_2),
+          coefArea : 0.25 * (devParams%Cq * n_2to3 -
+                devParams%ka * (area - devParams%totArea0) * n_2),
 
-          coeffVol : params%kv * (volume - params%totVolume0),
+          coeffVol : devParams%kv * (volume - devParams%totVolume0),
           addFArea : coefArea * cross(normal, x32),
           addFVolume : coeffVol * cross(v3, v2),
 
          r : length(v2 - v1),
-          xx : r/params%lmax,
-          IbforceI : params%kbToverp * ( 0.25/((1.0-xx)*(1.0-xx)) - 0.25 + xx ) / r,
+        r : r < 0.0001 ? 0.0001 : r,
+          xx : r/devParams%lmax,
+          IbforceI : devParams%kbToverp * ( 0.25/((1.0-xx)*(1.0-xx)) - 0.25 + xx ) / r,
 
-        return(addFArea + addFVolume + IbforceI * x21)
+        return addFArea + addFVolume + IbforceI * x21
     )$
