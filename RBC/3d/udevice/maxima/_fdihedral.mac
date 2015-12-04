@@ -9,15 +9,15 @@ _fdihedral( v1,  v2,  v3,  v4):=
           cosTheta : dot(ksi, dzeta) * overIksiI*overIdzetaI,
           IsinThetaI2 : 1 - cosTheta*cosTheta,
           sinTheta_1 : copysignf( rsqrtf(max(IsinThetaI2, 1/1000000)), dot(ksi - dzeta, v4 - v1) ),  
-          beta : devParams%cost0kb - cosTheta * devParams%sint0kb * sinTheta_1,
+          beta : params%cost0kb - cosTheta * params%sint0kb * sinTheta_1,
 
          b11 : -beta * cosTheta * overIksiI*overIksiI,
          b12 : beta * overIksiI*overIdzetaI,
          b22 : -beta * cosTheta * overIdzetaI*overIdzetaI,
 
-        if (update = 1)
-            return cross(ksi, v3 - v2)*b11 + cross(dzeta, v3 - v2)*b12,
-        else if (update = 2)
-            return cross(ksi, v1 - v3)*b11 + ( cross(ksi, v3 - v4) + cross(dzeta, v1 - v3) )*b12 + cross(dzeta, v3 - v4)*b22,
-        else return make_float3(0, 0, 0)
+        if (update = 1) then
+            return (cross(ksi, v3 - v2)*b11 + cross(dzeta, v3 - v2)*b12)
+        elseif (update = 2) then
+            return (cross(ksi, v1 - v3)*b11 + ( cross(ksi, v3 - v4) + cross(dzeta, v1 - v3) )*b12 + cross(dzeta, v3 - v4)*b22)
+        else return(make_float3(0, 0, 0))
     )$
