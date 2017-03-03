@@ -44,7 +44,7 @@ if __name__ == '__main__':
         for j in range(len(pv0)): pv[pn[j]] = float(pv0[j])
 
         stpd = int(1600/pv['_gamma_dot'])
-        tend = int(1600/pv['_gamma_dot'])
+        tend = int(80/pv['_gamma_dot'])
 
         # replace corresponsing entries in config file
         parse_file(cnf_file, pv, 2)  # last arg -- 0-base index of param value
@@ -77,7 +77,8 @@ if __name__ == '__main__':
         os.system(cmd % (dpd_dir, 'rbc.dat', d, ''))
 
         # IC for RBC
-        with open(d+'/rbcs-ic.txt', 'w') as f: f.write('0 0 16  0 1 0 8  0 0 1 16  0 0 0 1')
+        with open(d+'/rbcs-ic.txt', 'w') as f:
+            f.write('1 0 0 %g  0 1 0 %g  0 0 1 %g  0 0 0 1\n' % (pv['XS']/2, pv['YS']/2, pv['ZS']/2))
 
         # run
         os.system('cd %s && ./test' % d)
@@ -95,7 +96,7 @@ if __name__ == '__main__':
 
             with open(d+'/post.txt', 'w') as f:
                 sh = pv['_gamma_dot']
-                f.write('freq/shrate: '+str(2.*np.pi*fr/sh)+' '+(fru/sh)+'\n')
-                f.write('angle: '+str(an)+' '+str(anu)+'\n')
+                f.write('freq/shrate: %g %g\n' % (2.*np.pi*fr/sh, fru/sh))
+                f.write('angle: %g %g\n' % (an, anu))
         except:
             pass
