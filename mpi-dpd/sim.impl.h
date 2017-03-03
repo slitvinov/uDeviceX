@@ -69,7 +69,7 @@ void create_walls() {
   s_n = wall::init(s_pp, s_n); /* number of survived particles */
   wall_created = true;
 
-  Cont::clear_velocity(s_pp, s_n);
+  Cont::ic_shear_velocity(s_pp, s_n);
   cells->build(s_pp, s_n, NULL, NULL);
   update_helper_arrays();
 
@@ -256,7 +256,7 @@ void run() {
   for (it = 0; it < nsteps; ++it) {
     if (walls && it == wall_creation_stepid) {
       create_walls();
-      Cont::clear_velocity(r_pp, r_n);
+      if (rbcs) Cont::ic_shear_velocity(r_pp, r_n);
       if (pushtheflow) driving_force = hydrostatic_a;
     }
     redistribute();
