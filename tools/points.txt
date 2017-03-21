@@ -1,5 +1,4 @@
-#	RC_FX	aij1	aij2	nd	gammadpd1	gammadpd2	kBT	shrate	gammaC		kb	p		x0		kd
-	1.5		4		4		3	8			8			0.1	10		0			32	0.0039	0.45	200
-	1.5		4		4		3	8			1			0.1	10		0			32	0.0039	0.45	200
-	1.5		4		4		3	8			0			0.1	10		0			32	0.0039	0.45	200
-	1.5		4		4		3	8			64			0.1	10		0			32	0.0039	0.45	200
+#   _gammadpd_out	_gammadpd_in  _gamma_dot  RBCgammaC	RBCkb	RBCp		RBCx0		RBCkd  
+    30	15 	5    30	40	0.0045	0.45	200 
+    30	10 	5    30	40	0.0045	0.45	200 
+    30	20 	5    30	40	0.0045	0.45	200 
