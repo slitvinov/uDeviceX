@@ -96,10 +96,10 @@ def set_defaults():
     pv['_ljepsilon']           = 1.0
     pv['RBCx0']                = 0.45
     pv['RBCp']                 = 0.0039
-    pv['RBCka']                = 4900.0
+    pv['RBCka']                = 4900
     pv['RBCkb']                = 32
     pv['RBCkd']                = 200
-    pv['RBCkv']                = 5000.0
+    pv['RBCkv']                = 5000
     pv['RBCgammaC']            = 0
     pv['RBCtotArea']           = 124.0
     pv['RBCtotVolume']         = 90.0
@@ -110,8 +110,8 @@ def set_defaults():
     pv['RBCnt']                = 992
     pv['contactforces']        = 'false'
     pv['doublepoiseuille']     = 'false'
-    pv['hdf5field_dumps']      = 'true'
-    pv['hdf5part_dumps']       = 'true'
+    pv['hdf5field_dumps']      = 'false'
+    pv['hdf5part_dumps']       = 'false'
     pv['pushtheflow']          = 'false'
     pv['rbcs']                 = 'true'
     pv['steps_per_dump']       = 320
@@ -165,9 +165,10 @@ def cp_files(d0):
 def gen_par(pn0, pv0):
     set_defaults()
     for j in range(len(pv0)): pv[pn0[j]] = float(pv0[j])
+    pv['_gammadpd_rbc'] = pv['_gammadpd_wall'] = pv['_gammadpd_out']
     sh = pv['_gamma_dot']
-    st = int(1600/sh); pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = st
-    te = 80/sh; pv['tend'] = te
+    pv['tend'] = 800/sh
+    pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(1600/sh)
 
 
 def recompile():
@@ -193,22 +194,23 @@ def post(d0):
     import compute_freq_standalone_Tran_Son_Tay as cT
     import numpy as np
 
-    time, theta, omega = cT.read_data(d0+'/ply', pv['dt'], pv['steps_per_dump'])
+    time, theta, omega, a, c = cT.read_data(d0+'/ply', pv['dt'], pv['steps_per_dump'])
     try:
         fr, fru = cT.get_fr(time, omega)
-        an, anu = cT.get_an(theta)
-        print fr, fru, an, anu
+        ish = 1./pv['_gamma_dot']; fr *= 2.*np.pi*ish; fru *= ish
+        a, au = np.mean(a), np.std(a)
+        c, cu = np.mean(c), np.std(c)
+        th, thu = cT.get_an(theta)
+
+        res = '%g %g %g %g %g %g %g %g' % (fr, fru, a, au, c, cu, th, thu)
 
         with open(d0+'/'+post_file, 'w') as f:
-            sh = pv['_gamma_dot']
-            f.write('freq/shrate: %g %g\n' % (2.*np.pi*fr/sh, fru/sh))
-            f.write('angle: %g %g\n' % (an, anu))
+            f.write('# fr fru a au c cu th thu\n')
+            f.write('%s\n' % res)
 
         with open(post_file, 'a') as f:
-            for t in pn: f.write('%g ' % pv[t])
-            sh = pv['_gamma_dot']
-            f.write('%g %g ' % (2.*np.pi*fr/sh, fru/sh))
-            f.write('%g %g\n' % (an, anu))
+            for key, value in pv.iteritems(): f.write('%g ' % value)
+            f.write('%s\n' % res)
     except:
         print 'Unexpected error:', sys.exc_info()[0]
         pass
