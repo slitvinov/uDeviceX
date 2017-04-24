@@ -1,0 +1,22 @@
+sc : 0.9415;
+V : 111;
+A : 141;
+acth : 7.3*sc;
+c : 2.3*sc;
+p : 1.6;
+
+eq1 : V = 4/3*%pi*a*b*c;
+eq2 : a*cth = acth;
+fA : 4*%pi * ( ((a*b)^p + (b*c)^p + (c*a)^p) / 3 )^(1/p);
+
+s : solve([eq1, eq2], [a, cth])[1];
+
+define(f(b), subst(s, fA-A));
+r : find_root(f, 0.01, 3);
+
+s : subst(b = r, s);
+s : cons(b = r, s);
+su(e) := float(subst(s, e));
+r2d(x) := float(x*180/%pi);
+print(su([a, b, r2d(acos(cth))]));
+print(c);
