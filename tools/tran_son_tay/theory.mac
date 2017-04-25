@@ -1,4 +1,5 @@
-U: f*[a/b*y, -b/a*x, 0];          /* eq (2) */
+U(i):= (f*[a/b*y, -b/a*x, 0])[i];          /* eq (2) */
+r(i):= [x, y, z][i];
 
 f1: (b^2 - a^2) / (ab);
 f1: f1^2;
@@ -8,3 +9,21 @@ f3: - 2*(a^2-b^2)/(a^2*b^2*c*g0*(a^2+b^2));
 
 g00: (a^2 + la)^(3/2)*(b^2+la)^(3/2)*(c^2+la)^(1/2);
 g00: 1/g00;
+g0: integrate(g00, la, 0, inf);
+
+eq10: (a^2 + b^2 - 4*a*b*(f/gd))/(a^2 - b^2);
+
+P(i,j):=kron_delta(i, j) - n(i)*n(j);
+
+d(f, i, j):=diff(U(i), r(j));
+e(i,j):=1/2* (d(U, i, j) + d(U, j, i));
+
+/* convolution */
+sb(k):=subst(
+  subst('i=i%, 'i=k),
+  e%);
+conv1(e%, i%) ::=sb(1) + sb(2) + sb(3);
+conv2(e, i, j)::= buildq([
+    e: buildq([e, i], conv1(e, i)),
+    j: j],
+  conv1(e, j));
