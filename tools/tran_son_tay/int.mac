@@ -1,0 +1,30 @@
+load("q2.mac");
+
+alias(e, explicit);
+
+x : 'a*cos('u)*sin('v);
+y : 'b*sin('u)*sin('v);
+z : 'c*cos('v);
+
+/* https://en.wikipedia.org/wiki/First_fundamental_form */
+r : [x, y, z];
+xu : diff(r, 'u);
+xv : diff(r, 'v);
+E : xu . xu;
+F : xu . xv;
+G : xv . xv;
+dA : sqrt(E*G-F^2);
+dA : trigsimp(dA);
+
+define(gA(a, b, c), buildq([dA : dA], (
+    dA0 : subst(['a=a, 'b=b, 'c=c], dA),
+    dA0 : trigsimp(dA0),
+    define(gA0(u, v), dA0),
+    q2(gA0, 0, 2*%pi, 0, %pi))));
+
+fA(a, b, c) := block([p : 1.6], 4*%pi * ( ((a*b)^p + (b*c)^p + (c*a)^p) / 3 )^(1/p));
+
+draw2d(
+    e('fA(3, 'b, 1), 'b, 1, 2),
+    'color='red,
+    e('gA(3, 'b, 1), 'b, 1, 2));

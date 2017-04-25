@@ -1,0 +1,6 @@
+q2(g, xa, xb, ya, yb) := block([e, v, lo, hi],
+    local(f, q),
+    q(e, v, lo, hi) := quad_qag(e, v, lo, hi, 3, 'epsrel=5d-8)[1],
+    f(y) := q(g('xx, y), 'xx, xa, xb),
+    q('f('yy), 'yy, ya, yb)
+);
