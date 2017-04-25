@@ -1,6 +1,3 @@
-q2(g, xa, xb, ya, yb) := block([e, v, lo, hi],
-    local(f, q),
-    q(e, v, lo, hi) := quad_qag(e, v, lo, hi, 3, 'epsrel=5d-8)[1],
-    f(y) := q(g('xx, y), 'xx, xa, xb),
-    q('f('yy), 'yy, ya, yb)
-);
+i2e(e, x, _xa, _xb, y, _ya, _yb):= romberg(romberg(e, y, _ya, _yb), x, _xa, _xb);
+q1e(e, v, lo, hi) := quad_qag(e, v, lo, hi, 3, 'epsrel=5d-8)[1];
+q2e(e, x, _xl, _xh,  y, _yl, _yh):= q1e('q1e(e, x, _xl, _xh), y, _yl, _yh);

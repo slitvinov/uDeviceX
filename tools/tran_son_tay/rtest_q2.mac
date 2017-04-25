@@ -1,0 +1,11 @@
+(kill(all), 'done);
+'done$
+
+(load("romberg"), load("q2.mac"), 'done);
+'done$
+
+i2e(x*y, x, 0, 1, y, 0, 1);
+0.25$
+
+q2e(x*y, x, 0, 1, y, 0, 1);
+0.25$
