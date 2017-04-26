@@ -11,3 +11,20 @@ vabs(v):=sqrt(lsum(e^2, e, v));
 vnorm(v):=block(
   [l: vabs(v)],
   create_list(e/l, e, v));
+
+dA :
+block(
+  [x, y, z, xu, xv, E, F, G, dA],
+  x : 'a*cos('u)*sin('v), /* u: [0, 2*%pi] */
+  y : 'b*sin('u)*sin('v), /* v: [0,   %pi] */
+  z : 'c*cos('v),
+  xu : diff([x,y,z], 'u),
+  xv : diff([x,y,z], 'v),
+  E : xu . xu,
+  F : xu . xv,
+  G : xv . xv,
+  dA : sqrt(E*G-F^2),
+  trigsimp(dA));
+
+V: 4/3*%pi*'a*'b*'c;
+si(e):=q2e(e, 'u, 0, 2*%pi,   'v, 0, %pi);

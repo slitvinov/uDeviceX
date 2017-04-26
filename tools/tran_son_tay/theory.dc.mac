@@ -8,4 +8,17 @@ r(i):= ['x, 'y, 'z][i];
 f1: ('b^2 - 'a^2) / ('a*'b);
 f1: f1^2;
 
-Dc: 'V*'etai*f1*'f;
+cP  : 1e-3;  /* `centipoise' to `Pascal*s` */
+mum : 1e-6;  /* `mu-meters'  to `meters'   */
+J   :  1e7;  /* `J'          to `erg'      */
+
+etai: 10*cP;
+Dc: V*etai*f1*'f^2;
+
+var1: [a=5.6*mum, b=1.5*mum, c=3.2*mum, f=6.22];
+var2: [a=6.0*mum, b=1.5*mum, c=3.0*mum, f=9.42];
+var3: [a=6.7*mum, b=1.6*mum, c=2.5*mum, f=12.7];
+
+float(subst(var1, Dc * J * 1e6));
+float(subst(var2, Dc * J * 1e6));
+float(subst(var3, Dc * J * 1e6));
