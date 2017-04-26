@@ -35,6 +35,11 @@ PATH=$HOME/.linuxbrew/bin:$PATH CGAL_DIR=$HOME/.linuxbrew/Cellar/cgal/4.9 cmake 
 make
 #+END_SRC
 
+** daint
+#+BEGIN_SRC
+cmake . -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+#+END_SRC
+
 * Linking with geom-wrapper
 #+BEGIN_EXAMPLE
 GWRP_CXXFLAGS = -I../geom-wrapper
