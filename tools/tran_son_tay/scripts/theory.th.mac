@@ -1,0 +1,19 @@
+load("theory.utils.mac") $
+load("romberg")          $
+load("q2.mac")           $
+
+tab1(k):=tab("../data/tab1.txt", case, k);
+tab2(k):=tab("../data/tab2.txt", case, k);
+tab3(k):=tab("../data/tab3.txt", case, k);
+
+r2d(e):=float(e*180/%pi);
+
+case: 1;
+var : [
+  'a=tab2('a), 'b=tab2('b), 'c=tab2('c), 'f=tab1('f),  'gd = tab2('gamma_dot)];
+
+c2th : ('a^2 + 'b^2 - 4*'a*'b*('f/'gd))/('a^2 - 'b^2);
+
+subst(var, r2d(acos(c2th)/2));
+
+tab2('th);

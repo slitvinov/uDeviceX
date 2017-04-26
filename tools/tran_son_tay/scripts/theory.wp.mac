@@ -2,17 +2,34 @@ load("theory.utils.mac") $
 load("romberg") ;
 load("q2.mac")  ;
 
+tab1(k):=tab("../data/tab1.txt", case, k);
+tab2(k):=tab("../data/tab2.txt", case, k);
+tab3(k):=tab("../data/tab3.txt", case, k);
+d2r(e):=e*%pi/180;
+cP  : 1e-3;  /* `centipoise' to `Pascal*s` */
+J   :  1e7;  /* `J'          to `erg'      */
+mum : 1e-6;  /* `mu-meters'  to `meters'   */
+
+case: 3;
+var : [
+  'a=tab2('a), 'b=tab2('b), 'c=tab2('c), 'f=tab1('f),  'gd = tab2('gamma_dot), 'th=d2r(tab2('th)),
+  'eta0 = 35*cP];
+
 U(i):= ('f*['a/'b*'y, -'b/'a*'x, 0])[i];          /* eq (2) */
 r(i):= ['x, 'y, 'z][i];
 
-f1: ('b^2 - 'a^2) / ('a*'b);
-f1: f1^2;
-
-f2: 'f1 * (1 - 2/('g0*'a*'b*'c*('a^2 + 'b^2)));
-f3: - 2*('a^2-'b^2)/('a^2*'b^2*'c*'g0*('a^2+'b^2));
+f1: (('b^2 - 'a^2) / ('a*'b))^2;
 
 g00: ('a^2 + 'la)^(3/2)*('b^2+'la)^(3/2)*('c^2+'la)^(1/2);
 g00: 1/g00;
-g0: integrate(g00, la, 0, inf);
+g00: subst(var, g00);
+g0: q1i(g00, la, 0, inf);
 
-Wp: 'V*'eta0*('f2*'f^2 + 'f3*'gd*'f*'c2th);
+f2: f1 * (1 - 2/(g0*'a*'b*'c*('a^2 + 'b^2)));
+f3: - 2*('a^2-'b^2)/('a^2*'b^2*'c*g0*('a^2+'b^2));
+
+Wp: V*'eta0*(f2*'f^2 + f3*'gd*'f*cos(2*th));
+Wp0: subst(var, Wp);
+Wp0: float(Wp0 * J * 1e6 * mum * mum);
+
+Wp0/tab3('Wp);
