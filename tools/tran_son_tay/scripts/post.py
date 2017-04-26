@@ -16,10 +16,10 @@ def read_data(plydir, dt, ntspd):
     listing = glob.glob(plydir+"/rbcs-*.ply"); listing.sort()
     nfiles = len(listing)
 
-    time = dt*ntspd*np.arange(nfiles)  # DPD time
+    t = dt*ntspd*np.arange(nfiles)  # DPD t
     start = nfiles-int(floor(0.5*nfiles))  # Length of signal
     end = min(start+2e6, nfiles)  # Length of signal
-    time = time[start:end]
+    t = t[start:end]
     ls = end-start
 
     # find marker
@@ -29,8 +29,8 @@ def read_data(plydir, dt, ntspd):
     a0 = np.max(x)-np.min(x)
     c0 = np.max(y)-np.min(y)
 
-    theta = np.zeros((ls,))  # angle with the projection on Ox
-    omega = np.zeros((ls,))  # angle of the marker with the current RBC axis
+    th = np.zeros((ls,))  # angle with the projection on Ox
+    om = np.zeros((ls,))  # angle of the marker with the current RBC axis
     diam_a = np.zeros((ls,))
     diam_c = np.zeros((ls,))
 
@@ -39,22 +39,22 @@ def read_data(plydir, dt, ntspd):
         x,y,z = read_ply_file(PlyData.read(fullpath))
         x = x-np.mean(x); y = y-np.mean(y); z = z-np.mean(z)
 
-        theta[i] = get_theta(x, y, z)
-        omega[i] = get_omega(x, y, z, midx, theta[i])
+        th[i] = get_th(x, y, z)
+        om[i] = get_om(x, y, z, midx, th[i])
         diam_a[i] = (np.max(x)-np.min(x))/a0
         diam_c[i] = (np.max(y)-np.min(y))/c0
 
         if i % 100 == 0: print 'Computed up to', i, '/', ls
 
-    save_res('Tran-Son-Tay_result.txt', (time,theta,omega,diam_a,diam_c))
-    plt.plot(time, omega, 'b-'); plt.plot(time, theta, 'r-')
+    save_res('Tran-Son-Tay_result.txt', (t,th,om,diam_a,diam_c))
+    plt.plot(t, om, 'b-'); plt.plot(t, th, 'r-')
     savefig('Tran-Son-Tay_angle.png')
     plt.close()
-    plt.plot(time, diam_a, 'b-'); plt.plot(time, diam_c, 'r-')
+    plt.plot(t, diam_a, 'b-'); plt.plot(t, diam_c, 'r-')
     savefig('Tran-Son-Tay_diam.png')
     plt.close()
 
-    return time, theta, omega, diam_a, diam_c
+    return t, th, om, diam_a, diam_c
 
 
 def wrapTo(x,left,right):
@@ -66,12 +66,12 @@ def wrapTo(x,left,right):
 
 def read_ply_file(ply):
     vertex = ply['vertex']
-    x,y,z = (vertex[t] for t in ('x', 'y', 'z'))
+    x,y,z = (vertex[p] for p in ('x', 'y', 'z'))
     return x,y,z
 
 
 # find the current axis
-def get_theta(x,y,z):
+def get_th(x,y,z):
     pca = PCA(n_components=2)
     pca.fit(np.array([x,z]).T)
     pc = pca.components_
@@ -81,7 +81,7 @@ def get_theta(x,y,z):
 
 
 # find the current marker angle
-def get_omega(x,y,z,id,th):
+def get_om(x,y,z,id,th):
     res = atan2(z[id],x[id])
     res = wrapTo(np.rad2deg(res), -180, 180)
     res = wrapTo(th-res, -180, 180)
@@ -117,12 +117,11 @@ def get_fr(x, y):
     plt.savefig('Tran-Son-Tay_peaks.png')
     plt.close()
 
-    print '(peaks) freq:', best[0], 'uncertainty:', best[1], '(', best[1]/best[0]*100, '% )'
     return best[0], best[1]/best[0]
 
 
-def get_an(theta):
-    return np.mean(theta), np.std(theta)
+def get_an(th):
+    return np.mean(th), np.std(th)
 
 
 if __name__ == '__main__':
@@ -132,15 +131,18 @@ if __name__ == '__main__':
     parser.add_argument('--st')
     parser.add_argument('--dt')
     args = parser.parse_args()
-    plydir     = args.ply
-    shrate_DPD = float(args.sh)
-    ntspd      = int(args.st)  # number of time steps per dump
-    dt         = float(args.dt)
+    plydir = args.ply
+    sh     = float(args.sh)
+    ntspd  = int(args.st)  # number of t steps per dump
+    dt     = float(args.dt)
 
-    time, theta, omega, diam_a, diam_c = read_data(plydir, dt, ntspd)
-    print 'a/a0:', np.mean(diam_a), np.std(diam_a)
-    print 'c/c0:', np.mean(diam_c), np.std(diam_c)
-    an, anu = get_an(theta)
-    print 'angle:', an, anu
-    fr, fru = get_fr(time, omega)
-    print 'freq/shrate:', 2.0*np.pi*fr/shrate_DPD, fru/shrate_DPD
+    t, th, om, a, c = read_data(plydir, dt, ntspd)
+    a, au = np.mean(a), np.std(a)
+    c, cu = np.mean(c), np.std(c)
+    th, thu = get_an(th)
+    fr, fru = get_fr(t, om)
+    ish = 1./sh; fr *= 2.*np.pi*ish; fru *= ish
+
+    with open('post.txt', 'w') as f:
+        f.write('# fr fru a au c cu th thu\n')
+        f.write('%g %g %g %g %g %g %g %g\n' % (fr, fru, a, au, c, cu, th, thu))
