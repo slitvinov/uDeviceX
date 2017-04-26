@@ -1,4 +1,6 @@
-load("q2.mac");
+load("romberg");
+
+i2(e, x, xa, xb, y, ya, yb):= romberg(romberg(e, y, ya, yb), x, xa, xb);
 
 alias(e, explicit);
 
@@ -16,11 +18,12 @@ G : xv . xv;
 dA : sqrt(E*G-F^2);
 dA : trigsimp(dA);
 
-define(gA(a, b, c), buildq([dA : dA], (
-    dA0 : subst(['a=a, 'b=b, 'c=c], dA),
-    dA0 : trigsimp(dA0),
-    define(gA0(u, v), dA0),
-    q2(gA0, 0, 2*%pi, 0, %pi))));
+define(gA(a, b, c), buildq([dA : dA], block(
+      [numer: true],
+      dA0 : subst(['a=a, 'b=b, 'c=c], dA),
+      i2(dA0, 'u, 0, 2*%pi, 'v, 0, %pi))));
+
+trace(gA);
 
 fA(a, b, c) := block([p : 1.6], 4*%pi * ( ((a*b)^p + (b*c)^p + (c*a)^p) / 3 )^(1/p));
 

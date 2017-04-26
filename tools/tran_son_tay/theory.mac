@@ -1,0 +1,64 @@
+load("theory.utils.mac") $
+load("romberg") ;
+load("q2.mac")  ;
+
+U(i):= ('f*['a/'b*'y, -'b/'a*'x, 0])[i];          /* eq (2) */
+r(i):= ['x, 'y, 'z][i];
+
+f1: ('b^2 - 'a^2) / ('a*'b);
+f1: f1^2;
+
+f2: 'f1 * (1 - 2/('g0*'a*'b*'c*('a^2 + 'b^2)));
+f3: - 2*('a^2-'b^2)/('a^2*'b^2*'c*'g0*('a^2+'b^2));
+
+g00: ('a^2 + 'la)^(3/2)*('b^2+'la)^(3/2)*('c^2+'la)^(1/2);
+g00: 1/g00;
+g0: integrate(g00, la, 0, inf);
+
+eq10: ('a^2 + 'b^2 - 4*'a*'b*('f/'gd))/('a^2 - 'b^2);
+
+n(i):=concat('n, i);
+P(i,j):=kron_delta(i, j) - n(i)*n(j);
+
+dU(i, j):=diff(U(i), r(j));
+e(i,j):=1/2* (dU(i,j) + dU(j,i));
+
+/* conv2(P(i,k)*P(j,l)*e(k,l),     k, l)); */
+
+es(i,j):=conv2(P(i,'k)*P(j,'l)*e('k, 'l),       'k, 'l);
+T: conv2(P('i,'j)*dU('i,'j),      'i, 'j);
+ew(i,j):=es(i, j) - 1/2*T*P(i, j);
+
+eew: conv2(ew('i,'j)*ew('i,'j), 'i, 'j);
+eew: factor(eew);
+
+nn: sqrt(n(1)^2 + n(2)^2 + n(3)^2);
+eew: psubst([n1=n1/nn, n2=n2/nn, n3=n3/nn], eew);
+eew: factor(eew);
+eew: subst(nn^2=1, eew);
+
+x : 'a*cos('u)*sin('v);
+y : 'b*sin('u)*sin('v);
+z : 'c*cos('v);
+xu : diff([x,y,z], 'u);
+xv : diff([x,y,z], 'v);
+E : xu . xu;
+F : xu . xv;
+G : xv . xv;
+dA : sqrt(E*G-F^2);
+dA : trigsimp(dA);
+
+nel: factor(trigsimp(cross(xu, xv)));
+nel: vnorm(nel);
+
+/* 7.1 1.7 2.2 */
+var: [n1 = nel[1], n2 = nel[2], n3 = nel[3], a=7.1, b=1.7, c=2.2, f=24.6];
+e0: subst(var, float(eew*dA));
+
+q2e(e0, 'u, 0, 2*%pi,   'v, 0, %pi);
+i2e(e0, 'u, 0, 2*%pi,   'v, 0, %pi);
+
+/*
+534245.0015771951
+1232968.750016584
+*/

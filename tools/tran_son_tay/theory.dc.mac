@@ -1,0 +1,11 @@
+load("theory.utils.mac") $
+load("romberg") ;
+load("q2.mac")  ;
+
+U(i):= ('f*['a/'b*'y, -'b/'a*'x, 0])[i];          /* eq (2) */
+r(i):= ['x, 'y, 'z][i];
+
+f1: ('b^2 - 'a^2) / ('a*'b);
+f1: f1^2;
+
+Dc: 'V*'etai*f1*'f;

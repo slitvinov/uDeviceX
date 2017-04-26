@@ -1,0 +1,8 @@
+#!/bin/bash
+
+t=/tmp/t
+awk -v OFS='\t' \
+'
+NR == 1 {$1=$1; print}
+NR != 1 {$1=$1; sub(/\t/, "\t\t"); print}
+' "$1" > $t && cat "$t" > "$1"
