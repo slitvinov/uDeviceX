@@ -1,0 +1,18 @@
+load("theory.utils.mac") $
+load("romberg") ;
+load("q2.mac")  ;
+
+U(i):= ('f*['a/'b*'y, -'b/'a*'x, 0])[i];          /* eq (2) */
+r(i):= ['x, 'y, 'z][i];
+
+f1: ('b^2 - 'a^2) / ('a*'b);
+f1: f1^2;
+
+f2: 'f1 * (1 - 2/('g0*'a*'b*'c*('a^2 + 'b^2)));
+f3: - 2*('a^2-'b^2)/('a^2*'b^2*'c*'g0*('a^2+'b^2));
+
+g00: ('a^2 + 'la)^(3/2)*('b^2+'la)^(3/2)*('c^2+'la)^(1/2);
+g00: 1/g00;
+g0: integrate(g00, la, 0, inf);
+
+Wp: 'V*'eta0*('f2*'f^2 + 'f3*'gd*'f*'c2th);

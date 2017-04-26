@@ -5,43 +5,7 @@ load("q2.mac")  ;
 U(i):= ('f*['a/'b*'y, -'b/'a*'x, 0])[i];          /* eq (2) */
 r(i):= ['x, 'y, 'z][i];
 
-n(i):=concat('n, i);
-P(i,j):=kron_delta(i, j) - n(i)*n(j);
+f1: ('b^2 - 'a^2) / ('a*'b);
+f1: f1^2;
 
-dU(i, j):=diff(U(i), r(j));
-e(i,j):=1/2* (dU(i,j) + dU(j,i));
-
-/* conv2(P(i,k)*P(j,l)*e(k,l),     k, l)); */
-
-es(i,j):=conv2(P(i,'k)*P(j,'l)*e('k, 'l),       'k, 'l);
-T: conv2(P('i,'j)*dU('i,'j),      'i, 'j);
-ew(i,j):=es(i, j) - 1/2*T*P(i, j);
-
-eew: conv2(ew('i,'j)*ew('i,'j), 'i, 'j);
-eew: factor(eew);
-
-nn: sqrt(n(1)^2 + n(2)^2 + n(3)^2);
-eew: psubst([n1=n1/nn, n2=n2/nn, n3=n3/nn], eew);
-eew: factor(eew);
-eew: subst(nn^2=1, eew);
-
-x : 'a*cos('u)*sin('v);
-y : 'b*sin('u)*sin('v);
-z : 'c*cos('v);
-xu : diff([x,y,z], 'u);
-xv : diff([x,y,z], 'v);
-E : xu . xu;
-F : xu . xv;
-G : xv . xv;
-dA : sqrt(E*G-F^2);
-dA : trigsimp(dA);
-
-nel: factor(trigsimp(cross(xu, xv))); /* surface norm for ellipsoid */
-nel: vnorm(nel);
-
-/* 5.6	1.5	3.2 */
-var: [n1 = nel[1], n2 = nel[2], n3 = nel[3], a=5.6, b=1.5, c=3.2, f=6.22];
-e0: subst(var, float(eew*dA));
-
-q2e(e0, 'u, 0, 2*%pi,   'v, 0, %pi);
-
+Dc: 'V*'etai*f1*'f;
