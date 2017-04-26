@@ -1,6 +1,5 @@
 load("theory.utils.mac") $
-load("romberg") ;
-load("q2.mac")  ;
+load("q2.mac")           $
 
 r(i):= ['x, 'y, 'z][i];
 U(i):= ('f*['a/'b*'y, -'b/'a*'x, 0])[i];          /* eq (2) */
