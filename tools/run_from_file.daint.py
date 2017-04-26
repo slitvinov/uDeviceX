@@ -183,8 +183,7 @@ def pre():
 
 
 def run(d0):
-    os.system('cd %s' % d0)
-    with open('runme.sh', 'w') as f:
+    with open('%s/runme.sh' % d0, 'w') as f:
         f.write('#!/bin/bash -l\n')
         f.write('#SBATCH --job-name=rbc_%s' % d0)
         f.write('#SBATCH --time=03:00:00\n')
@@ -198,7 +197,7 @@ def run(d0):
         f.write('module load cray-hdf5-parallel\n')
         f.write('export HEX_COMM_FACTOR=2\n')
         f.write('srun --export ALL ./test 1 1 1\n')
-    os.system('sbatch runme.sh')
+    os.system('cd %s && sbatch runme.sh' % d0)
 
 
 if __name__ == '__main__':
