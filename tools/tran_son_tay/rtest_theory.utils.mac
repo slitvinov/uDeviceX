@@ -1,0 +1,14 @@
+(kill(all), 'done);
+'done$
+
+(load("theory.utils.mac"), 'done);
+'done$
+
+conv1(i*f[i], i);
+3*f[3]+2*f[2]+f[1]$
+
+block(local(f), f(i):=['x, 'y, 'z][i], conv1(f(i), i));
+z+y+x$
+
+block(local(f), f(i, j):=j*['x, 'y, 'z][i], conv2(f(i, j), i, j));
+6*z+6*y+6*x$
