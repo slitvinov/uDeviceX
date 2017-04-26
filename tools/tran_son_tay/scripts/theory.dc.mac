@@ -8,4 +8,18 @@ r(i):= ['x, 'y, 'z][i];
 f1: ('b^2 - 'a^2) / ('a*'b);
 f1: f1^2;
 
-Dc: 'V*'etai*f1*'f;
+cP  : 1e-3;  /* `centipoise' to `Pascal*s` */
+mum : 1e-6;  /* `mu-meters'  to `meters'   */
+J   :  1e7;  /* `J'          to `erg'      */
+
+etai: 10*cP;
+Dc: V*etai*f1*'f^2;
+
+tab1(k):=tab("../data/tab1.txt", case, k);
+tab2(k):=tab("../data/tab2.txt", case, k);
+tab3(k):=tab("../data/tab3.txt", case, k);
+
+for case thru 5 do (
+  var: [a=tab2('a)*mum, b=tab2('b)*mum, c=tab2('c)*mum, f=tab1('f)],
+  Dc0: float(subst(var, Dc * J * 1e6)),
+  print([Dc0, tab3('Dc)]));

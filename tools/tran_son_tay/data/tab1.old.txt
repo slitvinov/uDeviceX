@@ -1,4 +1,4 @@
-#gamma_dot acth*	std_acth*	c*	std_c*	f	std_f
+#gamma_dot	acth_s	std_acth_s	c_s	std_c_s	f	std_f
 28.6	   4.9		0.6		3.5	0.4	5.40	0.31
 42.9	   5.4		0.8		3.3	0.3	7.98	0.57
 57.1	   5.9		0.5		3.1	0.4	10.5	0.82
