@@ -2,25 +2,37 @@ load("theory.utils.mac") $
 load("romberg") ;
 load("q2.mac")  ;
 
-case: 3;
-var : [
-  'a=tab2('a), 'b=tab2('b), 'c=tab2('c), 'f=tab1('f),  'gd = tab2('gamma_dot), 'th=d2r(tab2('th)),
-  'eta0 = 35*cP];
+load("dimension");
+alias(di, dimension);
+
+lput(L, d):=for e in L do put(e, d, di);
+
+lput(['a, 'b, 'c], 'length);
+lput(['la], 'length^2);
+lput(['f, 'gd] , 1/'time);
+lput(['V], 'length^3);
+lput(['th], 1);
+Velocity: 'length/'time;
+Acceleration: Velocity/'time;
+Force : Acceleration * 'mass;
+Area  : 'length^2;
+Pa: Force / Area;
+lput(['eta0], Pa * 'time);
+Energy: 'mass * Velocity^2;
+Dissipation: Energy/'time;
 
 f1: (('b^2 - 'a^2) / ('a*'b))^2;
 
 g00: ('a^2 + 'la)^(3/2)*('b^2+'la)^(3/2)*('c^2+'la)^(1/2);
 g00: 1/g00;
 g00: subst(var, g00);
-g0: q1i(g00, la, 0, inf);
+g0: 'integrate(g00, la, 0, inf);
+
+lput(['g0], di(g00*la));
 
 f2: f1 * (1 - 2/('g0*'a*'b*'c*('a^2 + 'b^2)));
 f3: - 2*('a^2-'b^2)/('a^2*'b^2*'c*'g0*('a^2+'b^2));
 
 Wp: V*'eta0*(f2*'f^2 + f3*'gd*'f*cos(2*th));
-Wp0: subst(var, Wp);
-Wp0: float(Wp0 * J * 1e6 * mum * mum);
 
-Wp0/tab3('Wp);
-
-fullratsimp(f2/f2p);
+di(Wp)/Dissipation;
