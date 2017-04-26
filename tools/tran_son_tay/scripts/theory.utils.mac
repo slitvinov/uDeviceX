@@ -27,4 +27,16 @@ block(
   trigsimp(dA));
 
 V: 4/3*%pi*'a*'b*'c;
-si(e):=q2e(e, 'u, 0, 2*%pi,   'v, 0, %pi);
+si(e):=q2e(e, 'u, 0, 2*%pi,   'v, 0, %pi); /* surface integral */
+
+tab(file, case, key):=block( /* [tab]le: read parameter from a file
+                             Usage: tab("../data/tab2.txt", 1, 'Dc) */
+  [T2, keys, vals, k0, v0],
+  local(T2),
+  T2: read_nested_list(file), T2[1]: rest(T2[1]),
+  keys: copylist(T2[1     ]),
+  vals: copylist(T2[case+1]),
+  while keys # [] do (
+    k0: pop(keys),
+    v0: pop(vals),
+    if k0 = key then return(v0)));
