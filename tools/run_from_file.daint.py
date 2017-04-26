@@ -186,7 +186,7 @@ def run(d0):
     os.system('cd %s' % d0)
     with open('runme.sh', 'w') as f:
         f.write('#!/bin/bash -l\n')
-        f.write('#SBATCH --job-name=rbc_%s', d0)
+        f.write('#SBATCH --job-name=rbc_%s' % d0)
         f.write('#SBATCH --time=03:00:00\n')
         f.write('#SBATCH --nodes=1\n')
         f.write('#SBATCH --ntasks-per-node=1\n')
