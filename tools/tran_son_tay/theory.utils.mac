@@ -1,0 +1,13 @@
+/* convolution */
+conv1(e, i)   ::= subst(i=1, e) + subst(i=2, e) + subst(i=3, e);
+conv2(e, i, j)::= buildq([e, i, j], conv1(conv1(e, i), j));
+
+cross(v, u):=[
+  u[2]*v[3]-v[2]*u[3],
+  v[1]*u[3]-u[1]*v[3],
+  u[1]*v[2]-v[1]*u[2]];
+
+vabs(v):=sqrt(lsum(e^2, e, v));
+vnorm(v):=block(
+  [l: vabs(v)],
+  create_list(e/l, e, v));
