@@ -145,5 +145,14 @@ def ellipsoid_fit(X):
     R = T.dot(A).dot(T.conj().T)
     evals, evecs = np.linalg.eig(R[:3,:3] / -R[3,3])
     radii = np.sqrt(1. / evals)
-    return center, radii, evecs, v
+
+    # calculate difference of the fitted points from the actual data normalized by the conic radii
+    sgns = np.sign(evals);
+    radii = radii * sgns;
+    d = np.array([x - center[0], y - center[1], z - center[2]]); # shift data to origin
+    d = np.asarray(np.matrix(d.T) * np.matrix(evecs)); # rotate to cardinal axes of the conic;
+    d = np.array([d[:,0] / radii[0], d[:,1] / radii[1], d[:,2] / radii[2]]).T; # normalize to the conic radii
+    chi2 = np.sum(np.abs(1 - np.sum(d**2 * np.tile(sgns, (d.shape[0], 1)), axis=1)));
+
+    return center, radii, evecs, v, chi2
 
