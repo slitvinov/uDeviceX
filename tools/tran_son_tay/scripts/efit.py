@@ -158,7 +158,7 @@ def ellipsoid_fit(X):
 
 
 # dump x, y, z coordinates to file
-def ellipsoid_dump(fname, center, evecs, radii):
+def ellipsoid_dump(fname, rot, radii):
     a = radii[0]; b = radii[1]; c = radii[2]
 
     ndump = 100
@@ -174,9 +174,9 @@ def ellipsoid_dump(fname, center, evecs, radii):
         y = b*np.sin(u)*np.sin(v) # v: [0, pi]
         z = c*np.cos(v)
 
-        r = np.array([x, y, z]).reshape((3, 1))
-        r = np.asarray(np.matrix(evecs) * np.matrix(r))
-        r = r + center
+        r = np.array([x, y, z])
+        r = np.asarray(np.matrix(r) * np.matrix(rot).T)
+        r = r.reshape(3)
 
         xx[i] = r[0]; yy[i] = r[1]; zz[i] = r[2]
 
@@ -187,13 +187,37 @@ def ellipsoid_dump(fname, center, evecs, radii):
             f.write('%g %g %g %g\n' % (xx[i], yy[i], zz[i], sc[i]))
 
 
-def ellipsoid_dump_ply(fname, center, evecs, radii):
+def ellipsoid_dump_ply(fname, rot, radii):
     ply = PlyData.read(os.path.expanduser('~/.udx/sphere.ply'))
     vertex = ply['vertex']
-    x, y, z = (vertex[p] for p in ('x', 'y', 'z'))
-    xyz = np.array([x, y, z]).T
+    xyz = np.array([vertex[p] for p in ('x', 'y', 'z')]).T
     sc = radii / np.max(xyz)
     xyz *= np.tile(sc, (xyz.shape[0], 1))
-    xyz = np.asarray(np.matrix(xyz)*np.matrix(evecs))
+    xyz = np.asarray(np.matrix(xyz) * np.matrix(rot).T)
     vertex['x'] = xyz[:, 0]; vertex['y'] = xyz[:, 1]; vertex['z'] = xyz[:, 2]
     ply.write(fname)
+
+
+# 1) read ply from 'ip', fit an ellipsoid
+# 2) dump ply in COM into 'op', dump ellipsoid into 'oe'
+def fit_ellipsoid_ply(ip, op, oe):
+    ply = PlyData.read(ip)
+    vertex = ply['vertex']
+    xyz = np.array([vertex[p] for p in ('x', 'y', 'z')]).T
+
+    center, radii, rot, v, chi2 = ellipsoid_fit(xyz)
+    idx = np.argsort(-radii); radii = radii[idx]; rot = rot[:, idx]
+
+    if not any(np.isnan(radii)):
+        # dump ellipsoid
+        ellipsoid_dump_ply(oe, rot, radii)
+        ellipsoid_dump(oe+'.3d', rot, radii)
+
+        # dump ply
+        ply['vertex']['x'] = xyz[:, 0] - center[0]
+        ply['vertex']['y'] = xyz[:, 1] - center[1]
+        ply['vertex']['z'] = xyz[:, 2] - center[2]
+        ply.write(op)
+    else: print ip
+
+    return center, rot, radii, chi2

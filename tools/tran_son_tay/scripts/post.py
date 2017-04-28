@@ -61,12 +61,15 @@ def read_data(plydir, dt, ntspd):
     ed = 'e' # directory for ellipsoid dumps
     if not os.path.exists(ed): os.makedirs(ed)
 
-    ec = 'c' # directory for COM dumps
-    if not os.path.exists(ec): os.makedirs(ec)
+    cd = 'c' # directory for COM dumps
+    if not os.path.exists(cd): os.makedirs(cd)
 
     for i in range(ls):
         fullpath = listing[start+i]
-        ply, x, y, z = read_ply(fullpath)
+        center, rot, radii, chi2 = ef.fit_ellipsoid_ply(
+            fullpath, '%s/%05d.ply' % (cd, start+i), '%s/%05d.ply' % (ed, start+i))
+
+        # ply, x, y, z = read_ply(fullpath)
         # x -= np.mean(x); y -= np.mean(y); z -= np.mean(z)
 
         # th[i] = get_th(x, y, z)
@@ -75,21 +78,9 @@ def read_data(plydir, dt, ntspd):
         # a[i]  = (np.max(x)-np.min(x))/a0
         # c[i]  = (np.max(y)-np.min(y))/c0
 
-        xyz = np.array([x, y, z]).T
-        center, radii, rot, v, chi2 = ef.ellipsoid_fit(xyz)
-        idx = np.argsort(-radii); radii = radii[idx]; rot = rot[:, idx]
         a[i] = radii[0]; b[i] = radii[1]; c[i] = radii[2]
         th[i] = get_angle_btw_vectors(rot[:,0], np.array([1,0,0]))
         print a[i], b[i], c[i], th[i]
-        if not any(np.isnan(radii)):
-            # dump ellipsoid
-            ef.ellipsoid_dump_ply('%s/%05d.ply' % (ed, start+i), center, rot, radii)
-
-            # dump ply
-            ply['vertex']['x'] = x - center[0]
-            ply['vertex']['y'] = y - center[1]
-            ply['vertex']['z'] = z - center[2]
-            ply.write('%s/%05d.ply' % (ec, start+i))
 
         if i % 100 == 0: print 'Computed up to %d/%d' % (i, ls)
 
