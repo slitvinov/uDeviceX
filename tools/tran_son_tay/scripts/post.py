@@ -2,29 +2,22 @@
 
 from argparse import ArgumentParser
 from glob import glob
-from math import floor, atan, atan2
 import numpy as np
-import numpy.linalg as la
+from numpy.linalg import norm
 from plyfile import PlyData
 from sklearn.decomposition import PCA
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import savefig
-from efit import ellipsoid_fit
+import efit as ef
+import os
 
 
-def wrapTo(x,left,right):
-    if x < left:
-        x = wrapTo(x+(right-left), left, right)
-        if x >= right: x = wrapTo(x-(right-left), left, right)
+def wrap_to(x,left,right):
+    if x < left:   x = wrap_to(x+(right-left), left, right)
+    if x >= right: x = wrap_to(x-(right-left), left, right)
     return x
-
-
-def read_ply_file(ply):
-    vertex = ply['vertex']
-    x,y,z = (vertex[p] for p in ('x', 'y', 'z'))
-    return x,y,z
 
 
 def save_res(filename, arr_in):
@@ -34,42 +27,71 @@ def save_res(filename, arr_in):
     np.savetxt(filename, np.concatenate(arr,axis=1), fmt='%.6e', delimiter=' ')
 
 
+def read_ply(fname):
+    ply = PlyData.read(fname)
+    vertex = ply['vertex']
+    x, y, z = (vertex[p] for p in ('x', 'y', 'z'))
+    return ply, x, y, z
+
+
 def read_data(plydir, dt, ntspd):
     listing = glob(plydir+"/rbcs-*.ply"); listing.sort()
     nfiles = len(listing)
 
     t = dt*ntspd*np.arange(nfiles)  # DPD t
-    start = nfiles-int(floor(0.5*nfiles))  # Length of signal
-    print start
+    start = nfiles-int(np.floor(0.5*nfiles))  # Length of signal
     end = min(start+2e6, nfiles)  # Length of signal
     t = t[start:end]
     ls = end-start
 
     # find marker
     fullpath = listing[0]
-    x, y, z = read_ply_file(PlyData.read(fullpath))
+    _, x, y, z = read_ply(fullpath)
     midx = np.argmax(x)  # the rightmost point will be a marker
     a0 = np.max(x)-np.min(x)
     c0 = np.max(y)-np.min(y)
 
-    th = np.zeros((ls,))  # angle with the projection on Ox
-    om = np.zeros((ls,))  # angle of the marker with the current RBC axis
-    el = np.zeros((ls,))
-    a  = np.zeros((ls,))
-    c  = np.zeros((ls,))
+    th = np.zeros(ls)  # angle with the projection on Ox
+    om = np.zeros(ls)  # angle of the marker with the current RBC axis
+    el = np.zeros(ls)
+    a  = np.zeros(ls)
+    b  = np.zeros(ls)
+    c  = np.zeros(ls)
+
+    ed = 'e' # directory for ellipsoid dumps
+    if not os.path.exists(ed): os.makedirs(ed)
+
+    ec = 'c' # directory for COM dumps
+    if not os.path.exists(ec): os.makedirs(ec)
 
     for i in range(ls):
         fullpath = listing[start+i]
-        x, y, z = read_ply_file(PlyData.read(fullpath))
-        x -= np.mean(x); y -= np.mean(y); z -= np.mean(z)
+        ply, x, y, z = read_ply(fullpath)
+        # x -= np.mean(x); y -= np.mean(y); z -= np.mean(z)
 
-        th[i] = get_th(x, y, z)
-        om[i] = get_om(x, y, z, midx, th[i])
-        el[i] = get_el(x, y, z)
-        a[i]  = (np.max(x)-np.min(x))/a0
-        c[i]  = (np.max(y)-np.min(y))/c0
+        # th[i] = get_th(x, y, z)
+        # om[i] = get_om(x, y, z, midx, th[i])
+        # el[i] = get_el(x, y, z)
+        # a[i]  = (np.max(x)-np.min(x))/a0
+        # c[i]  = (np.max(y)-np.min(y))/c0
 
-        if i % 100 == 0: print 'Computed up to', i, '/', ls
+        xyz = np.array([x, y, z]).T
+        center, radii, rot, v, chi2 = ef.ellipsoid_fit(xyz)
+        idx = np.argsort(-radii); radii = radii[idx]; rot = rot[:, idx]
+        a[i] = radii[0]; b[i] = radii[1]; c[i] = radii[2]
+        th[i] = get_angle_btw_vectors(rot[:,0], np.array([1,0,0]))
+        print a[i], b[i], c[i], th[i]
+        if not any(np.isnan(radii)):
+            # dump ellipsoid
+            ef.ellipsoid_dump_ply('%s/%05d.ply' % (ed, start+i), center, rot, radii)
+
+            # dump ply
+            ply['vertex']['x'] = x - center[0]
+            ply['vertex']['y'] = y - center[1]
+            ply['vertex']['z'] = z - center[2]
+            ply.write('%s/%05d.ply' % (ec, start+i))
+
+        if i % 100 == 0: print 'Computed up to %d/%d' % (i, ls)
 
     save_res('result.txt', (t,th,om,a,c))
     plt.plot(t, om, 'b-'); plt.plot(t, th, 'r-')
@@ -82,60 +104,34 @@ def read_data(plydir, dt, ntspd):
     return t, th, om, a, c, el
 
 
+def get_angle_btw_vectors(v1, v2):
+    res = np.dot(v1, v2) / (norm(v1)*norm(v2))
+    return np.degrees(np.arccos(res))
+
+
 # find the distance from the ellipse
 def get_el(x, y, z):
     xyz = np.array([x, y, z]).T
-    center, radii, evecs, v, chi2 = ellipsoid_fit(xyz)
-    print chi2
-    if (not np.isnan(chi2)): plot_el(center, evecs, radii)
+    center, radii, rot, v, chi2 = ellipsoid_fit(xyz)
+    ellipsoid_dump('e.3d', center, rot, radii)
     return chi2
 
 
-def plot_el(center, evecs, radii):
-    a = radii[0]; b = radii[1]; c = radii[2]
-
-    ndump = 100
-    uu = np.linspace(0, 2*np.pi, ndump)
-    vv = np.linspace(0,   np.pi, ndump)
-    [uu, vv] = np.meshgrid(uu, vv); n = uu.size
-    uu = uu.reshape(n); vv = vv.reshape(n)
-    xx = np.zeros(n); yy = np.zeros(n); zz = np.zeros(n)
-
-    for i in range(n):
-        u = uu[i]; v = vv[i]
-        x = a*np.cos(u)*np.sin(v) # u: [0, pi]
-        y = b*np.sin(u)*np.sin(v) # v: [0, pi]
-        z = c*np.cos(v)
-
-        r = np.array([x, y, z]).reshape((3, 1))
-        r = np.asarray(np.matrix(evecs) * np.matrix(r))
-        r = r + center
-
-        xx[i] = r[0]; yy[i] = r[1]; zz[i] = r[2]
-
-    print 'writing: e.3d'
-    with open('e.3d', 'w') as f:
-        f.write('x y z sc\n')
-        sc = np.zeros(n) # fake scalar
-        for i in range(n):
-            f.write('%g %g %g %g\n' % (xx[i], yy[i], zz[i], sc[i]));
-
-
 # find the current axis
-def get_th(x,y,z):
+def get_th(x, y, z):
     pca = PCA(n_components=2)
     pca.fit(np.array([x,z]).T)
     pc = pca.components_
-    res = atan(pc[0,1]/pc[0,0])
-    res = wrapTo(np.rad2deg(res), -90, 90)
+    res = np.arctan(pc[0,1]/pc[0,0])
+    res = wrap_to(np.degrees(res), -90, 90)
     return res
 
 
 # find the current marker angle
-def get_om(x,y,z,id,th):
-    res = atan2(z[id],x[id])
-    res = wrapTo(np.rad2deg(res), -180, 180)
-    res = wrapTo(th-res, -180, 180)
+def get_om(x, y, z, id, th):
+    res = np.arctan2(z[id],x[id])
+    res = wrap_to(np.degrees(res), -180, 180)
+    res = wrap_to(th-res, -180, 180)
     return res
 
 
