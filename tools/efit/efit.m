@@ -1,21 +1,10 @@
 #!/usr/bin/env octave-qf
-
-fn = '../test_data/rbc.ply'
-
 X = 1; Y = 2; Z = 3;
 
-fd = fopen(fn); nl  = @() fgetl(fd); % next line
-nl(); nl();
-l = nl(); nv = sscanf(l, 'element vertex %d');
-nl(); nl(); nl(); nl(); nl(); nl();
-l = nl(); nf = sscanf(l, 'element face %d');
-nl(); nl();
-
-nvar  = 6; % x, y, z, u, v, w
-D = fread(fd, [nvar     , nv], 'float32');
+fn = '../test_data/rbc.ply'
+[D, F] = read_ply(fn);
 D = D(1:3, :);
 xx = D(1, :);  yy = D(2, :);  zz = D(3, :);
-fclose(fd);
 
 [center, radii, evecs] = ellipsoid_fit(D');
 a = radii(1); b = radii(2); c = radii(3);
