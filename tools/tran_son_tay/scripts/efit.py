@@ -1,6 +1,7 @@
 import numpy as np
 import math 
-
+from  plyfile import PlyData
+import os
 
 
 def data_regularize(data, type="spheric", divs = 10):
@@ -116,7 +117,6 @@ def ellipsoid_plot(center, radii, rotation, ax, plotAxes=False, cageColor='b', c
     ax.plot_wireframe(x, y, z,  rstride=4, cstride=4, color=cageColor, alpha=cageAlpha)
 
 
-
 # http://www.mathworks.com/matlabcentral/fileexchange/24693-ellipsoid-fit
 # for arbitrary axes
 def ellipsoid_fit(X):
@@ -147,12 +147,53 @@ def ellipsoid_fit(X):
     radii = np.sqrt(1. / evals)
 
     # calculate difference of the fitted points from the actual data normalized by the conic radii
-    sgns = np.sign(evals);
-    radii = radii * sgns;
-    d = np.array([x - center[0], y - center[1], z - center[2]]); # shift data to origin
-    d = np.asarray(np.matrix(d.T) * np.matrix(evecs)); # rotate to cardinal axes of the conic;
-    d = np.array([d[:,0] / radii[0], d[:,1] / radii[1], d[:,2] / radii[2]]).T; # normalize to the conic radii
-    chi2 = np.sum(np.abs(1 - np.sum(d**2 * np.tile(sgns, (d.shape[0], 1)), axis=1)));
+    sgns = np.sign(evals)
+    radii *= sgns
+    d = np.array([x - center[0], y - center[1], z - center[2]]) # shift data to origin
+    d = np.asarray(np.matrix(d.T) * np.matrix(evecs)) # rotate to cardinal axes of the conic
+    d = np.array([d[:,0] / radii[0], d[:,1] / radii[1], d[:,2] / radii[2]]).T # normalize to the conic radii
+    chi2 = np.sum(np.abs(1 - np.sum(d**2 * np.tile(sgns, (d.shape[0], 1)), axis=1)))
 
     return center, radii, evecs, v, chi2
 
+
+# dump x, y, z coordinates to file
+def ellipsoid_dump(fname, center, evecs, radii):
+    a = radii[0]; b = radii[1]; c = radii[2]
+
+    ndump = 100
+    uu = np.linspace(0, 2*np.pi, ndump)
+    vv = np.linspace(0,   np.pi, ndump)
+    [uu, vv] = np.meshgrid(uu, vv); n = uu.size
+    uu = uu.reshape(n); vv = vv.reshape(n)
+    xx = np.zeros(n); yy = np.zeros(n); zz = np.zeros(n)
+
+    for i in range(n):
+        u = uu[i]; v = vv[i]
+        x = a*np.cos(u)*np.sin(v) # u: [0, pi]
+        y = b*np.sin(u)*np.sin(v) # v: [0, pi]
+        z = c*np.cos(v)
+
+        r = np.array([x, y, z]).reshape((3, 1))
+        r = np.asarray(np.matrix(evecs) * np.matrix(r))
+        r = r + center
+
+        xx[i] = r[0]; yy[i] = r[1]; zz[i] = r[2]
+
+    with open(fname, 'w') as f:
+        f.write('x y z sc\n')
+        sc = np.zeros(n) # fake scalar
+        for i in range(n):
+            f.write('%g %g %g %g\n' % (xx[i], yy[i], zz[i], sc[i]))
+
+
+def ellipsoid_dump_ply(fname, center, evecs, radii):
+    ply = PlyData.read(os.path.expanduser('~/.udx/sphere.ply'))
+    vertex = ply['vertex']
+    x, y, z = (vertex[p] for p in ('x', 'y', 'z'))
+    xyz = np.array([x, y, z]).T
+    sc = radii / np.max(xyz)
+    xyz *= np.tile(sc, (xyz.shape[0], 1))
+    xyz = np.asarray(np.matrix(xyz)*np.matrix(evecs))
+    vertex['x'] = xyz[:, 0]; vertex['y'] = xyz[:, 1]; vertex['z'] = xyz[:, 2]
+    ply.write(fname)
