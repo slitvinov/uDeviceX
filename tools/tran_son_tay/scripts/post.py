@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from argparse import ArgumentParser
 from glob import glob
 from math import floor, atan, atan2
@@ -9,6 +11,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import savefig
+from efit import ellipsoid_fit
 
 
 def wrapTo(x,left,right):
@@ -37,6 +40,7 @@ def read_data(plydir, dt, ntspd):
 
     t = dt*ntspd*np.arange(nfiles)  # DPD t
     start = nfiles-int(floor(0.5*nfiles))  # Length of signal
+    print start
     end = min(start+2e6, nfiles)  # Length of signal
     t = t[start:end]
     ls = end-start
@@ -80,33 +84,41 @@ def read_data(plydir, dt, ntspd):
 
 # find the distance from the ellipse
 def get_el(x, y, z):
-    n = len(x)
-    xyz = np.array([x, y, z])
-    e, v = get_I(xyz)
-    xyz_new = np.asarray(np.matrix(la.inv(v))*np.matrix(xyz))
-    nx = np.squeeze(xyz_new[0, :]); ny = np.squeeze(xyz_new[2, :])
-    en = 100; ex = np.zeros(en); ey = np.zeros(en)
-    for i in range(en):
-        a = np.max(nx); b = np.max(ny)
-        phi = 2*np.pi*i/en
-        r = a*b/np.sqrt((a*np.sin(phi))**2 + (b*np.cos(phi))**2)
-        ex[i] = r*np.cos(phi); ey[i] = r*np.sin(phi)
-    plt.plot(nx, ny, 'bo'); plt.plot(ex, ey, 'ro'); plt.savefig('test.png')
-    d = 0
+    xyz = np.array([x, y, z]).T
+    center, radii, evecs, v, chi2 = ellipsoid_fit(xyz)
+    print chi2
+    if (not np.isnan(chi2)): plot_el(center, evecs, radii)
+    return chi2
+
+
+def plot_el(center, evecs, radii):
+    a = radii[0]; b = radii[1]; c = radii[2]
+
+    ndump = 100
+    uu = np.linspace(0, 2*np.pi, ndump)
+    vv = np.linspace(0,   np.pi, ndump)
+    [uu, vv] = np.meshgrid(uu, vv); n = uu.size
+    uu = uu.reshape(n); vv = vv.reshape(n)
+    xx = np.zeros(n); yy = np.zeros(n); zz = np.zeros(n)
+
     for i in range(n):
-        d += np.min([la.norm(np.array([nx[i], ny[i]])-np.array([ex[j], ey[j]])) for j in range(en)])
-    return d/n
+        u = uu[i]; v = vv[i]
+        x = a*np.cos(u)*np.sin(v) # u: [0, pi]
+        y = b*np.sin(u)*np.sin(v) # v: [0, pi]
+        z = c*np.cos(v)
 
+        r = np.array([x, y, z]).reshape((3, 1))
+        r = np.asarray(np.matrix(evecs) * np.matrix(r))
+        r = r + center
 
-def get_I(data):
-    dim, n = data.shape
-    I = np.zeros((dim, dim))
-    for i in range(0, n):
-        ri = data[:, i]
-        I += np.dot(ri, ri)*np.identity(dim) - np.kron(ri, ri).reshape(dim, dim)
-    e, v = la.eig(I)
-    idx = np.argsort(e)
-    return e[idx], v[:, idx]
+        xx[i] = r[0]; yy[i] = r[1]; zz[i] = r[2]
+
+    print 'writing: e.3d'
+    with open('e.3d', 'w') as f:
+        f.write('x y z sc\n')
+        sc = np.zeros(n) # fake scalar
+        for i in range(n):
+            f.write('%g %g %g %g\n' % (xx[i], yy[i], zz[i], sc[i]));
 
 
 # find the current axis
