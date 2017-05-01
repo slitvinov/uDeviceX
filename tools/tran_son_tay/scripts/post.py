@@ -14,9 +14,9 @@ import efit as ef
 import os
 
 
-def wrap_to(x,left,right):
-    if x < left:   x = wrap_to(x+(right-left), left, right)
-    if x >= right: x = wrap_to(x-(right-left), left, right)
+def wrap(x,left,right):
+    if x < left:   x = wrap(x+(right-left), left, right)
+    if x >= right: x = wrap(x-(right-left), left, right)
     return x
 
 
@@ -31,7 +31,7 @@ def read_ply(fname):
     ply = PlyData.read(fname)
     vertex = ply['vertex']
     x, y, z = (vertex[p] for p in ('x', 'y', 'z'))
-    return ply, x, y, z
+    return x, y, z
 
 
 def read_data(plydir, dt, ntspd):
@@ -46,7 +46,7 @@ def read_data(plydir, dt, ntspd):
 
     # find marker
     fullpath = listing[0]
-    _, x, y, z = read_ply(fullpath)
+    x, y, z = read_ply(fullpath)
     midx = np.argmax(x)  # the rightmost point will be a marker
     a0 = np.max(x)-np.min(x)
     c0 = np.max(y)-np.min(y)
@@ -65,22 +65,16 @@ def read_data(plydir, dt, ntspd):
     if not os.path.exists(cd): os.makedirs(cd)
 
     for i in range(ls):
-        fullpath = listing[start+i]
+        fi = start+i  # file id
+        fullpath = listing[fi]
         center, rot, radii, chi2 = ef.fit_ellipsoid_ply(
-            fullpath, '%s/%05d.ply' % (cd, start+i), '%s/%05d.ply' % (ed, start+i))
-
-        # ply, x, y, z = read_ply(fullpath)
-        # x -= np.mean(x); y -= np.mean(y); z -= np.mean(z)
-
-        # th[i] = get_th(x, y, z)
-        # om[i] = get_om(x, y, z, midx, th[i])
-        # el[i] = get_el(x, y, z)
-        # a[i]  = (np.max(x)-np.min(x))/a0
-        # c[i]  = (np.max(y)-np.min(y))/c0
+            fullpath, '%s/%05d' % (cd, fi), '%s/%05d' % (ed, fi))
 
         a[i] = radii[0]; b[i] = radii[1]; c[i] = radii[2]
         th[i] = get_angle_btw_vectors(rot[:,0], np.array([1,0,0]))
-        print a[i], b[i], c[i], th[i]
+        om[i] = get_om(fullpath, midx, th[i])
+        el[i] = chi2
+        # print a[i], b[i], c[i], om[i], th[i], el[i]
 
         if i % 100 == 0: print 'Computed up to %d/%d' % (i, ls)
 
@@ -114,15 +108,15 @@ def get_th(x, y, z):
     pca.fit(np.array([x,z]).T)
     pc = pca.components_
     res = np.arctan(pc[0,1]/pc[0,0])
-    res = wrap_to(np.degrees(res), -90, 90)
+    res = wrap(np.degrees(res), -90, 90)
     return res
 
 
 # find the current marker angle
-def get_om(x, y, z, id, th):
-    res = np.arctan2(z[id],x[id])
-    res = wrap_to(np.degrees(res), -180, 180)
-    res = wrap_to(th-res, -180, 180)
+def get_om(fname, id, th):
+    x, y, z = read_ply(fname)
+    res = np.degrees(np.arctan2(z[id], x[id]))
+    res = wrap(th-res, -180, 180)
     return res
 
 

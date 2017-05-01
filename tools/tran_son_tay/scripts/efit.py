@@ -80,14 +80,19 @@ def ellipsoid_fit(X):
     center = np.linalg.solve(-A[:3,:3], v[6:9])
     T = np.eye(4)
     T[3,:3] = center.T
+    center = center.reshape((3,))
     R = T.dot(A).dot(T.conj().T)
     evals, evecs = np.linalg.eig(R[:3,:3] / -R[3,3])
-    idx = np.argsort(evals); evals = evals[idx]; evecs = evecs[:, idx]
-    radii = np.sqrt(1. / evals)
-    sgns = np.sign(evals)
-    radii *= sgns
 
-    center = center.reshape((3,))
+    # sort eigenvalues
+    idx = np.argsort(evals); evals = evals[idx]; evecs = evecs[:, idx]
+    sgns = np.sign(evals)
+    radii = np.sqrt(sgns / evals)
+
+    # orient the eigenvectors so that they are aligned with the axes
+    if np.dot(evecs[:,0], np.array([1, 0, 0])) < 0: evecs[:,0] *= -1
+    if np.dot(evecs[:,1], np.array([0, 1, 0])) < 0: evecs[:,1] *= -1
+    if np.dot(evecs[:,2], np.array([0, 0, 1])) < 0: evecs[:,2] *= -1
 
     # calculate difference of the fitted points from the actual data normalized by the conic radii
     d = np.array([x - center[0], y - center[1], z - center[2]]) # shift data to origin
@@ -145,20 +150,17 @@ def fit_ellipsoid_ply(ip, op, oe):
     ply = PlyData.read(ip)
     vertex = ply['vertex']
     xyz = np.array([vertex[p] for p in ('x', 'y', 'z')]).T
-
     center, radii, rot, v, chi2 = ellipsoid_fit(xyz)
-    idx = np.argsort(-radii); radii = radii[idx]; rot = rot[:, idx]
 
     if not any(np.isnan(radii)):
         # dump ellipsoid
-        ellipsoid_dump_ply(oe, rot, radii)
-        ellipsoid_dump(oe+'.3d', rot, radii)
+        ellipsoid_dump_ply(oe+'.ply', rot, radii)
 
         # dump ply
         ply['vertex']['x'] = xyz[:, 0] - center[0]
         ply['vertex']['y'] = xyz[:, 1] - center[1]
         ply['vertex']['z'] = xyz[:, 2] - center[2]
-        ply.write(op)
+        ply.write(op+'.ply')
     else: print 'File %s has NaN' % ip
 
     return center, rot, radii, chi2
