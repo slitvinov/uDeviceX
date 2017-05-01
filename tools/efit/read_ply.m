@@ -13,7 +13,7 @@ function [D, F]  = read_ply(fn)
   D = D(1:3, :);
 
   F = fread(fd, [nv_pf + 1, nf], 'int32');
-  F = F(2:end, :)
+  F = F(2:end, :);
   
   fclose(fd);
 endfunction

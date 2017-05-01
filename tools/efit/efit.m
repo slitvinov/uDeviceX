@@ -1,12 +1,15 @@
 #!/usr/bin/env octave-qf
 X = 1; Y = 2; Z = 3;
 
-fn = '../test_data/rbc.ply'
+fn = argv(){1};
+fo = argv(){2};
+printf('reading %s\n', fn);
+
 [D, F] = read_ply(fn);
 D = D(1:3, :);
 xx = D(1, :);  yy = D(2, :);  zz = D(3, :);
 
-[center, radii, evecs] = ellipsoid_fit(D');
+[center, radii, evecs, v, chi2] = ellipsoid_fit(D');
 a = radii(1); b = radii(2); c = radii(3);
 
 ndump = 100;
@@ -30,10 +33,9 @@ for i = 1:numel(uu)
   xx(i) = r(X); yy(i) = r(Y); zz(i) = r(Z);
 end
 
-
-disp("writing: e.3d");
-fd = fopen("e.3d", "w");
-fdisp(fd, "x y z sc");
+printf('writing %s\n', fo);
+fd = fopen(fo, 'w');
+fdisp(fd, 'x y z sc');
 sc = zeros(1, n); % fake scalar
 dlmwrite(fd, [xx; yy; zz; sc]', ' ');
 

@@ -128,7 +128,8 @@ end
 
 % solve the normal system of equations
 d2 = x .* x + y .* y + z .* z; % the RHS of the llsq problem (y's)
-u = ( D' * D ) \ ( D' * d2 );  % solution to the normal equations
+Q = D' * D; b = D' * d2;
+u = Q \ b;  % solution to the normal equations
 
 % find the residual sum of errors
 % chi2 = sum( ( 1 - ( D * u ) ./ d2 ).^2 ); % this chi2 is in the coordinate frame in which the ellipsoid is a unit sphere.
@@ -199,7 +200,3 @@ if abs( v(end) ) > 1e-6
 else
     v = -sign( v(end) ) * v;
 end
-
-
-
-
