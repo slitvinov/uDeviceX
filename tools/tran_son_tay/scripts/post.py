@@ -35,6 +35,15 @@ def read_ply(fname):
 
 
 def read_data(plydir, dt, ntspd):
+# find the current marker angle
+def get_om(fname, idx, th):
+    x, y, z = read_ply(fname)
+    x -= np.mean(x); y -= np.mean(y); z -= np.mean(z)
+    om = th - np.degrees(np.arctan2(z[idx], x[idx]))
+    om = wrap(om, -180, 180)
+    return om
+
+
     listing = glob(plydir+"/rbcs-*.ply"); listing.sort()
     nfiles = len(listing)
 
@@ -109,14 +118,6 @@ def get_th(x, y, z):
     pc = pca.components_
     res = np.arctan(pc[0,1]/pc[0,0])
     res = wrap(np.degrees(res), -90, 90)
-    return res
-
-
-# find the current marker angle
-def get_om(fname, id, th):
-    x, y, z = read_ply(fname)
-    res = np.degrees(np.arctan2(z[id], x[id]))
-    res = wrap(th-res, -180, 180)
     return res
 
 
