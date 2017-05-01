@@ -87,11 +87,16 @@ def get_om(fname, idx, th):
 
         if i % 100 == 0: print 'Computed up to %d/%d' % (i, ls)
 
-    save_res('result.txt', (t,th,om,a,c))
-    plt.plot(t, om, 'b-'); plt.plot(t, th, 'r-')
+    save_res('result.txt', (t, th, om, a, b, c, el))
+    plt.plot(t, th, 'r-', label='theta')
+    plt.plot(t, om, 'b-', label='omega')
+    plt.legend()
     savefig('angle.png')
     plt.close()
-    plt.plot(t, a, 'b-'); plt.plot(t, c, 'r-')
+    plt.plot(t, a, 'r-', label='a')
+    plt.plot(t, b, 'g-', label='b')
+    plt.plot(t, c, 'b-', label='c')
+    plt.legend()
     savefig('diam.png')
     plt.close()
 
