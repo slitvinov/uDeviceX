@@ -163,4 +163,4 @@ def fit_ellipsoid_ply(ip, op, oe):
         ply.write(op+'.ply')
     else: print 'File %s has NaN' % ip
 
-    return center, rot, radii, chi2
+    return center, rot, radii, chi2, xyz

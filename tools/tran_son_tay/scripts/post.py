@@ -34,7 +34,11 @@ def read_ply(fname):
     return x, y, z
 
 
-def read_data(plydir, dt, ntspd):
+def get_angle_btw_vectors(v1, v2):
+    res = np.dot(v1, v2) / (norm(v1)*norm(v2))
+    return np.degrees(np.arccos(res))
+
+
 # find the current marker angle
 def get_om(fname, idx, th):
     x, y, z = read_ply(fname)
@@ -44,92 +48,8 @@ def get_om(fname, idx, th):
     return om
 
 
-    listing = glob(plydir+"/rbcs-*.ply"); listing.sort()
-    nfiles = len(listing)
-
-    t = dt*ntspd*np.arange(nfiles)  # DPD t
-    start = nfiles-int(np.floor(0.5*nfiles))  # Length of signal
-    end = min(start+2e6, nfiles)  # Length of signal
-    t = t[start:end]
-    ls = end-start
-
-    ed = 'e' # directory for ellipsoid dumps
-    if not os.path.exists(ed): os.makedirs(ed)
-    cd = 'c' # directory for COM dumps
-    if not os.path.exists(cd): os.makedirs(cd)
-
-    # find marker
-    fullpath = listing[0]
-    x, y, z = read_ply(fullpath)
-    midx = np.argmax(x)  # the rightmost point will be a marker
-    center, rot, radii, chi2 = ef.fit_ellipsoid_ply(
-        fullpath, '%s/%05d' % (cd, 0), '%s/%05d' % (ed, 0))
-    a0 = radii[0]; b0 = radii[1]; c0 = radii[2]
-
-    th = np.zeros(ls)  # angle with the projection on Ox
-    om = np.zeros(ls)  # angle of the marker with the current RBC axis
-    el = np.zeros(ls)
-    a  = np.zeros(ls)
-    b  = np.zeros(ls)
-    c  = np.zeros(ls)
-
-    for i in range(ls):
-        fi = start+i  # file id
-        fullpath = listing[fi]
-        center, rot, radii, chi2 = ef.fit_ellipsoid_ply(
-            fullpath, '%s/%05d' % (cd, fi), '%s/%05d' % (ed, fi))
-
-        a[i] = radii[0]/a0; b[i] = radii[1]/b0; c[i] = radii[2]/c0
-        th[i] = get_angle_btw_vectors(rot[:,0], np.array([1,0,0]))
-        om[i] = get_om(fullpath, midx, th[i])
-        el[i] = chi2
-        # print a[i], b[i], c[i], om[i], th[i], el[i]
-
-        if i % 100 == 0: print 'Computed up to %d/%d' % (i, ls)
-
-    save_res('result.txt', (t, th, om, a, b, c, el))
-    plt.plot(t, th, 'r-', label='theta')
-    plt.plot(t, om, 'b-', label='omega')
-    plt.legend()
-    savefig('angle.png')
-    plt.close()
-    plt.plot(t, a, 'r-', label='a')
-    plt.plot(t, b, 'g-', label='b')
-    plt.plot(t, c, 'b-', label='c')
-    plt.legend()
-    savefig('diam.png')
-    plt.close()
-
-    return t, th, om, a, c, el
-
-
-def get_angle_btw_vectors(v1, v2):
-    res = np.dot(v1, v2) / (norm(v1)*norm(v2))
-    return np.degrees(np.arccos(res))
-
-
-# find the distance from the ellipse
-def get_el(x, y, z):
-    xyz = np.array([x, y, z]).T
-    center, radii, rot, v, chi2 = ellipsoid_fit(xyz)
-    ellipsoid_dump('e.3d', center, rot, radii)
-    return chi2
-
-
-# find the current axis
-def get_th(x, y, z):
-    pca = PCA(n_components=2)
-    pca.fit(np.array([x,z]).T)
-    pc = pca.components_
-    res = np.arctan(pc[0,1]/pc[0,0])
-    res = wrap(np.degrees(res), -90, 90)
-    return res
-
-
 def get_fr(x, y):
-    from scipy import signal
-
-    best = 0, 100
+    fr = 0; fru = 100
 
     # find the points where the sign changes -- these are the peaks
     peakind = []
@@ -138,21 +58,96 @@ def get_fr(x, y):
             peakind.append(i)
 
     pers = x[peakind[1:]]-x[peakind[0:-1]]
-    freq = np.mean(1/pers)
-    frequ = np.std(1/pers)
+    cfr  = np.mean(1/pers)
+    cfru = np.std(1/pers)
 
-    if best[1] > frequ: best = freq, frequ
+    if fru > cfru: fr = cfr; fru = cfru
 
-    plt.plot(x, y, 'b-o')
-    plt.plot(x[peakind], y[peakind], 'ro')
+    plt.plot(x, y, 'b-o', label='theta')
+    plt.plot(x[peakind], y[peakind], 'ro', label='peaks')
+    plt.legend()
     plt.savefig('peaks.png')
     plt.close()
 
-    return best[0], best[1]/best[0]
+    return fr, fru/fr
 
 
-def get_an(th):
-    return np.mean(th), np.std(th)
+def process_data(plydir, dt, ntspd, sh):
+    ed = 'e' # directory for ellipsoid dumps
+    if not os.path.exists(ed): os.makedirs(ed)
+    cd = 'c' # directory for COM dumps
+    if not os.path.exists(cd): os.makedirs(cd)
+
+    # initialization
+    files = glob(plydir+"/rbcs-*.ply"); files.sort()
+    n = len(files)
+    th = np.zeros(n)  # angle with the projection on Ox
+    om = np.zeros(n)  # angle of the marker with the current RBC axis
+    el = np.zeros(n)
+    a  = np.zeros(n)
+    b  = np.zeros(n)
+    c  = np.zeros(n)
+    ch = int(np.floor(n/10))
+    steady = 0; si = 0.75*n; ave = 0
+
+    # main loop
+    for i in range(n):
+        fname = files[i]
+        center, rot, radii, chi2, xyz = ef.fit_ellipsoid_ply(fname,
+            '%s/%05d' % (cd, i), '%s/%05d' % (ed, i))
+
+        if i == 0:
+            mi = np.argmax(xyz[:,0])  # the rightmost point will be a marker
+            a0 = radii[0]; b0 = radii[1]; c0 = radii[2]
+
+        a[i] = radii[0]/a0; b[i] = radii[1]/b0; c[i] = radii[2]/c0
+        th[i] = get_angle_btw_vectors(rot[:,0], np.array([1,0,0]))
+        om[i] = get_om(fname, mi, th[i])
+        el[i] = chi2
+
+        # check whether we're in a steady state
+        if ch > 0 and (i+1) % ch == 0:
+            cur = np.mean(a[i-ch+1:i])
+            if not steady and abs(ave-cur) < 0.02*ave:
+                print "Steady state reached after", i, "steps out of", n
+                steady = 1; si = i
+            else: ave = cur
+
+        if i % 100 == 0: print 'Computed up to %d/%d' % (i, n)
+
+    t = dt*ntspd*np.arange(n)  # DPD time
+    save_res('result.txt', (t, th, om, a, b, c, el))
+    plt.plot(t, th, 'r-', label='theta')
+    plt.plot(t, om, 'b-', label='omega')
+    plt.plot([t[si], t[si]], [-180, 180], 'k--')
+    plt.legend()
+    savefig('angle.png')
+    plt.close()
+    plt.plot(t, a, 'r-', label='a')
+    plt.plot(t, b, 'g-', label='b')
+    plt.plot(t, c, 'b-', label='c')
+    plt.plot([t[si], t[si]], [0, 2], 'k--')
+    plt.legend()
+    savefig('diam.png')
+    plt.close()
+    plt.plot(t, el, 'r-', label='ellipticity')
+    plt.plot([t[si], t[si]], [0, 100], 'k--')
+    plt.legend()
+    savefig('ellipticity.png')
+    plt.close()
+
+    # compute means and stds
+    a,  au  = np.mean( a[si:]), np.std( a[si:])
+    b,  bu  = np.mean( b[si:]), np.std( b[si:])
+    c,  cu  = np.mean( c[si:]), np.std( c[si:])
+    el, elu = np.mean(el[si:]), np.std(el[si:])
+    th, thu = np.mean(th[si:]), np.std(th[si:])
+    fr, fru = get_fr(t[si:], om[si:]); fr *= 2.*np.pi/sh; fru /= sh
+
+    with open('post.txt', 'w') as f:
+        f.write('# fr\t\tfru\t\t\ta\t\t\tau\t\t\tb\t\t\tbu\t\t\tc\t\t\tcu\t\t\tth\t\t\tthu\t\t\tel\t\t\telu\n')
+        f.write('  %.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\n' %
+                (  fr,   fru,  a,    au,   b,    bu,   c,    cu,   th,   thu,  el,   elu))
 
 
 if __name__ == '__main__':
@@ -167,14 +162,4 @@ if __name__ == '__main__':
     ntspd  = int(args.st)  # number of t steps per dump
     dt     = float(args.dt)
 
-    t, th, om, a, c, el = read_data(plydir, dt, ntspd)
-    a, au = np.mean(a), np.std(a)
-    c, cu = np.mean(c), np.std(c)
-    el, elu = np.mean(el), np.std(el)
-    th, thu = get_an(th)
-    fr, fru = get_fr(t, om)
-    ish = 1./sh; fr *= 2.*np.pi*ish; fru *= ish
-
-    with open('post.txt', 'w') as f:
-        f.write('# fr fru a au c cu th thu el elu\n')
-        f.write('%g %g %g %g %g %g %g %g %g %g\n' % (fr, fru, a, au, c, cu, th, thu, el, elu))
+    process_data(plydir, dt, ntspd, sh)
