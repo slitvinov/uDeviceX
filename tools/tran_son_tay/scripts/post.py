@@ -53,12 +53,18 @@ def get_om(fname, idx, th):
     t = t[start:end]
     ls = end-start
 
+    ed = 'e' # directory for ellipsoid dumps
+    if not os.path.exists(ed): os.makedirs(ed)
+    cd = 'c' # directory for COM dumps
+    if not os.path.exists(cd): os.makedirs(cd)
+
     # find marker
     fullpath = listing[0]
     x, y, z = read_ply(fullpath)
     midx = np.argmax(x)  # the rightmost point will be a marker
-    a0 = np.max(x)-np.min(x)
-    c0 = np.max(y)-np.min(y)
+    center, rot, radii, chi2 = ef.fit_ellipsoid_ply(
+        fullpath, '%s/%05d' % (cd, 0), '%s/%05d' % (ed, 0))
+    a0 = radii[0]; b0 = radii[1]; c0 = radii[2]
 
     th = np.zeros(ls)  # angle with the projection on Ox
     om = np.zeros(ls)  # angle of the marker with the current RBC axis
@@ -67,19 +73,13 @@ def get_om(fname, idx, th):
     b  = np.zeros(ls)
     c  = np.zeros(ls)
 
-    ed = 'e' # directory for ellipsoid dumps
-    if not os.path.exists(ed): os.makedirs(ed)
-
-    cd = 'c' # directory for COM dumps
-    if not os.path.exists(cd): os.makedirs(cd)
-
     for i in range(ls):
         fi = start+i  # file id
         fullpath = listing[fi]
         center, rot, radii, chi2 = ef.fit_ellipsoid_ply(
             fullpath, '%s/%05d' % (cd, fi), '%s/%05d' % (ed, fi))
 
-        a[i] = radii[0]; b[i] = radii[1]; c[i] = radii[2]
+        a[i] = radii[0]/a0; b[i] = radii[1]/b0; c[i] = radii[2]/c0
         th[i] = get_angle_btw_vectors(rot[:,0], np.array([1,0,0]))
         om[i] = get_om(fullpath, midx, th[i])
         el[i] = chi2
