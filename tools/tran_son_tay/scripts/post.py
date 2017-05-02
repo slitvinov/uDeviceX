@@ -101,15 +101,15 @@ def process_data(plydir, dt, ntspd, sh):
         if i == 0:
             mi = np.argmax(xyz[:,0])  # the rightmost point will be a marker
             a0 = radii[0]; b0 = radii[1]; c0 = radii[2]
-			a_0 = np.max(xyz[:,0]) - np.min(xyz[:,0])
-			c_0  np.max(xyz[:,2]) - np.min(xyz[:,2])
+            a_0 = np.max(xyz[:,0]) - np.min(xyz[:,0])
+            c_0  np.max(xyz[:,2]) - np.min(xyz[:,2])
 
         a[i] = radii[0]/a0; b[i] = radii[1]/b0; c[i] = radii[2]/c0
         th[i] = get_angle_btw_vectors(rot[:,0], np.array([1,0,0]))
         om[i] = get_om(fname, mi, th[i])
         el[i] = chi2
-		a_[i] = (np.max(xyz[:,0]) - np.min(xyz[:,0]))/a_0
-		c_[i] = (np.max(xyz[:,2]) - np.min(xyz[:,2]))/c_0
+        a_[i] = (np.max(xyz[:,0]) - np.min(xyz[:,0]))/a_0
+        c_[i] = (np.max(xyz[:,2]) - np.min(xyz[:,2]))/c_0
 
         # check whether we're in a steady state
         if ch > 0 and (i+1) % ch == 0:
