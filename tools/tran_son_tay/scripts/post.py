@@ -87,7 +87,9 @@ def process_data(plydir, dt, ntspd, sh):
     a  = np.zeros(n)
     b  = np.zeros(n)
     c  = np.zeros(n)
-    ch = int(np.floor(n/10))
+    a_ = np.zeros(n)
+    c_ = np.zeros(n)
+    ch = int(np.floor(n/20))
     steady = 0; si = 0.75*n; ave = 0
 
     # main loop
@@ -99,11 +101,15 @@ def process_data(plydir, dt, ntspd, sh):
         if i == 0:
             mi = np.argmax(xyz[:,0])  # the rightmost point will be a marker
             a0 = radii[0]; b0 = radii[1]; c0 = radii[2]
+			a_0 = np.max(xyz[:,0]) - np.min(xyz[:,0])
+			c_0  np.max(xyz[:,2]) - np.min(xyz[:,2])
 
         a[i] = radii[0]/a0; b[i] = radii[1]/b0; c[i] = radii[2]/c0
         th[i] = get_angle_btw_vectors(rot[:,0], np.array([1,0,0]))
         om[i] = get_om(fname, mi, th[i])
         el[i] = chi2
+		a_[i] = (np.max(xyz[:,0]) - np.min(xyz[:,0]))/a_0
+		c_[i] = (np.max(xyz[:,2]) - np.min(xyz[:,2]))/c_0
 
         # check whether we're in a steady state
         if ch > 0 and (i+1) % ch == 0:
@@ -116,7 +122,7 @@ def process_data(plydir, dt, ntspd, sh):
         # if i % 100 == 0: print 'Computed up to %d/%d' % (i, n)
 
     t = dt*ntspd*np.arange(n)  # DPD time
-    save_res('result.txt', (t, th, om, a, b, c, el))
+    save_res('result.txt', (t, th, om, a, b, c, el, a_, c_))
     plt.plot(t, th, 'r-', label='theta')
     plt.plot(t, om, 'b-', label='omega')
     plt.plot([t[si], t[si]], [-180, 180], 'k--')
@@ -142,12 +148,14 @@ def process_data(plydir, dt, ntspd, sh):
     c,  cu  = np.mean( c[si:]), np.std( c[si:])
     el, elu = np.mean(el[si:]), np.std(el[si:])
     th, thu = np.mean(th[si:]), np.std(th[si:])
+    a_, au_ = np.mean(a_[si:]), np.std(a_[si:])
+    c_, cu_ = np.mean(c_[si:]), np.std(c_[si:])
     fr, fru = get_fr(t[si:], om[si:]); fr *= 2.*np.pi/sh; fru /= sh
 
     with open('post.txt', 'w') as f:
-        f.write('# fr\t\tfru\t\t\ta\t\t\tau\t\t\tb\t\t\tbu\t\t\tc\t\t\tcu\t\t\tth\t\t\tthu\t\t\tel\t\t\telu\n')
-        f.write('  %.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\n' %
-                (  fr,   fru,  a,    au,   b,    bu,   c,    cu,   th,   thu,  el,   elu))
+        f.write('# fr\tfru\ta\tau\tb\tbu\tc\tcu\tth\tthu\tel\telu\ta_\tau_\tc_\tcu_\n')
+        f.write('  %.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\n' %
+                (  fr,   fru,  a,    au,   b,    bu,   c,    cu,   th,   thu,  el,   elu,  a_,   au_,  c_,   cu_))
 
 
 if __name__ == '__main__':

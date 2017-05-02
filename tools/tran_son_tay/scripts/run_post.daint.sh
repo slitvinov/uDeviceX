@@ -7,7 +7,7 @@ for d in $(seq 27 117); do
     go=$(awk '$1 == "_gammadpd_out"  {print $2}' params.txt)
     gi=$(awk '$1 == "_gammadpd_in"   {print $2}' params.txt)
     gc=$(awk '$1 == "RBCgammaC"      {print $2}' params.txt)
-	echo "Processing run $d with parameters $go, $gi, $gc"
+    echo "Processing run $d with parameters $go $gi $gc $sh"
     post.py --dt=$dt --ply=ply --sh=$sh --st=$st
     )
 done
