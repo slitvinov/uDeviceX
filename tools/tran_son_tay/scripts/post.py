@@ -102,7 +102,7 @@ def process_data(plydir, dt, ntspd, sh):
             mi = np.argmax(xyz[:,0])  # the rightmost point will be a marker
             a0 = radii[0]; b0 = radii[1]; c0 = radii[2]
             a_0 = np.max(xyz[:,0]) - np.min(xyz[:,0])
-            c_0  np.max(xyz[:,2]) - np.min(xyz[:,2])
+            c_0 = np.max(xyz[:,2]) - np.min(xyz[:,2])
 
         a[i] = radii[0]/a0; b[i] = radii[1]/b0; c[i] = radii[2]/c0
         th[i] = get_angle_btw_vectors(rot[:,0], np.array([1,0,0]))
