@@ -1,4 +1,4 @@
-for d in $(seq 2 5); do
+for d in $(seq 27 117); do
     (
     cd simulations/run_$d
     dt=$(awk '$1 == "dt"             {print $2}' params.txt)

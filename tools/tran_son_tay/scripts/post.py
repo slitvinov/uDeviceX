@@ -119,7 +119,7 @@ def process_data(plydir, dt, ntspd, sh):
                 steady = 1; si = i
             else: ave = cur
 
-        if i % 100 == 0: print 'Computed up to %d/%d' % (i, n)
+        # if i % 100 == 0: print 'Computed up to %d/%d' % (i, n)
 
     t = dt*ntspd*np.arange(n)  # DPD time
     save_res('result.txt', (t, th, om, a, b, c, el, a_, c_))
