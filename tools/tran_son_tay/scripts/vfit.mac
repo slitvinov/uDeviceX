@@ -1,0 +1,36 @@
+/* Fitting TT frequency to velocity field */
+
+load("cgrind") $
+
+(X: 1, Y: 2);
+/* q: a/b; */
+U: f * [q*y, -1/q*x];
+
+declare(sm, linear); /* sum */
+declare([q, f], constant);
+E: sm ((U[X] - vx)^2 + (U[Y] - vy)^2);
+E: expand(E);
+
+kill(f); /* unconstant */
+dE: diff(E, f);
+so: linsolve(dE, f)[1];
+so: factor(so);
+
+vars: [sm(vx*y) = svxy, sm(y^2) = syy, sm(x^2) = sxx, sm(vy*x) = svyx, q^2 = q2, q^4 = q4];
+so  : subst(vars, so);
+
+ans: append(
+  map('reverse, vars),
+  [so]);
+
+for e in ans do cgrind(e);
+
+/*
+svxy = sm(vx*y);
+syy = sm(pow(y,2));
+sxx = sm(pow(x,2));
+svyx = sm(vy*x);
+q2 = pow(q,2);
+q4 = pow(q,4);
+f = (q*(q2*svxy-svyx))/(q4*syy+sxx);
+*/
