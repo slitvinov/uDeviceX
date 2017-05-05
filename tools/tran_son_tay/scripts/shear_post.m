@@ -1,6 +1,6 @@
 d = '~/workspace/source_codes/RBC/rbc_uq/tools/tran_son_tay/data';
 f = 'post.new';
-p = load(sprintf('%s/%s.txt', d, f));
+p = dlmread(sprintf('%s/%s.txt', d, f), '', 1, 0);
 sh = p(:, 5); p = p(sh == 5, :);
 r =  p(:, 1);
 go = p(:, 2);
