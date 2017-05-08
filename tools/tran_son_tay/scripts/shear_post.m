@@ -27,11 +27,8 @@ x = go; y = gi; z = gc;
 xt = unique(x); yt = unique(y); zt = unique(z);
 dp = 0.5; s = 10000;
 hold on
-q1 = fr; q2 = 0.218203; v = (q1-q2)/q2; scatter3(x-2*dp, y, z, s, v, 'Marker', '.')
-q1 = a_; q2 = 1.900000; v = (q1-q2)/q2; scatter3(x-1*dp, y, z, s, v, 'Marker', '.')
-q1 = c_; q2 = 0.525000; v = (q1-q2)/q2; scatter3(x+0*dp, y, z, s, v, 'Marker', '.')
-q1 = th; q2 = 12.80000; v = (q1-q2)/q2; scatter3(x+1*dp, y, z, s, v, 'Marker', '.')
-q1 = el; q2 = 125.0000; v = (q1   )/q2; scatter3(x+2*dp, y, z, s, v, 'Marker', '.')
+q1 = fr; q2 = 0.218203; v = (q1-q2)/q2; scatter3(x-1*dp, y, z, s, v, 'Marker', '.')
+q1 = el; q2 = 125.0000; v = (q1   )/q2; scatter3(x+1*dp, y, z, s, v, 'Marker', '.')
 for i=1:length(xt)
     for k=1:length(zt)
         line([xt(i) xt(i)],   [yt(1) yt(end)], [zt(k) zt(k)])
@@ -40,13 +37,12 @@ end
 hold off
 
 grid on
-xlabel('go'); ylabel('gi'); zlabel('gc')
-xlim([min(x)-3*dp max(x)+3*dp])
+xlabel('\gamma_o'); ylabel('\gamma_i'); zlabel('\gamma^C')
+xlim([min(x)-2*dp max(x)+2*dp])
 ylim([min(y)      max(y)     ])
 zlim([min(z)      max(z)     ])
 xticks(xt); yticks(yt); zticks(zt)
 colormap('jet'); caxis([-0.2 0.2]); colorbar
-% campos([-21.4473 -191.4344 66.9401])
 campos([-20 -200 50])
 
 %%
