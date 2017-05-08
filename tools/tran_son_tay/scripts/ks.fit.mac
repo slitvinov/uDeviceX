@@ -1,10 +1,9 @@
-/* Fitting TT frequency to velocity field */
+/* Fitting TT frequency to velocity field (Keller-Skalak)*/
 
 load("cgrind") $
 
 (X: 1, Y: 2);
-/* q: a/b; */
-U: f * [q*y, -1/q*x];
+U: f * [q*y, -1/q*x]; /* q: a/b; */
 
 declare(sm, linear); /* sum */
 declare([q, f], constant);
