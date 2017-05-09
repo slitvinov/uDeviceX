@@ -1,50 +1,62 @@
-A wrapper for cgal [1]
+A wrapper for cgal [^1]
 
-* Installing cgal
-** debian
-#+BEGIN_SRC sh
+Installing cgal
+===============
+
+debian
+------
+
+``` {.bash}
 sudo apt install libcgal-dev libcgal-qt5-dev -y
-#+END_SRC
+```
 
-* Installing cgal
-** osx
-#+BEGIN_SRC sh
+osx
+---
+
+``` {.bash}
 brew install cgal
 echo 'export CGAL_DIR=/usr/local/Cellar/cgal/4.9' >>~/.bash_profile
-#+END_SRC
+```
 
-** daint
-#+BEGIN_SRC sh
+daint
+-----
+
+``` {.bash}
 git clone https://github.com/Linuxbrew/brew.git ~/.linuxbrew
 echo 'export PATH="$HOME/.linuxbrew/bin:$PATH"' >>~/.bashrc
 brew install cgal
 echo 'export CGAL_DIR=$HOME/.linuxbrew/Cellar/cgal/4.9' >>~/.bashrc
-#+END_SRC
+```
 
-* Build geom-wrapper
+Build geom-wrapper
+==================
 
-** ubuntu
-#+BEGIN_SRC sh
+ubuntu
+------
+
+``` {.bash}
 cmake . -DCMAKE_VERBOSE_MAKEFILE=ON
 make
-#+END_SRC
+```
 
-** falcon
-#+BEGIN_SRC
-PATH=$HOME/.linuxbrew/bin:$PATH CGAL_DIR=$HOME/.linuxbrew/Cellar/cgal/4.9 cmake . -DCMAKE_VERBOSE_MAKEFILE=ON
-make
-#+END_SRC
+falcon
+------
 
-** daint
-#+BEGIN_SRC
-cmake . -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-#+END_SRC
+    PATH=$HOME/.linuxbrew/bin:$PATH CGAL_DIR=$HOME/.linuxbrew/Cellar/cgal/4.9 cmake . -DCMAKE_VERBOSE_MAKEFILE=ON
+    make
 
-* Linking with geom-wrapper
-#+BEGIN_EXAMPLE
+daint
+-----
+
+    cmake . -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+
+Linking with geom-wrapper
+=========================
+
+``` {.example}
 GWRP_CXXFLAGS = -I../geom-wrapper
 GWRP_LDFLAGS = -L${HOME}/prefix/cgal/lib64 -Wl,-rpath,${HOME}/prefix/cgal/lib64:${HOME}/prefix/pkgsrc/lib
 GWRP_LIBS = ../geom-wrapper/libgeom-wrapper.a -lgmp -lCGAL
-#+END_EXAMPLE
+```
 
-[1] http://www.cgal.org
+[^1]: <http://www.cgal.org>
