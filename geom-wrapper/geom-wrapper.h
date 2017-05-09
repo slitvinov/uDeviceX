@@ -15,7 +15,7 @@ void iotags_domain(float xl, float yl, float zl,
                    int pbcx_, int pbcy_, int pbcz_);
 
 /* Sets in-out flags for solvent particles:
-   -1: outside, [0:nrbc-1] id of the particle it belongs to
+   -1: outside, [0:nrbc-1] id of the cell it belongs to
 Note:
 Modifies sol_[xx|yy|zz] */
 void iotags_all(long  nrbc , float *rbc_xx, float *rbc_yy, float *rbc_zz,
