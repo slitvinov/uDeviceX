@@ -7,13 +7,14 @@ import numpy as np
 from argparse import ArgumentParser
 from efit import fit_ellipsoid_ply
 from glob import glob
-from matplotlib.pyplot import plot, savefig, close, legend
+from matplotlib.pyplot import plot, savefig, close, legend, quiver, axis
 from numpy.linalg import norm
 from os import makedirs
 from os.path import exists
 from plyfile import PlyData
 from sklearn.decomposition import PCA
 from scipy.optimize import leastsq
+from time import time
 
 
 verbose = 0
@@ -111,8 +112,16 @@ def get_fr_sk(xyz, uvw, rot, ab, it):
     uvw = np.dot(xyz+uvw, rot) - xyz
 
     # fit
-    r = xyz[:,[A,B]]; v = uvw[:,[A,B]]
+    r = xyz[:, [A, B]]; v = uvw[:, [A, B]]
     f = fit_sk2(r, v, ab)
+
+    # # plot
+    # ve = f*np.array([ab, -1./ab])*r[:,[Y, X]]
+    # quiver(r[:, X], r[:, Y], v [:, X], v [:, Y], color='r')
+    # quiver(r[:, X], r[:, Y], ve[:, X], ve[:, Y], color='b')
+    # axis('equal')
+    # savefig('fit.pdf'); close()
+
     return f
 
 
@@ -135,7 +144,7 @@ def get_fr(x, y):
     plot(x, y, 'b-o', label='theta')
     plot(x[peakind], y[peakind], 'ro', label='peaks')
     legend()
-    savefig('peaks.png')
+    savefig('peaks.pdf')
     close()
 
     return fr, fru/fr
@@ -156,9 +165,9 @@ def process_data(plydir, dt, ntspd, sh):
     fr = np.zeros(n)  # tanktreading frequency
     a  = np.zeros(n); b  = np.zeros(n); c  = np.zeros(n)
     a_ = np.zeros(n); b_ = np.zeros(n); c_ = np.zeros(n)
-    ch = int(np.floor(n/20))
-    steady = False; si = int(0.3*n); ave = 0
+    ch = int(0.05*n); steady = False; si = int(0.5*n); ave = 0
 
+    tstart = time()
     for i in range(n):
         fname = files[i]
         center, rot, radii, chi2, xyz, uvw = fit_ellipsoid_ply(fname,
@@ -166,23 +175,23 @@ def process_data(plydir, dt, ntspd, sh):
 
         if i == 0:
             mi = np.argmax(xyz[:,A])  # the rightmost point will be a marker
-            a0 = np.max(xyz[:,A]) - np.min(xyz[:,A])
-            b0 = np.max(xyz[:,B]) - np.min(xyz[:,B])
-            c0 = np.max(xyz[:,C]) - np.min(xyz[:,C])
+            a0 = np.max(xyz[:, A]) - np.min(xyz[:, A])
+            b0 = np.max(xyz[:, B]) - np.min(xyz[:, B])
+            c0 = np.max(xyz[:, C]) - np.min(xyz[:, C])
 
         a[i] = 2*radii[A]/a0
         b[i] = 2*radii[B]/b0
         c[i] = 2*radii[C]/c0
-        a_[i] = (np.max(xyz[:,A]) - np.min(xyz[:,A]))/a0
-        b_[i] = (np.max(xyz[:,B]) - np.min(xyz[:,B]))/b0
-        c_[i] = (np.max(xyz[:,C]) - np.min(xyz[:,C]))/c0
-        th[i] = get_angle_btw_vectors(rot[:,A], np.array([1,0,0]))
+        a_[i] = (np.max(xyz[:, A]) - np.min(xyz[:, A]))/a0
+        b_[i] = (np.max(xyz[:, B]) - np.min(xyz[:, B]))/b0
+        c_[i] = (np.max(xyz[:, C]) - np.min(xyz[:, C]))/c0
+        th[i] = get_angle_btw_vectors(rot[:, A], np.array([1, 0, 0]))
         om[i] = get_om(xyz, mi, th[i])
         el[i] = chi2
         fr[i] = get_fr_sk(xyz, uvw, rot, radii[A]/radii[B], i)
 
         # check whether we're in a steady state
-        if ch > 0 and (i+1) % ch == 0 and i >= si:
+        if ch > 0 and i >= si and i % ch == 0:
             cur = np.mean(a[i-ch+1:i])
             if not steady and np.abs(ave-cur) < 0.02*ave:
                 steady = True; si = i
@@ -190,6 +199,8 @@ def process_data(plydir, dt, ntspd, sh):
             else: ave = cur
 
         if verbose and i % 100 == 0: print 'Computed %d/%d steps' % (i, n)
+
+    print 'Elapsed time: %.1f sec' % (time()-tstart)
 
     t = dt*ntspd*np.arange(n)  # DPD time
     save_txt('result.txt', (t, th, om, a, b, c, el, a_, b_, c_, fr))
