@@ -150,6 +150,7 @@ def fit_ellipsoid_ply(ip, op, oe):
     ply = PlyData.read(ip)
     vertex = ply['vertex']
     xyz = np.array([vertex[p] for p in ('x', 'y', 'z')]).T
+    uvw = np.array([vertex[p] for p in ('u', 'v', 'w')]).T
     center, radii, rot, v, chi2 = ellipsoid_fit(xyz)
 
     if not any(np.isnan(radii)):
@@ -163,4 +164,4 @@ def fit_ellipsoid_ply(ip, op, oe):
         ply.write(op+'.ply')
     else: print 'File %s has NaN' % ip
 
-    return center, rot, radii, chi2, xyz
+    return center, rot, radii, chi2, xyz, uvw

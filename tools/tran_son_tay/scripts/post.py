@@ -13,6 +13,7 @@ from os import makedirs
 from os.path import exists
 from plyfile import PlyData
 from sklearn.decomposition import PCA
+from scipy.optimize import leastsq
 
 
 verbose = 0
@@ -52,6 +53,20 @@ def get_om(fname, idx, th):
     return om
 
 
+def get_fr_sk(xyz, uvw, rot, ab):
+    xyz -= np.mean(xyz, axis=0)
+    uvw -= np.mean(uvw, axis=0)
+
+    xyz = np.dot(xyz, rot)
+    uvw = np.dot(xyz+uvw, rot) - xyz
+
+    r = xyz[:,[0,2]]; v = uvw[:,[0,2]]
+
+    def func(f, r, v): return norm(f*np.array([ab, -1./ab])*r[:,[1, 0]] - v)
+    f0 = 0.2
+    return leastsq(func, f0, args=(r, v))[0]
+
+
 def get_fr(x, y):
     fr = 0; fru = 100
 
@@ -89,16 +104,17 @@ def process_data(plydir, dt, ntspd, sh):
     th = np.zeros(n)  # angle with the projection on Ox
     om = np.zeros(n)  # angle of the marker with the current RBC axis
     el = np.zeros(n)  # ellipticity
+    fr = np.zeros(n)  # tanktreading frequency
     a  = np.zeros(n); b  = np.zeros(n); c  = np.zeros(n)
     a_ = np.zeros(n); b_ = np.zeros(n); c_ = np.zeros(n)
     ch = int(np.floor(n/20))
-    steady = False; si = 0.75*n; ave = 0
+    steady = False; si = int(0.75*n); ave = 0
     A = 0; B = 2; C = 1  # x, y, z corresponding to a, b, c
 
     # main loop
     for i in range(n):
         fname = files[i]
-        center, rot, radii, chi2, xyz = fit_ellipsoid_ply(fname,
+        center, rot, radii, chi2, xyz, uvw = fit_ellipsoid_ply(fname,
             '%s/%05d' % (cd, i), '%s/%05d' % (ed, i))
 
         if i == 0:
@@ -117,6 +133,7 @@ def process_data(plydir, dt, ntspd, sh):
         th[i] = get_angle_btw_vectors(rot[:,A], np.array([1,0,0]))
         om[i] = get_om(fname, mi, th[i])
         el[i] = chi2
+        fr[i] = get_fr_sk(xyz, uvw, rot, a[i]/b[i])
 
         # check whether we're in a steady state
         if ch > 0 and (i+1) % ch == 0:
@@ -153,6 +170,12 @@ def process_data(plydir, dt, ntspd, sh):
     savefig('ellipticity.png')
     close()
 
+    plot(t, fr, 'r-', label='TTF')
+    plot([t[si], t[si]], [0, 1], 'k--')
+    legend()
+    savefig('ttf.png')
+    close()
+
     # compute means and stds
     a,  au  = np.mean( a[si:]), np.std( a[si:])
     b,  bu  = np.mean( b[si:]), np.std( b[si:])
@@ -162,7 +185,9 @@ def process_data(plydir, dt, ntspd, sh):
     a_, au_ = np.mean(a_[si:]), np.std(a_[si:])
     b_, bu_ = np.mean(b_[si:]), np.std(b_[si:])
     c_, cu_ = np.mean(c_[si:]), np.std(c_[si:])
-    fr, fru = get_fr(t[si:], om[si:]); fr *= 2.*np.pi/sh; fru /= sh
+    fr, fru = np.mean(fr[si:]), np.std(fr[si:])
+    fr /= sh; fru /= sh
+    # fr, fru = get_fr(t[si:], om[si:]); fr *= 2.*np.pi/sh; fru /= sh
 
     with open('post.txt', 'w') as f:
         f.write('# fr\tfru\ta\tau\tb\tbu\tc\tcu\tth\tthu\tel\telu\ta_\tau_\tc_\tcu_\n')
@@ -172,10 +197,10 @@ def process_data(plydir, dt, ntspd, sh):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--ply')
-    parser.add_argument('--sh')
-    parser.add_argument('--st')
-    parser.add_argument('--dt')
+    parser.add_argument('--ply', default='ply')
+    parser.add_argument('--sh',  default='1')
+    parser.add_argument('--st',  default='1')
+    parser.add_argument('--dt',  default='1')
     args = parser.parse_args()
     plydir = args.ply
     sh     = float(args.sh)
