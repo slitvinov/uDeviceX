@@ -46,7 +46,7 @@ void safe_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 
 char* trim(char* s) { /* remove trailing and leading blanks, tabs,
 			   new lines */
-  /* trailing */
+  if (s == NULL) return;
   int n;
   for (n = std::strlen(s)-1; n >= 0; n--)
     if (s[n] != ' ' && s[n] != '\t' && s[n] != '\n')
