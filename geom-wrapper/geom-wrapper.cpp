@@ -59,17 +59,16 @@ void iotags_wrap(float* r, float r0, float L) { /* among periodic
 }
 
 namespace ud2f { /* [uD]eviceX rbc definition file [to] [f]aces */
-  void ok(ssize_t rc) { /* input file status check */
-    if (rc == -1) {
-      printf("(ud2faces) ERROR: cannot read uDeviceX file\n");
-      exit(EXIT_FAILURE);
-    }
+  /* nl() realted global variables */
+  char* line;
+  char  linebuf[BUFSIZ];
+  FILE* fd;
+  void nl() {
+    line = fgets(linebuf, BUFSIZ - 1, fd);
+    line = trim(line);
   }
 
-  /* nl() realted global variables */
-  static char* line; static size_t len; static ssize_t read;
-#define nl() ok(read = getline(&line, &len, fd)), line = trim(line) /* [n]ext [l]ine and trim */
-  void read_header(FILE* fd) {
+  void read_header() {
     nl(); sscanf(line, "%ld\n", &nb); /* number of vertices in one RBC  */
     nl();                            /* number of edges  */
     nl(); sscanf(line, "%ld\n", &nf);
@@ -85,8 +84,8 @@ namespace ud2f { /* [uD]eviceX rbc definition file [to] [f]aces */
     }
   }
 
-  void read_faces(FILE* fd) { /* acclocats and fills `ff1', `ff2',
-				 `ff3' */
+  void read_faces() { /* acclocats and fills `ff1', `ff2',
+			 `ff3' */
     auto szi = sizeof(int);
     ff1 = (int*)malloc(nf*szi); ff2 = (int*)malloc(nf*szi); ff3 = (int*)malloc(nf*szi);
 
@@ -94,19 +93,21 @@ namespace ud2f { /* [uD]eviceX rbc definition file [to] [f]aces */
     do nl(); while ( s_eq(line, ""));
     int iangle, tangle; /* id and type of an `angle'; unused */
     int f1, f2, f3, ifa = 0;
-    do {
+    for (;;) {
       sscanf(line, "%d %d %d %d %d\n", &iangle, &tangle, &f1, &f2, &f3);
       ff1[ifa] = f1; ff2[ifa] = f2; ff3[ifa] = f3; ifa++;
       nl();
-    } while (read != -1 && !s_eq(line, ""));
+      if (line == NULL) break;
+      if (s_eq(line, "")) break;
+    }
     check_nf(ifa, nf);
   }
 
   void read_file(const char* fn) {
     fprintf(stderr, "(iotags) reading: %s\n", fn);
-    auto fd = safe_fopen(fn, "r");
-    read_header(fd);
-    read_faces(fd);
+    fd = safe_fopen(fn, "r");
+    read_header();
+    read_faces();
     fclose(fd);
   }
 }
@@ -186,10 +187,10 @@ void iotags_all(long  nrbc , float* rbc_xx, float* rbc_yy, float* rbc_zz,
     auto x0 = rbc_xx[0], y0 = rbc_yy[0], z0 = rbc_zz[0]; /* any vertex of RBC*/
     if (io % 100 == 0) fprintf(stderr, "(geom-wrapper) rbc: %ld of %ld\n", io, no);
     iotags_recenter(sol_xx, sol_yy, sol_zz,
-    		    x0, y0, z0); /* recenter solvent using periodic BC */
+		    x0, y0, z0); /* recenter solvent using periodic BC */
     iotags_single(io,
 		  rbc_xx, rbc_yy, rbc_zz,
-  		  sol_xx, sol_yy, sol_zz,
+		  sol_xx, sol_yy, sol_zz,
 		  /* output */ iotags);
     rbc_xx += nb; rbc_yy += nb; rbc_zz += nb;
   }
