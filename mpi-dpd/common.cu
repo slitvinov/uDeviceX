@@ -25,6 +25,8 @@ void CellLists::build(Particle * const p, const int n, int * const order, const 
 }
 
 void diagnostics(Particle * particles, int n, int idstep) {
+    enum {X, Y, Z};
+
     double p[] = {0, 0, 0};
     for(int i = 0; i < n; ++i)
         for(int c = 0; c < 3; ++c)
@@ -43,16 +45,25 @@ void diagnostics(Particle * particles, int n, int idstep) {
     MC(MPI_Reduce(m::rank == 0 ? MPI_IN_PLACE : &n,
 		  &n, 1, MPI_INT, MPI_SUM, 0, m::cart));
 
+    double M = 0, I = 0;
+    for (int i = 0; i < n; ++i) {
+        float *r = particles[i].r;
+        float *v = particles[i].v;
+        M += -r[X]*v[Z] + r[Z]*v[X];
+        I += r[X]*r[X] + r[Z]*r[Z];
+    }
+
     double kbt = 0.5 * ke / (n * 3. / 2);
     if (m::rank == 0) {
         static bool firsttime = true;
         FILE * f = fopen("diag.txt", firsttime ? "w" : "a");
         firsttime = false;
         if (idstep == 0)
-            fprintf(f, "# TSTEP\tKBT\tPX\tPY\tPZ\n");
-
-        printf("\x1b[91m timestep: %e\t%.10e\t%.10e\t%.10e\t%.10e\x1b[0m\n", idstep * dt, kbt, p[0], p[1], p[2]);
-        fprintf(f, "%e\t%.10e\t%.10e\t%.10e\t%.10e\n", idstep * dt, kbt, p[0], p[1], p[2]);
+            fprintf(f, "# TSTEP\tKBT\tPX\tPY\tPZ\tM\tI\n");
+#define FMT "%e\t%.10e\t%.10e\t%.10e\t%.10e\t%.10e\t%.10e"
+        printf("\x1b[91m timestep: " FMT "\x1b[0m\n", idstep * dt, kbt, p[0], p[1], p[2], M, I);
+        fprintf(f, FMT "\n", idstep * dt, kbt, p[0], p[1], p[2], M, I);
         fclose(f);
+#undef FMT
     }
 }
