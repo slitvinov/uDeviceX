@@ -12,5 +12,5 @@ if (CGAL_FOUND)
 
       add_subdirectory(demo)
   else()
-    message(STATUS "This program requires the CGAL library, and will not be compiled.")
+    message(FATAL_ERROR "This program requires the CGAL library, and will not be compiled.")
 endif()
