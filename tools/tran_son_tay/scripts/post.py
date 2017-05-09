@@ -57,7 +57,7 @@ def plot_all(si, t, th, om, a, b, c, el, fr):
     close()
 
     plot(t, el, 'r-', label='ellipticity')
-    plot([t[si], t[si]], [0, 100], 'k--')
+    plot([t[si], t[si]], [0, 1], 'k--')
     legend()
     savefig('ellipticity.pdf')
     close()
@@ -67,6 +67,33 @@ def plot_all(si, t, th, om, a, b, c, el, fr):
     legend()
     savefig('ttf.pdf')
     close()
+
+
+def print_all(si, fr, a, b, c, th, el, a_, b_, c_):
+    a,  au  = np.mean( a[si:]), np.std( a[si:])
+    b,  bu  = np.mean( b[si:]), np.std( b[si:])
+    c,  cu  = np.mean( c[si:]), np.std( c[si:])
+    el, elu = np.mean(el[si:]), np.std(el[si:])
+    th, thu = np.mean(th[si:]), np.std(th[si:])
+    a_, au_ = np.mean(a_[si:]), np.std(a_[si:])
+    b_, bu_ = np.mean(b_[si:]), np.std(b_[si:])
+    c_, cu_ = np.mean(c_[si:]), np.std(c_[si:])
+    fr, fru = np.mean(fr[si:]), np.std(fr[si:])
+    # fr, fru = get_fr(t[si:], om[si:]); fr *= 2.*np.pi/sh; fru /= sh
+
+    sep = '\t'
+    with open('post.txt', 'w') as f:
+        t = '#', 'fr', 'fru', 'a', 'au', 'b', 'bu', 'c', 'cu', 'th', 'thu', 'el', 'elu', 'a_', 'au_', 'c_', 'cu_'
+        fmt = '%s'
+        tm = map(lambda e: fmt % e, t)
+        tm = sep.join(tm)
+        f.write('%s\n' % tm)
+
+        t = fr, fru, a, au, b, bu, c, cu, th, thu, el, elu, a_, au_, b_, bu_, c_, cu_
+        fmt = '%.6f'
+        tm = map(lambda e: fmt % e, t)
+        tm = sep.join(tm)
+        f.write('%s\n' % tm)
 
 
 def get_angle_btw_vectors(v1, v2):
@@ -187,8 +214,8 @@ def process_data(plydir, dt, ntspd, sh):
         c_[i] = (np.max(xyz[:, C]) - np.min(xyz[:, C]))/c0
         th[i] = get_angle_btw_vectors(rot[:, A], np.array([1, 0, 0]))
         om[i] = get_om(xyz, mi, th[i])
-        el[i] = chi2
-        fr[i] = get_fr_sk(xyz, uvw, rot, radii[A]/radii[B], i)
+        el[i] = chi2 / xyz.shape[0]
+        fr[i] = get_fr_sk(xyz, uvw, rot, radii[A]/radii[B], i) / sh
 
         # check whether we're in a steady state
         if ch > 0 and i >= si and i % ch == 0:
@@ -205,24 +232,7 @@ def process_data(plydir, dt, ntspd, sh):
     t = dt*ntspd*np.arange(n)  # DPD time
     save_txt('result.txt', (t, th, om, a, b, c, el, a_, b_, c_, fr))
     plot_all(si, t, th, om, a, b, c, el, fr)
-
-    # compute means and stds
-    a,  au  = np.mean( a[si:]), np.std( a[si:])
-    b,  bu  = np.mean( b[si:]), np.std( b[si:])
-    c,  cu  = np.mean( c[si:]), np.std( c[si:])
-    el, elu = np.mean(el[si:]), np.std(el[si:])
-    th, thu = np.mean(th[si:]), np.std(th[si:])
-    a_, au_ = np.mean(a_[si:]), np.std(a_[si:])
-    b_, bu_ = np.mean(b_[si:]), np.std(b_[si:])
-    c_, cu_ = np.mean(c_[si:]), np.std(c_[si:])
-    fr, fru = np.mean(fr[si:]), np.std(fr[si:])
-    fr /= sh; fru /= sh
-    # fr, fru = get_fr(t[si:], om[si:]); fr *= 2.*np.pi/sh; fru /= sh
-
-    with open('post.txt', 'w') as f:
-        f.write('# fr\tfru\ta\tau\tb\tbu\tc\tcu\tth\tthu\tel\telu\ta_\tau_\tc_\tcu_\n')
-        f.write('  %.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\n' %
-                (  fr,   fru,  a,    au,   b,    bu,   c,    cu,   th,   thu,  el,   elu,  a_,   au_,  b_,   bu_,  c_,   cu_))
+    print_all(si, fr, a, b, c, th, el, a_, b_, c_)
 
 
 if __name__ == '__main__':
