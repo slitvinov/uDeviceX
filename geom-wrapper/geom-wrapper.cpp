@@ -44,13 +44,13 @@ public:
   }
 };
 
-void iotags_init(long nb_, long  nf_, int*   rbc_f1, int*   rbc_f2, int* rbc_f3) {
+void iotags_init(long nb_, long  nf_, int *rbc_f1, int *rbc_f2, int *rbc_f3) {
   nb = nb_;
   nf = nf_; ff1 = rbc_f1; ff2 = rbc_f2; ff3 = rbc_f3; /* set static
 							  variables */
 }
 
-void iotags_wrap(float* r, float r0, float L) { /* among periodic
+void iotags_wrap(float *r, float r0, float L) { /* among periodic
 					    images of `r' choose the
 					    one closest to `r0' */
   auto dr = *r - r0;
@@ -63,7 +63,7 @@ namespace ud2f { /* [uD]eviceX rbc definition file [to] [f]aces */
   char* line;
   char  linebuf[BUFSIZ];
   FILE* fd;
-  void nl() {
+  void nl() { /* [n]ext [l]ine */
     line = fgets(linebuf, BUFSIZ - 1, fd);
     line = trim(line);
   }
@@ -73,7 +73,8 @@ namespace ud2f { /* [uD]eviceX rbc definition file [to] [f]aces */
     nl();                            /* number of edges  */
     nl(); sscanf(line, "%ld\n", &nf);
   }
-  bool s_eq(const char* s1, const char* s2) { /* true if `s1' is equal `s2' */
+  
+  bool s_eq(const char *s1, const char *s2) { /* true if `s1' is equal `s2' */
     return std::strcmp(s1, s2) == 0;
   }
 
@@ -84,7 +85,7 @@ namespace ud2f { /* [uD]eviceX rbc definition file [to] [f]aces */
     }
   }
 
-  void read_faces() { /* acclocats and fills `ff1', `ff2',
+  void read_faces() { /* allocates and fills `ff1', `ff2',
 			 `ff3' */
     auto szi = sizeof(int);
     ff1 = (int*)malloc(nf*szi); ff2 = (int*)malloc(nf*szi); ff3 = (int*)malloc(nf*szi);
@@ -103,7 +104,7 @@ namespace ud2f { /* [uD]eviceX rbc definition file [to] [f]aces */
     check_nf(ifa, nf);
   }
 
-  void read_file(const char* fn) {
+  void read_file(const char *fn) {
     fprintf(stderr, "(iotags) reading: %s\n", fn);
     fd = safe_fopen(fn, "r");
     read_header();
@@ -112,7 +113,7 @@ namespace ud2f { /* [uD]eviceX rbc definition file [to] [f]aces */
   }
 }
 
-void iotags_init_file(const char* fn) { /* like `iotags_init' but read
+void iotags_init_file(const char *fn) { /* like `iotags_init' but read
 					   uDeviceX file */
   ud2f::read_file(fn); /* sets `nb', `nf'; allocates and fills: `ff1',
 			  `ff2', `ff3' */
@@ -168,7 +169,7 @@ void iotags_single(long io, /* id of an RBC */
 }
 
 /* move all coordinates closer to x0, y0, z0 */
-void iotags_recenter(float* xx, float* yy, float* zz,
+void iotags_recenter(float *xx, float *yy, float *zz,
 		     float x0, float y0, float z0) {
   long isol;
   if (pbcx) for (isol = 0; isol < nsol; isol++) iotags_wrap(&xx[isol], x0, Lx);
@@ -176,8 +177,8 @@ void iotags_recenter(float* xx, float* yy, float* zz,
   if (pbcz) for (isol = 0; isol < nsol; isol++) iotags_wrap(&zz[isol], z0, Lz);
 }
 
-void iotags_all(long  nrbc , float* rbc_xx, float* rbc_yy, float* rbc_zz,
-		long  nsol_, float* sol_xx, float* sol_yy, float* sol_zz,
+void iotags_all(long  nrbc , float *rbc_xx, float *rbc_yy, float *rbc_zz,
+		long  nsol_, float *sol_xx, float *sol_yy, float *sol_zz,
 		int* iotags) { /* fills iotags */
   nsol = nsol_; /* set static */
   auto no = nrbc / nb; /* number of objects (RBCs); nrbc: is the total
