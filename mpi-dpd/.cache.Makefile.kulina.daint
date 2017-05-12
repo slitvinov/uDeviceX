@@ -5,11 +5,12 @@
 
 h5part = 1
 h5 = 1
+gwrp = 1
 
 ARCH_VAL = compute_60
 CODE_VAL = sm_60
 
-LINK = CC
+LINK = g++
 NVCC_BIN = nvcc
 
 # how to get the flags: mpicxx -show
