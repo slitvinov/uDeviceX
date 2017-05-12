@@ -157,10 +157,35 @@ void dev2hst() { /* device to host  data transfer */
 		       sizeof(Particle) * r_n, D2H, 0));
 }
 
+bool in_box(float *r) {
+  enum {X, Y, Z};
+  float xlo = -5,   xhi = -xlo,
+        ylo = -3,   yhi = -ylo,
+        zlo = -1.5, zhi = -zlo;
+  return (   xlo <= r[X] && r[X] <= xhi
+          && ylo <= r[Y] && r[Y] <= yhi
+          && zlo <= r[Z] && r[Z] <= zhi);
+}
+
+int mv_box(Particle *pp, int n) {
+  Particle p;
+  int i, i0 = 0 /* first particle not in box */;
+  for (i = 0; i < n; ++i) {
+    float *r = pp[i].r;
+    if (in_box(r)) {
+      p = pp[i];
+      pp[i] = pp[i0];
+      pp[i0] = p;
+      i0++;
+    }
+  }
+  return i0;
+}
+
 void dump_part() {
   if (!hdf5part_dumps) return;
   dev2hst(); /* TODO: do not need `r' */
-  int n = s_n + r_n;
+  int n = mv_box(sr_pp, s_n);
   dump_part_solvent->dump(sr_pp, n);
 }
 

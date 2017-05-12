@@ -85,9 +85,6 @@ H5PartDump::H5PartDump(const std::string fname): tstamp(0), disposed(false)
 void H5PartDump::_initialize(const std::string filename)
 {
 #ifndef NO_H5PART
-    const int L[3] = { XS, YS, ZS };
-    for(int c = 0; c < 3; ++c) origin[c] = L[c] / 2 + m::coords[c] * L[c];
-      
     mkdir("h5", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     char path[1024];
     sprintf(path, "h5/%s", filename.c_str());
