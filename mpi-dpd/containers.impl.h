@@ -189,6 +189,7 @@ namespace ParticleKernels {
     __global__ void rm_vmean(Particle* p, int n) {
 	int pid = threadIdx.x + blockDim.x * blockIdx.x;
 	if (pid >= n) return;
+	lastbit::Preserver up(p[pid].v[0]);
     p[pid].v[0] -= vmean[0];
     p[pid].v[1] -= vmean[1];
     p[pid].v[2] -= vmean[2];
@@ -217,8 +218,8 @@ void rm_vmean(Particle* s_pp, int s_n, Particle* r_pp, int r_n) {
   if (s_n && r_n) {
     ParticleKernels::setup_vmean<<<(r_n + 127) / 128, 128 >>>();
     ParticleKernels::get_vmean<<<(r_n + 127) / 128, 128 >>>(r_pp, r_n);
-    ParticleKernels::rm_vmean <<<(s_n + 127) / 128, 128 >>>(s_pp, s_n);
-    ParticleKernels::rm_vmean <<<(r_n + 127) / 128, 128 >>>(r_pp, r_n);
+    ParticleKernels::rm_vmean<<<(s_n + 127) / 128, 128 >>>(s_pp, s_n);
+    ParticleKernels::rm_vmean<<<(r_n + 127) / 128, 128 >>>(r_pp, r_n);
   }
 }
 
