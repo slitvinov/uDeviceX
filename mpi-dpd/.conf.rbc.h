@@ -14,7 +14,7 @@
 #define _gammadpd_rbc 15.0
 #define _gammadpd_wall 15.0
 #define _hydrostatic_a 0.05
-#define _kBT 0.1
+#define _kBT 1e-7
 #define _ljepsilon 1.0
 #define _ljsigma 0.3
 #define _numberdensity 3

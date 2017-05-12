@@ -8,7 +8,7 @@
 # add crap from test_data/* to git
 
 #### RBC with wall
-# cTEST: rbc.t1
+# nTEST: rbc.t1
 # export PATH=../tools:$PATH
 # cp sdf/wall1/wall.dat sdf.dat
 # cp .rbcs-ic.txt rbcs-ic.txt
