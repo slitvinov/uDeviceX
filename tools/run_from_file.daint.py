@@ -70,8 +70,8 @@ def gen_templates():
 
 def set_defaults():
     pv['rc']                   = 1.5
-    pv['XS']                   = 32
-    pv['YS']                   = 16
+    pv['XS']                   = 64
+    pv['YS']                   = 32
     pv['ZS']                   = 32
     pv['XMARGIN_WALL']         = 6
     pv['YMARGIN_WALL']         = 6
@@ -109,7 +109,7 @@ def set_defaults():
     pv['contactforces']        = 'false'
     pv['doublepoiseuille']     = 'false'
     pv['hdf5field_dumps']      = 'false'
-    pv['hdf5part_dumps']       = 'false'
+    pv['hdf5part_dumps']       = 'true'
     pv['pushtheflow']          = 'false'
     pv['rbcs']                 = 'true'
     pv['steps_per_dump']       = 320
@@ -135,7 +135,7 @@ def gen_rbc():
 
 def gen_ic(d0):
     with open(d0+'/'+ic_file, 'w') as f:
-        ic = '1 0 0 %g  0 1 0 %g  0 0 1 %g  0 0 0 1\n'
+        ic = '1 0 0 %d  0 1 0 %d  0 0 1 %d  0 0 0 1\n'
         f.write(ic % (pv['XS']/2, pv['YS']/2, pv['ZS']/2))
 
 
@@ -165,8 +165,8 @@ def gen_par(pn0, pv0):
     for j in range(len(pv0)): pv[pn0[j]] = float(pv0[j])
     pv['_gammadpd_rbc'] = pv['_gammadpd_wall'] = pv['_gammadpd_out']
     sh = pv['_gamma_dot']
-    pv['tend'] = 800/sh
-    pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(1600/sh)
+    pv['tend'] = 4*800/sh
+    pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(4*800/sh)
 
 
 def recompile():
@@ -186,7 +186,7 @@ def run(d0):
     with open('%s/runme.sh' % d0, 'w') as f:
         f.write('#!/bin/bash -l\n')
         f.write('#SBATCH --job-name=rbc_%s\n' % d0)
-        f.write('#SBATCH --time=03:00:00\n')
+        f.write('#SBATCH --time=12:00:00\n')
         f.write('#SBATCH --nodes=1\n')
         f.write('#SBATCH --ntasks-per-node=1\n')
         f.write('#SBATCH --output=output.txt\n')
