@@ -51,19 +51,19 @@ def plot_all(si, t, th, om, a, b, c, el, fr):
     plot(t, a, 'r-', label='a')
     plot(t, b, 'g-', label='b')
     plot(t, c, 'b-', label='c')
-    plot([t[si], t[si]], [0, 2], 'k--')
+    plot([t[si], t[si]], [0, 3], 'k--')
     legend()
     savefig('diam.pdf')
     close()
 
     plot(t, el, 'r-', label='ellipticity')
-    plot([t[si], t[si]], [0, 1], 'k--')
+    plot([t[si], t[si]], [0, 0.25], 'k--')
     legend()
     savefig('ellipticity.pdf')
     close()
 
     plot(t, fr, 'r-', label='TTF')
-    plot([t[si], t[si]], [0, 1], 'k--')
+    plot([t[si], t[si]], [0, 0.5], 'k--')
     legend()
     savefig('ttf.pdf')
     close()
@@ -180,8 +180,6 @@ def get_fr(x, y):
 def process_data(plydir, dt, ntspd, sh):
     ed = 'e' # directory for ellipsoid dumps
     if not exists(ed): makedirs(ed)
-    cd = 'c' # directory for COM dumps
-    if not exists(cd): makedirs(cd)
 
     # initialization
     files = glob(plydir+"/rbcs-*.ply"); files.sort()
@@ -197,8 +195,7 @@ def process_data(plydir, dt, ntspd, sh):
     tstart = time()
     for i in range(n):
         fname = files[i]
-        center, rot, radii, chi2, xyz, uvw = fit_ellipsoid_ply(fname,
-            '%s/%05d' % (cd, i), '%s/%05d' % (ed, i))
+        center, rot, radii, chi2, xyz, uvw = fit_ellipsoid_ply(fname, '%s/%05d' % (ed, i))
 
         if i == 0:
             mi = np.argmax(xyz[:,A])  # the rightmost point will be a marker
