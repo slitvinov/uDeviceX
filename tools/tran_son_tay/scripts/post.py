@@ -180,8 +180,6 @@ def get_fr(x, y):
 def process_data(plydir, dt, ntspd, sh):
     ed = 'e' # directory for ellipsoid dumps
     if not exists(ed): makedirs(ed)
-    cd = 'c' # directory for COM dumps
-    if not exists(cd): makedirs(cd)
 
     # initialization
     files = glob(plydir+"/rbcs-*.ply"); files.sort()
@@ -197,8 +195,7 @@ def process_data(plydir, dt, ntspd, sh):
     tstart = time()
     for i in range(n):
         fname = files[i]
-        center, rot, radii, chi2, xyz, uvw = fit_ellipsoid_ply(fname,
-            '%s/%05d' % (cd, i), '%s/%05d' % (ed, i))
+        center, rot, radii, chi2, xyz, uvw = fit_ellipsoid_ply(fname, '%s/%05d' % (ed, i))
 
         if i == 0:
             mi = np.argmax(xyz[:,A])  # the rightmost point will be a marker
