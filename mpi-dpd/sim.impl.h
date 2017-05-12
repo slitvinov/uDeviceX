@@ -139,6 +139,10 @@ void forces() {
   rex::recv_f();
 }
 
+void rm_vmean() {
+   Cont::rm_vmean(s_pp, s_n, r_pp, r_n);
+}
+
 void in_out() {
 #ifdef GWRP
 #include "sim.hack.h"
@@ -260,6 +264,7 @@ void run() {
       if (pushtheflow) driving_force = hydrostatic_a;
     }
     redistribute();
+    rm_vmean();
     forces();
     dumps_diags(it);
     update();

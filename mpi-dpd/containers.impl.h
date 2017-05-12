@@ -159,6 +159,40 @@ namespace ParticleKernels {
     float vx = gamma_dot*z, vy = 0, vz = 0;
     p[pid].v[0] = vx; p[pid].v[1] = vy; p[pid].v[2] = vz;
     }
+
+    __device__ float vmean[3];
+    __global__ void setup_vmean() {
+      int pid = threadIdx.x + blockDim.x * blockIdx.x;
+      if (pid == 0) {
+        vmean[0] = 0;
+        vmean[1] = 0;
+        vmean[2] = 0;
+      }
+    }
+
+    __global__ void print_vmean() {
+      int pid = threadIdx.x + blockDim.x * blockIdx.x;
+      if (pid == 0) {
+        printf("VMEAN: %g %g %g\n", vmean[0], vmean[1], vmean[2]);
+      }
+    }
+
+    __global__ void get_vmean(Particle* p, int n) {
+	int pid = threadIdx.x + blockDim.x * blockIdx.x;
+	if (pid >= n) return;
+    float vx = p[pid].v[0], vy = p[pid].v[1], vz = p[pid].v[2];
+    atomicAdd(vmean + 0, vx/n);
+    atomicAdd(vmean + 1, vy/n);
+    atomicAdd(vmean + 2, vz/n);
+    }
+
+    __global__ void rm_vmean(Particle* p, int n) {
+	int pid = threadIdx.x + blockDim.x * blockIdx.x;
+	if (pid >= n) return;
+    p[pid].v[0] -= vmean[0];
+    p[pid].v[1] -= vmean[1];
+    p[pid].v[2] -= vmean[2];
+    }
 } /* end of ParticleKernels */
 
 namespace Cont {
@@ -177,6 +211,15 @@ void clear_velocity(Particle* pp, int n) {
 void ic_shear_velocity(Particle* pp, int n) {
   if (n)
     ParticleKernels::ic_shear_velocity<<<(n + 127) / 128, 128 >>>(pp, n);
+}
+
+void rm_vmean(Particle* s_pp, int s_n, Particle* r_pp, int r_n) {
+  if (s_n && r_n) {
+    ParticleKernels::setup_vmean<<<(r_n + 127) / 128, 128 >>>();
+    ParticleKernels::get_vmean<<<(r_n + 127) / 128, 128 >>>(r_pp, r_n);
+    ParticleKernels::rm_vmean <<<(s_n + 127) / 128, 128 >>>(s_pp, s_n);
+    ParticleKernels::rm_vmean <<<(r_n + 127) / 128, 128 >>>(r_pp, r_n);
+  }
 }
 
 std::vector<Geom> setup_read(const char *path2ic) {

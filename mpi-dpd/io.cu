@@ -61,11 +61,6 @@ void ply_dump(const char * filename,
     }
     std::string content = ss.str();
     _write_bytes(content.c_str(), content.size(), f);
-    const int L[3] = { XS, YS, ZS };
-    for(int i = 0; i < n; ++i)
-        for(int c = 0; c < 3; ++c)
-	  particles[i].r[c] += L[c] / 2 + m::coords[c] * L[c];
-
     _write_bytes(&particles.front(), sizeof(Particle) * n, f);
     int poffset = 0;
     MC(MPI_Exscan(&n, &poffset, 1, MPI_INTEGER, MPI_SUM, m::cart));
