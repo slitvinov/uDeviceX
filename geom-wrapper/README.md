@@ -23,9 +23,7 @@ daint
 
 ``` {.bash}
 git clone https://github.com/Linuxbrew/brew.git ~/.linuxbrew
-echo 'export PATH="$HOME/.linuxbrew/bin:$PATH"' >>~/.bashrc
 brew install cgal
-echo 'export CGAL_DIR=$HOME/.linuxbrew/Cellar/cgal/4.9' >>~/.bashrc
 ```
 
 Build geom-wrapper
@@ -48,7 +46,7 @@ falcon
 daint
 -----
 
-    cmake . -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+    PATH=$HOME/.linuxbrew/bin:$PATH CGAL_DIR=$HOME/.linuxbrew/Cellar/cgal/4.9  cmake . -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 
 Linking with geom-wrapper
 =========================
