@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 import os
 import sys
+from math import acos, sqrt, pi
+from argparse import ArgumentParser
 
 pt = {}  # parameters templates
 pv = {}  # parameters values
-ps = {}  # parameters short names
 
 # files and directories
 home = os.path.expanduser('~')
-dpd_dir = home+'/rbc_shear_tags/mpi-dpd'
-tools = home+'/rbc_shear_tags/tools'
+dpd_dir = home+'/rbc_uq/mpi-dpd'
+tools = home+'/rbc_uq/tools'
 cnf_file = dpd_dir+'/.conf.h'
 rbc_file = dpd_dir+'/params/rbc.inc0.h'
 ic_file = 'rbcs-ic.txt'
 src_file = 'points.txt'
 par_file = 'params.txt'
-post_file = 'post.txt'
 res_dir = 'simulations'
+post_file = 'post.txt'
 
 
 def gen_templates():
@@ -72,9 +73,9 @@ def gen_templates():
 
 def set_defaults():
     pv['rc']                   = 1.5
-    pv['XS']                   = 32
-    pv['YS']                   = 16
-    pv['ZS']                   = 32
+    pv['XS']                   = 64
+    pv['YS']                   = 32
+    pv['ZS']                   = 16
     pv['XMARGIN_WALL']         = 6
     pv['YMARGIN_WALL']         = 6
     pv['ZMARGIN_WALL']         = 6
@@ -111,7 +112,7 @@ def set_defaults():
     pv['contactforces']        = 'false'
     pv['doublepoiseuille']     = 'false'
     pv['hdf5field_dumps']      = 'false'
-    pv['hdf5part_dumps']       = 'false'
+    pv['hdf5part_dumps']       = 'true'
     pv['pushtheflow']          = 'false'
     pv['rbcs']                 = 'true'
     pv['steps_per_dump']       = 320
@@ -137,7 +138,7 @@ def gen_rbc():
 
 def gen_ic(d0):
     with open(d0+'/'+ic_file, 'w') as f:
-        ic = '1 0 0 %g  0 1 0 %g  0 0 1 %g  0 0 0 1\n'
+        ic = '1 0 0 %d  0 1 0 %d  0 0 1 %d  0 0 0 1\n'
         f.write(ic % (pv['XS']/2, pv['YS']/2, pv['ZS']/2))
 
 
@@ -167,8 +168,10 @@ def gen_par(pn0, pv0):
     for j in range(len(pv0)): pv[pn0[j]] = float(pv0[j])
     pv['_gammadpd_rbc'] = pv['_gammadpd_wall'] = pv['_gammadpd_out']
     sh = pv['_gamma_dot']
-    pv['tend'] = 800/sh
-    pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(1600/sh)
+    pv['tend'] = 4*800/sh
+    pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(4*800/sh)
+    t = sqrt(3.)*(pv['RBCnv']-2)
+    pv['RBCphi'] = acos((t - 5*pi) / (t - 3*pi))
 
 
 def recompile():
@@ -184,41 +187,43 @@ def pre():
     return d0
 
 
-def run(d0):
+def run_falcon(d0):
     os.system('cd %s && ./test' % d0)
-    os.system('cd %s/ply && sh ~/scripts/ply/cm.sh' % d0)
 
 
-def post(d0):
-    sys.path.append(dpd_dir)
-    import compute_freq_standalone_Tran_Son_Tay as cT
-    import numpy as np
+def run_daint(d0):
+    with open('%s/runme.sh' % d0, 'w') as f:
+        f.write('#!/bin/bash -l\n')
+        f.write('#SBATCH --job-name=rbc_%s\n' % d0)
+        f.write('#SBATCH --time=24:00:00\n')
+        f.write('#SBATCH --nodes=1\n')
+        f.write('#SBATCH --ntasks-per-node=1\n')
+        f.write('#SBATCH --output=output.txt\n')
+        f.write('#SBATCH --error=error.txt\n')
+        f.write('#SBATCH --constraint=gpu\n')
+        f.write('#SBATCH --account=s659\n')
+        f.write('module load cudatoolkit\n')
+        f.write('module load cray-hdf5-parallel\n')
+        f.write('export HEX_COMM_FACTOR=2\n')
+        f.write('srun --export ALL ./test 1 1 1\n')
+    os.system('cd %s && sbatch runme.sh' % d0)
 
-    time, theta, omega, a, c = cT.read_data(d0+'/ply', pv['dt'], pv['steps_per_dump'])
-    try:
-        fr, fru = cT.get_fr(time, omega)
-        ish = 1./pv['_gamma_dot']; fr *= 2.*np.pi*ish; fru *= ish
-        a, au = np.mean(a), np.std(a)
-        c, cu = np.mean(c), np.std(c)
-        th, thu = cT.get_an(theta)
 
-        res = '%g %g %g %g %g %g %g %g' % (fr, fru, a, au, c, cu, th, thu)
-
-        with open(d0+'/'+post_file, 'w') as f:
-            f.write('# fr fru a au c cu th thu\n')
-            f.write('%s\n' % res)
-
-        with open(post_file, 'a') as f:
-            for key, value in pv.iteritems(): f.write('%g ' % value)
-            f.write('%s\n' % res)
-    except:
-        print 'Unexpected error:', sys.exc_info()[0]
-        pass
-
-    os.system('mv Tran-Son-Tay* %s' % d0)
+def run(d0, machine):
+    if machine == 'falcon':
+        run_falcon(d0)
+    elif machine == 'daint':
+        run_daint(d0)
+    else:
+        print 'Unknown machine'
 
 
 if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--machine', default='falcon')
+    args = parser.parse_args()
+    machine = args.machine
+
     if not os.path.exists(res_dir): os.makedirs(res_dir)
 
     gen_templates()
@@ -238,5 +243,4 @@ if __name__ == '__main__':
         recompile()
 
         d0 = pre()
-        run(d0)
-        post(d0)
+        run(d0, machine)
