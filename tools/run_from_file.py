@@ -138,8 +138,9 @@ def gen_rbc():
 
 def gen_ic(d0):
     with open(d0+'/'+ic_file, 'w') as f:
-        ic = '1 0 0 %d  0 1 0 %d  0 0 1 %d  0 0 0 1\n'
-        f.write(ic % (pv['XS']/2, pv['YS']/2, pv['ZS']/2))
+        sc = 2 # warning: fine resolution
+        f.write('%g 0 0 %d  0 %g 0 %d  0 0 %g %d  0 0 0 1\n' % (
+                 sc, pv['XS']/2, sc, pv['YS']/2, sc, pv['ZS']/2))
 
 
 def gen_dir():
@@ -160,7 +161,7 @@ def cp_files(d0):
     cmd = 'cp %s/%s %s/%s'
     os.system(cmd % (dpd_dir, 'test',               d0, ''))
     os.system(cmd % (dpd_dir, 'sdf/wall1/wall.dat', d0, 'sdf.dat'))
-    os.system(cmd % (dpd_dir, 'rbc.dat',          d0, 'rbc.dat'))
+    os.system(cmd % (dpd_dir, 'rbc.r1.dat',         d0, 'rbc.dat'))
 
 
 def gen_par(pn0, pv0):
