@@ -160,7 +160,7 @@ def cp_files(d0):
     cmd = 'cp %s/%s %s/%s'
     os.system(cmd % (dpd_dir, 'test',               d0, ''))
     os.system(cmd % (dpd_dir, 'sdf/wall1/wall.dat', d0, 'sdf.dat'))
-    os.system(cmd % (dpd_dir, 'rbc.dat',            d0, ''))
+    os.system(cmd % (dpd_dir, 'rbc.dat',          d0, 'rbc.dat'))
 
 
 def gen_par(pn0, pv0):
@@ -171,7 +171,8 @@ def gen_par(pn0, pv0):
     pv['tend'] = 4*800/sh
     pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(4*800/sh)
     t = sqrt(3.)*(pv['RBCnv']-2)
-    pv['RBCphi'] = acos((t - 5*pi) / (t - 3*pi))
+    t = acos((t - 5*pi) / (t - 3*pi))
+    pv['RBCphi'] = 180./pi * t
 
 
 def recompile():
