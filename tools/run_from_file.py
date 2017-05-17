@@ -44,6 +44,7 @@ def gen_templates():
     pt['_gammadpd_wall']       = '#define %s ( %g )\n'
     pt['_ljsigma']             = '#define %s ( %g )\n'
     pt['_ljepsilon']           = '#define %s ( %g )\n'
+    pt['RBCrc']                = '#define %s ( %g )\n'
     pt['RBCx0']                = '#define %s ( %g )\n'
     pt['RBCka']                = '#define %s ( %g )\n'
     pt['RBCkd']                = '#define %s ( %g )\n'
@@ -95,6 +96,7 @@ def set_defaults():
     pv['_gammadpd_wall']       = 8
     pv['_ljsigma']             = 0.3
     pv['_ljepsilon']           = 1.0
+    pv['RBCrc']                = 1
     pv['RBCx0']                = 0.45
     pv['RBCp']                 = 0.0039
     pv['RBCka']                = 4900
@@ -138,7 +140,7 @@ def gen_rbc():
 
 def gen_ic(d0):
     with open(d0+'/'+ic_file, 'w') as f:
-        sc = 2 # warning: fine resolution
+        sc = pv['RBCrc']
         f.write('%g 0 0 %d  0 %g 0 %d  0 0 %g %d  0 0 0 1\n' % (
                  sc, pv['XS']/2, sc, pv['YS']/2, sc, pv['ZS']/2))
 
@@ -161,19 +163,39 @@ def cp_files(d0):
     cmd = 'cp %s/%s %s/%s'
     os.system(cmd % (dpd_dir, 'test',               d0, ''))
     os.system(cmd % (dpd_dir, 'sdf/wall1/wall.dat', d0, 'sdf.dat'))
-    os.system(cmd % (dpd_dir, 'rbc.r1.dat',         d0, 'rbc.dat'))
+    if pv['RBCrc'] > 1:
+        os.system(cmd % (dpd_dir, 'rbc.r1.dat',         d0, 'rbc.dat'))
+    else:
+        os.system(cmd % (dpd_dir, 'rbc.dat',            d0, 'rbc.dat'))
 
 
 def gen_par(pn0, pv0):
     set_defaults()
     for j in range(len(pv0)): pv[pn0[j]] = float(pv0[j])
+
     pv['_gammadpd_rbc'] = pv['_gammadpd_wall'] = pv['_gammadpd_out']
+
     sh = pv['_gamma_dot']
-    pv['tend'] = 4*800/sh
-    pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(4*800/sh)
+    pv['tend'] = 200/sh
+    pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(200/sh)
+
+    if pv['RBCrc'] > 1:
+        pv['RBCnv'] = 1986
+        pv['RBCnt'] = 3968
+    else:
+        pv['RBCnv'] = 498
+        pv['RBCnt'] = 992
+
     t = sqrt(3.)*(pv['RBCnv']-2)
     t = acos((t - 5*pi) / (t - 3*pi))
     pv['RBCphi'] = 180./pi * t
+
+    pv['RBCkv']        *=  RBCrc
+    pv['RBCp']         /=  RBCrc
+    pv['RBCkb']        /=  RBCrc*RBCrc
+    pv['RBCtotArea']   /=  RBCrc*RBCrc
+    pv['RBCkbT']       /=  RBCrc*RBCrc
+    pv['RBCtotVolume'] /=  RBCrc*RBCrc*RBCrc
 
 
 def recompile():
@@ -223,8 +245,10 @@ def run(d0, machine):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--machine', default='falcon')
+    parser.add_argument('--RBCrc', default=1)
     args = parser.parse_args()
     machine = args.machine
+    RBCrc = float(args.RBCrc)
 
     if not os.path.exists(res_dir): os.makedirs(res_dir)
 
@@ -232,6 +256,7 @@ if __name__ == '__main__':
 
     with open(src_file, 'r') as f: lines = f.readlines()
     pn0 = lines[0].replace('#', '').split()  # user-defined parameters names
+    pn0.append('RBCrc')
 
     for l in lines:
         pv0 = l.split()  # user-defined parameters values
@@ -239,6 +264,7 @@ if __name__ == '__main__':
 
         print 'Running line %s\n' % l
 
+        pv0.append(RBCrc)
         gen_par(pn0, pv0)
         gen_cnf()
         gen_rbc()
