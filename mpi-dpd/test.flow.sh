@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Run from this directory:
-#  > atest run_diag.sh
+#  > atest test.flow.sh
 #
 # To update the test change TEST to cTEST and run
-#  > atest run_diag.sh
-# add crap from test_data/* to git
+#  > atest test.flow.sh
+# add files from test_data/* to git
 
 #### Double poiseuille
 # TEST: double.poiseuille

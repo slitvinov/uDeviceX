@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Run from this directory:
-#  > atest run_diag.sh
+#  > atest test.rbc.sh
 #
-# To update the test change TEST to cTEST and run
-#  > atest run_diag.sh
-# add crap from test_data/* to git
+# To update the test change nTEST to cTEST and run
+#  > atest test.rbc.sh
+# add files from test_data/* to git
 
 #### RBC with wall
 # nTEST: rbc.t1
