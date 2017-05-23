@@ -27,7 +27,7 @@ __device__ __forceinline__ float3 _fangle(float3 v1, float3 v2,
   n_2 = 1.0 / Ak;
   ka0 = RBCka / RBCtotArea;
   coefArea =
-      -0.25f * (ka0 * (area - RBCtotArea) * n_2) -
+      -0.25 * (ka0 * (area - RBCtotArea) * n_2) -
       RBCkd * (Ak - A0) / (4. * A0 * Ak);
 
   kv0 = RBCkv / (6.0 * RBCtotVolume);
@@ -36,14 +36,14 @@ __device__ __forceinline__ float3 _fangle(float3 v1, float3 v2,
   float3 addFVolume = coeffVol * cross(v3, v2);
 
   r = length(x21);
-  r = r < 0.0001f ? 0.0001f : r;
+  r = r < 0.0001 ? 0.0001 : r;
   l0 = sqrt(A0 * 4.0 / sqrt(3.0));
   lmax = l0 / RBCx0;
   xx = r / lmax;
 
   kbToverp = RBCkbT / RBCp;
   IbforceI_wcl =
-      kbToverp * (0.25f / ((1.0f - xx) * (1.0f - xx)) - 0.25f + xx) /
+      kbToverp * (0.25 / ((1.0 - xx) * (1.0 - xx)) - 0.25 + xx) /
       r;
 
   x0 = RBCx0;
@@ -75,10 +75,10 @@ __device__ __forceinline__ float3 _fdihedral(float3 v1, float3 v2, float3 v3,
   overIdzeI = rsqrtf(dot(dze, dze));
 
   cosTheta = dot(ksi, dze) * overIksiI * overIdzeI;
-  IsinThetaI2 = 1.0f - cosTheta * cosTheta;
+  IsinThetaI2 = 1.0 - cosTheta * cosTheta;
 
   sinTheta_1 = copysignf
-    (rsqrtf(max(IsinThetaI2, 1.0e-6f)),
+    (rsqrtf(max(IsinThetaI2, 1.0e-6)),
      dot(ksi - dze, v4 - v1)); // ">" because the normals look inside
 
   phi = RBCphi / 180.0 * M_PI;
@@ -137,7 +137,7 @@ __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
     f += _fvisc(v1, v2, u1, u2);
     return f;
   }
-  return make_float3(-1.0e10f, -1.0e10f, -1.0e10f);
+  return make_float3(-1.0e10, -1.0e10, -1.0e10);
 }
 
 template <int nvertices>
@@ -195,7 +195,7 @@ __device__ float3 _fdihedral_device(float2 tmp0, float2 tmp1) {
 
     return _fdihedral<1>(v0, v2, v1, v4) + _fdihedral<2>(v1, v0, v2, v3);
   }
-  return make_float3(-1.0e10f, -1.0e10f, -1.0e10f);
+  return make_float3(-1.0e10, -1.0e10, -1.0e10);
 }
 
 template <int nvertices>
@@ -211,7 +211,7 @@ __global__ void fall_kernel(int nc, float *__restrict__ av,
     float3 f = _fangle_device<nvertices>(tmp0, tmp1, av);
     f += _fdihedral_device<nvertices>(tmp0, tmp1);
 
-    if (f.x > -1.0e9f) {
+    if (f.x > -1.0e9) {
       atomicAdd(&acc[3 * pid + 0], f.x);
       atomicAdd(&acc[3 * pid + 1], f.y);
       atomicAdd(&acc[3 * pid + 2], f.z);
@@ -246,7 +246,7 @@ __global__ void areaAndVolumeKernel(float *totA_V) {
    sq((a).x*(b).y - (a).y*(b).x))
 #define abscross(a, b) sqrtf(abscross2(a, b)) /* |a x b| */
 
-  float2 a_v = make_float2(0.0f, 0.0f);
+  float2 a_v = make_float2(0.0, 0.0);
   int cid = blockIdx.y;
 
   for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < RBCnt;
@@ -257,8 +257,8 @@ __global__ void areaAndVolumeKernel(float *totA_V) {
     float3 v1(tex2vec(3 * (ids.y + cid * RBCnv)));
     float3 v2(tex2vec(3 * (ids.z + cid * RBCnv)));
 
-    a_v.x += 0.5f * abscross(v1 - v0, v2 - v0);
-    a_v.y += 0.1666666667f *
+    a_v.x += 0.5 * abscross(v1 - v0, v2 - v0);
+    a_v.y += 0.1666666667 *
       ((v0.x*v1.y-v0.y*v1.x)*v2.z +
        (v0.z*v1.x-v0.x*v1.z)*v2.y +
        (v0.y*v1.z-v0.z*v1.y)*v2.x);
