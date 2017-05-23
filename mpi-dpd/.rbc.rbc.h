@@ -1,4 +1,4 @@
-#define RBCkbT (( 0.1 ) / (rc*rc))
+#define RBCkbT (( 1e-7 ) / (rc*rc))
 #define RBCka ( 4900 )
 #define RBCnt ( 992 )
 #define RBCp (( 0.0039 ) / rc)
