@@ -13,15 +13,14 @@ __constant__ float A[4][4];
 __device__ float3 _fangle(float3 a, float3 b, float3 c,
 			  float area, float volume) {
 #include "params/rbc.inc0.h"
-  double Ak, A0, n_2, cA, cV, nnsq,
+  double Ak, A0, n_2, cA, cV,
 	r, xx, b_wlc, kp, b_pow, ka0, kv0, x0, l0, lmax,
 	kbToverp;
 
   float3 ab = b - a, ac = c - a, bc = c - b;
   float3 nn = cross(ab, ac); /* normal */
 
-  nnsq = pow(a.y*b.z-a.z*b.y,2)+pow(a.z*b.x-a.x*b.z,2)+pow(a.x*b.y-a.y*b.x,2); /* dot(nn, nn) */
-  Ak = 0.5 * sqrt(nnsq);
+  Ak = 0.5 * sqrtf(dot(nn, nn));
 
   A0 = RBCtotArea / (2.0 * RBCnv - 4.);
   n_2 = 1.0 / Ak;
