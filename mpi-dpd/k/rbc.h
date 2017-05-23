@@ -10,9 +10,8 @@ __constant__ float A[4][4];
    (a).z*(b).x - (a).x*(b).z, \
    (a).x*(b).y - (a).y*(b).x)
 
-__device__ __forceinline__ float3 _fangle(float3 a, float3 b,
-					  float3 c, float area,
-					  float volume) {
+__device__ float3 _fangle(float3 a, float3 b, float3 c,
+			  float area, float volume) {
 #include "params/rbc.inc0.h"
   double Ak, A0, n_2, cA, cV, nnsq,
 	r, xx, b_wlc, kp, b_pow, ka0, kv0, x0, l0, lmax,
