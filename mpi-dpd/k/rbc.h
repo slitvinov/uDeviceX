@@ -52,7 +52,11 @@ __device__ __forceinline__ float3 _fangle(float3 v1, float3 v2,
       (4 * RBCp * (x0 - 1) * (x0 - 1));
   IbforceI_pow = -kp / pow(r, RBCmpow) / r;
 
-  return addFArea + addFVolume + (IbforceI_wcl + IbforceI_pow) * a;
+  return make_float3(
+		     addFArea.x + addFVolume.x + (IbforceI_wcl + IbforceI_pow) * a.x,
+		     addFArea.y + addFVolume.y + (IbforceI_wcl + IbforceI_pow) * a.y,
+		     addFArea.z + addFVolume.z + (IbforceI_wcl + IbforceI_pow) * a.z
+		     );
 }
 
 __device__ __forceinline__ float3 _fvisc(float3 v1, float3 v2,
