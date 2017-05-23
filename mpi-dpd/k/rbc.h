@@ -9,19 +9,20 @@ __constant__ float A[4][4];
   ((a).y*(b).z - (a).z*(b).y, \
    (a).z*(b).x - (a).x*(b).z, \
    (a).x*(b).y - (a).y*(b).x)
-  
-__device__ __forceinline__ float3 _fangle(float3 v1, float3 v2,
-					  float3 v3, float area,
+
+__device__ __forceinline__ float3 _fangle(float3 a, float3 b,
+					  float3 c, float area,
 					  float volume) {
 #include "params/rbc.inc0.h"
-  double Ak, A0, n_2, cA, cV,
+  double Ak, A0, n_2, cA, cV, nnsq,
 	r, xx, b_wlc, kp, b_pow, ka0, kv0, x0, l0, lmax,
 	kbToverp;
 
-  float3 ab = v2 - v1, ac = v3 - v1, bc = v3 - v2;
+  float3 ab = b - a, ac = c - a, bc = c - b;
   float3 nn = cross(ab, ac); /* normal */
 
-  Ak = 0.5 * sqrtf(dot(nn, nn));
+  nnsq = pow(a.y*b.z-a.z*b.y,2)+pow(a.z*b.x-a.x*b.z,2)+pow(a.x*b.y-a.y*b.x,2); /* dot(nn, nn) */
+  Ak = 0.5 * sqrt(nnsq);
 
   A0 = RBCtotArea / (2.0 * RBCnv - 4.);
   n_2 = 1.0 / Ak;
@@ -33,7 +34,7 @@ __device__ __forceinline__ float3 _fangle(float3 v1, float3 v2,
   kv0 = RBCkv / (6.0 * RBCtotVolume);
   cV = kv0 * (volume - RBCtotVolume);
   float3 FA = cA * cross(nn, bc);
-  float3 FV = cV * cross(v3, v2);
+  float3 FV = cV * cross( c,  b);
 
   r = length(ab);
   r = r < 0.0001 ? 0.0001 : r;
