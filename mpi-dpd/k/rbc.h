@@ -18,8 +18,8 @@ __device__ __forceinline__ float3 _fangle(float3 v1, float3 v2,
 	r, xx, b_wlc, kp, b_pow, ka0, kv0, x0, l0, lmax,
 	kbToverp;
 
-  float3 a = v2 - v1, b = v3 - v2, c = v3 - v1;
-  float3 nn = cross(a, c); /* normal */
+  float3 ab = v2 - v1, ac = v3 - v1, bc = v3 - v2;
+  float3 nn = cross(ab, ac); /* normal */
 
   Ak = 0.5 * sqrtf(dot(nn, nn));
 
@@ -32,10 +32,10 @@ __device__ __forceinline__ float3 _fangle(float3 v1, float3 v2,
 
   kv0 = RBCkv / (6.0 * RBCtotVolume);
   cV = kv0 * (volume - RBCtotVolume);
-  float3 FA = cA * cross(nn, b);
+  float3 FA = cA * cross(nn, bc);
   float3 FV = cV * cross(v3, v2);
 
-  r = length(a);
+  r = length(ab);
   r = r < 0.0001 ? 0.0001 : r;
   l0 = sqrt(A0 * 4.0 / sqrt(3.0));
   lmax = l0 / RBCx0;
@@ -53,9 +53,9 @@ __device__ __forceinline__ float3 _fangle(float3 v1, float3 v2,
   b_pow = -kp / pow(r, RBCmpow) / r;
 
   return make_float3(
-		     FA.x + FV.x + (b_wlc + b_pow) * a.x,
-		     FA.y + FV.y + (b_wlc + b_pow) * a.y,
-		     FA.z + FV.z + (b_wlc + b_pow) * a.z
+		     FA.x + FV.x + (b_wlc + b_pow) * ab.x,
+		     FA.y + FV.y + (b_wlc + b_pow) * ab.y,
+		     FA.z + FV.z + (b_wlc + b_pow) * ab.z
 		     );
 }
 
