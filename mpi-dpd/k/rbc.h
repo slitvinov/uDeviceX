@@ -14,7 +14,7 @@ __device__ __forceinline__ float3 _fangle(float3 v1, float3 v2,
 					  float3 v3, float area,
 					  float volume) {
 #include "params/rbc.inc0.h"
-  float Ak, A0, n_2, coefArea, coeffVol,
+  double Ak, A0, n_2, coefArea, coeffVol,
 	r, xx, IbforceI_wcl, kp, IbforceI_pow, ka0, kv0, x0, l0, lmax,
 	kbToverp;
 
@@ -58,7 +58,7 @@ __device__ __forceinline__ float3 _fangle(float3 v1, float3 v2,
 __device__ __forceinline__ float3 _fvisc(float3 v1, float3 v2,
 					 float3 u1, float3 u2) {
   float3 du = u2 - u1, dr = v1 - v2;
-  float gammaC = RBCgammaC, gammaT = 3.0 * RBCgammaC;
+  double gammaC = RBCgammaC, gammaT = 3.0 * RBCgammaC;
 
   return du * gammaT +
 	 dr * gammaC * dot(du, dr) / dot(dr, dr);
@@ -67,7 +67,7 @@ __device__ __forceinline__ float3 _fvisc(float3 v1, float3 v2,
 template <int update>
 __device__ __forceinline__ float3 _fdihedral(float3 v1, float3 v2, float3 v3,
 					     float3 v4) {
-  float overIksiI, overIdzeI, cosTheta, IsinThetaI2, sinTheta_1,
+  double overIksiI, overIdzeI, cosTheta, IsinThetaI2, sinTheta_1,
     beta, b11, b12, phi, sint0kb, cost0kb;
 
   float3 ksi = cross(v1 - v2, v1 - v3), dze = cross(v3 - v4, v2 - v4);
@@ -92,7 +92,7 @@ __device__ __forceinline__ float3 _fdihedral(float3 v1, float3 v2, float3 v3,
   if (update == 1) {
     return cross(ksi, v3 - v2) * b11 + cross(dze, v3 - v2) * b12;
   } else if (update == 2) {
-    float b22 = -beta * cosTheta * overIdzeI * overIdzeI;
+    double b22 = -beta * cosTheta * overIdzeI * overIdzeI;
     return  cross(ksi, v1 - v3) * b11 +
 	   (cross(ksi, v3 - v4) + cross(dze, v1 - v3)) * b12 +
 	    cross(dze, v3 - v4) * b22;
