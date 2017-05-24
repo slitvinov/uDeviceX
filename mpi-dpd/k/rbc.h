@@ -20,7 +20,7 @@ __device__ float3 _fangle(float3 a, float3 b, float3 c,
   float3 ab = b - a, ac = c - a, bc = c - b;
   float3 nn = cross(ab, ac); /* normal */
 
-  Ak = 0.5 * sqrtf(dot(nn, nn));
+  Ak = 0.5 * sqrt(dot(nn, nn));
 
   A0 = RBCtotArea / (2.0 * RBCnv - 4.);
   n_2 = 1.0 / Ak;
@@ -34,7 +34,7 @@ __device__ float3 _fangle(float3 a, float3 b, float3 c,
   float3 FA = cA * cross(nn, bc);
   float3 FV = cV * cross( c,  b);
 
-  r = sqrtf(dot(ab, ab));
+  r = sqrt(dot(ab, ab));
   r = r < 0.0001 ? 0.0001 : r;
   l0 = sqrt(A0 * 4.0 / sqrt(3.0));
   lmax = l0 / RBCx0;
@@ -74,14 +74,14 @@ __device__ __forceinline__ float3 _fdihedral(float3 v1, float3 v2, float3 v3,
     beta, b11, b12, phi, sint0kb, cost0kb;
 
   float3 ksi = cross(v1 - v2, v1 - v3), dze = cross(v3 - v4, v2 - v4);
-  overIksiI = rsqrtf(dot(ksi, ksi));
-  overIdzeI = rsqrtf(dot(dze, dze));
+  overIksiI = rsqrt(dot(ksi, ksi));
+  overIdzeI = rsqrt(dot(dze, dze));
 
   cosTheta = dot(ksi, dze) * overIksiI * overIdzeI;
   IsinThetaI2 = 1.0 - cosTheta * cosTheta;
 
   sinTheta_1 = copysignf
-    (rsqrtf(max(IsinThetaI2, 1.0e-6)),
+    (rsqrt(max(IsinThetaI2, 1.0e-6)),
      dot(ksi - dze, v4 - v1)); // ">" because the normals look inside
 
   phi = RBCphi / 180.0 * M_PI;
@@ -247,7 +247,7 @@ __global__ void areaAndVolumeKernel(float *totA_V) {
   (sq((a).y*(b).z - (a).z*(b).y) +  \
    sq((a).z*(b).x - (a).x*(b).z) +  \
    sq((a).x*(b).y - (a).y*(b).x))
-#define abscross(a, b) sqrtf(abscross2(a, b)) /* |a x b| */
+#define abscross(a, b) sqrt(abscross2(a, b)) /* |a x b| */
 
   float2 a_v = make_float2(0.0, 0.0);
   int cid = blockIdx.y;
