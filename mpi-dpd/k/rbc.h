@@ -63,8 +63,8 @@ __device__ __forceinline__ float3 _fvisc(float3 v1, float3 v2,
   float3 du = u2 - u1, dr = v1 - v2;
   double gammaC = RBCgammaC, gammaT = 3.0 * RBCgammaC;
 
-  return du * gammaT +
-	 dr * gammaC * dot(du, dr) / dot(dr, dr);
+  return gammaT                             * du +
+	 gammaC * dot(du, dr) / dot(dr, dr) * dr;
 }
 
 template <int update>
