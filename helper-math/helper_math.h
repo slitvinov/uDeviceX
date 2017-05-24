@@ -1,7 +1,8 @@
 /** Copyright 1993-2013 NVIDIA Corporation.  All rights reserved. **/
-inline __host__ __device__ double dmult (double a, double b) { return a * b; }
-inline __host__ __device__ double dplus (double a, double b) { return a + b; }
-inline __host__ __device__ double dminus(double a, double b) { return a - b; }
+inline __host__ __device__ double dmult (double a, double b)           { return a * b; }
+inline __host__ __device__ double dplus (double a, double b)           { return a + b; }
+inline __host__ __device__ double dplus3(double a, double b, double c) { return a + b + c; }
+inline __host__ __device__ double dminus(double a, double b)           { return a - b; }
 
 inline __host__ __device__ float3 operator+(float3 a, float3 b)
 {
