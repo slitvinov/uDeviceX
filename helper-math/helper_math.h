@@ -10,9 +10,7 @@ IHD float3 operator+(float3 a, float3 b) {
 }
 
 IHD void operator+=(float3 &a, float3 b) {
-  a.x += b.x;
-  a.y += b.y;
-  a.z += b.z;
+  a.x += b.x; a.y += b.y; a.z += b.z;
 }
 
 IHD float3 operator-(float3 a, float3 b) {
