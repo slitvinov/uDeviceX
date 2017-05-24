@@ -96,7 +96,7 @@ __device__ __forceinline__ float3 _fdihedral(float3 v1, float3 v2, float3 v3,
     return b11 * cross(ksi, v3 - v2)  + b12 * cross(dze, v3 - v2);
   } else if (update == 2) {
     double b22 = -beta * cosTheta * overIdzeI * overIdzeI;
-    return  b11 *  cross(ksi, v1 - v3)  +
+    return  b11 *  cross(ksi, v1 - v3) +
 	    b12 * (cross(ksi, v3 - v4) + cross(dze, v1 - v3)) +
 	    b22 *  cross(dze, v3 - v4) ;
   } else
