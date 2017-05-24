@@ -5,11 +5,6 @@ texture<int, 1, cudaReadModeElementType> texAdjVert2;
 texture<int4, cudaTextureType1D> texTriangles4;
 __constant__ float A[4][4];
 
-#define cross(a, b) make_float3 \
-  ((a).y*(b).z - (a).z*(b).y, \
-   (a).z*(b).x - (a).x*(b).z, \
-   (a).x*(b).y - (a).y*(b).x)
-
 __device__ float3 _fangle(float3 a, float3 b, float3 c,
 			  float area, float volume) {
 #include "params/rbc.inc0.h"

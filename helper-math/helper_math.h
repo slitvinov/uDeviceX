@@ -38,6 +38,13 @@ IHD double dot(float3 a, float3 b)
     dmult(a.z, b.z);
 }
 
+IHD float3 cross(float3 a, float3 b) {
+  double ax = a.x, ay = a.y, az = a.z;
+  double bx = b.x, by = b.y, bz = b.z;
+
+  return mf3(ay*bz - az*by, az*bx - ax*bz, ax*by - ay*bx);
+}
+
 /* yy := a*xx + yy */
 IHD void axpy(double a, float3 xx, float3 &yy) {
   yy.x += a * xx.x;
