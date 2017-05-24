@@ -34,7 +34,7 @@ __device__ float3 _fangle(float3 a, float3 b, float3 c,
   float3 FA = cA * cross(nn, bc);
   float3 FV = cV * cross( c,  b);
 
-  r = length(ab);
+  r = sqrtf(dot(ab, ab));
   r = r < 0.0001 ? 0.0001 : r;
   l0 = sqrt(A0 * 4.0 / sqrt(3.0));
   lmax = l0 / RBCx0;
