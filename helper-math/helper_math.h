@@ -33,9 +33,9 @@ IHD float3 operator*(double b, float3 a)
 IHD double dot(float3 a, float3 b)
 {
   return \
-    a.x * b.x +
-    a.y * b.y +
-    a.z * b.z;
+    dmult(a.x, b.x) +
+    dmult(a.y, b.y) +
+    dmult(a.z, b.z);
 }
 
 /* yy := a*xx + yy */
