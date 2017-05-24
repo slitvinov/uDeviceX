@@ -32,7 +32,10 @@ IHD float3 operator*(double b, float3 a)
 
 IHD double dot(float3 a, float3 b)
 {
-  return a.x * b.x + a.y * b.y + a.z * b.z;
+  return \
+    a.x * b.x +
+    a.y * b.y +
+    a.z * b.z;
 }
 
 /* yy := a*xx + yy */
