@@ -25,3 +25,10 @@ inline __host__ __device__ double dot(float3 a, float3 b)
 {
   return a.x * b.x + a.y * b.y + a.z * b.z;
 }
+
+/* yy := a*xx + yy */
+inline __host__ __device__ void axpy(double a, float3 xx, float3 &yy) {
+  yy.x += a * xx.x;
+  yy.y += a * xx.y;
+  yy.z += a * xx.z;
+}
