@@ -159,9 +159,9 @@ void dev2hst() { /* device to host  data transfer */
 
 bool in_box(float *r) {
   enum {X, Y, Z};
-  float xlo = -5,   xhi = -xlo,
-        ylo = -3,   yhi = -ylo,
-        zlo = -1.5, zhi = -zlo;
+  float xlo = -12, xhi = -xlo,
+        ylo = -5,  yhi = -ylo,
+        zlo = -5,  zhi = -zlo;
   return (   xlo <= r[X] && r[X] <= xhi
           && ylo <= r[Y] && r[Y] <= yhi
           && zlo <= r[Z] && r[Z] <= zhi);
