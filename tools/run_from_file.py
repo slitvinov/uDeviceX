@@ -16,8 +16,7 @@ rbc_file = dpd_dir+'/params/rbc.inc0.h'
 ic_file = 'rbcs-ic.txt'
 src_file = 'points.txt'
 par_file = 'params.txt'
-res_dir = 'simulations'
-post_file = 'post.txt'
+res_dir = 'grid'
 
 
 def gen_templates():
@@ -74,9 +73,9 @@ def gen_templates():
 
 def set_defaults():
     pv['rc']                   = 1.5
-    pv['XS']                   = 64
-    pv['YS']                   = 32
-    pv['ZS']                   = 16
+    pv['XS']                   = 32
+    pv['YS']                   = 8
+    pv['ZS']                   = 32
     pv['XMARGIN_WALL']         = 6
     pv['YMARGIN_WALL']         = 6
     pv['ZMARGIN_WALL']         = 6
@@ -126,14 +125,14 @@ def set_defaults():
 
 def gen_cnf():
     with open(cnf_file, 'w') as f:
-        for key, value in pv.iteritems():
+        for key, value in sorted(pv.iteritems()):
             if 'RBC' not in key:
                 f.write(pt[key] % (key, value))
 
 
 def gen_rbc():
     with open(rbc_file, 'w') as f:
-        for key, value in pv.iteritems():
+        for key, value in sorted(pv.iteritems()):
             if 'RBC' in key:
                 f.write(pt[key] % (key, value))
 
@@ -156,7 +155,7 @@ def gen_dir():
 
 def write_par_file(d0):
     with open(d0+'/'+par_file, 'w') as f:
-        for key, value in pv.iteritems(): f.write('%s %s\n' % (key, str(value)))
+        for key, value in sorted(pv.iteritems()): f.write('%s %s\n' % (key, str(value)))
 
 
 def cp_files(d0):
@@ -176,8 +175,8 @@ def gen_par(pn0, pv0):
     pv['_gammadpd_rbc'] = pv['_gammadpd_wall'] = pv['_gammadpd_out']
 
     sh = pv['_gamma_dot']
-    pv['tend'] = 200/sh
-    pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(200/sh)
+    pv['tend'] = 800/sh
+    pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(800/sh)
 
     if pv['RBCrc'] > 1:
         pv['RBCnv'] = 1986
@@ -190,16 +189,20 @@ def gen_par(pn0, pv0):
     t = acos((t - 5*pi) / (t - 3*pi))
     pv['RBCphi'] = 180./pi * t
 
-    pv['RBCkv']        *=  RBCrc
-    pv['RBCp']         /=  RBCrc
-    pv['RBCkb']        /=  RBCrc*RBCrc
-    pv['RBCtotArea']   /=  RBCrc*RBCrc
-    pv['RBCkbT']       /=  RBCrc*RBCrc
-    pv['RBCtotVolume'] /=  RBCrc*RBCrc*RBCrc
+    # warning: scaling is opposite to rc
+    # pv['RBCkv']        *= RBCrc
+    # pv['RBCkb']        *= RBCrc*RBCrc
+    # pv['RBCkbT']       *= RBCrc*RBCrc
+    pv['XS']           *= RBCrc
+    pv['YS']           *= RBCrc
+    pv['ZS']           *= RBCrc
+    pv['RBCp']         *= RBCrc
+    pv['RBCtotArea']   *= RBCrc*RBCrc
+    pv['RBCtotVolume'] *= RBCrc*RBCrc*RBCrc
 
 
 def recompile():
-    cmd = 'cd %s && make clean && make -j'
+    cmd = 'cd %s && make clean && make -j > make.log'
     os.system(cmd % dpd_dir)
 
 

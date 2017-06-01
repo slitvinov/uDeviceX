@@ -23,7 +23,7 @@ X = 0; Y = 1; Z = 2
 
 '''
 1. All vectors are column vectors
-2. Ellipsoid half-axes are ordered such that b <= c <= a
+2. Ellipsoid half-axes are ordered such that eb <= ec <= ea
 '''
 
 
@@ -33,14 +33,14 @@ def wrap(x, l, r):
     return x
 
 
-def save_txt(f, a_in):
+def save_txt(f, h, a_in):
     a_out = ()
     for a in a_in:
         a_out = a_out + (a.reshape((a.size, 1)),)
-    np.savetxt(f, np.concatenate(a_out, axis=1), fmt='%.6e', delimiter=' ')
+    np.savetxt(f, np.concatenate(a_out, axis=1), fmt='%.6e', delimiter=' ', header=h)
 
 
-def plot_all(si, t, th, om, a, b, c, el, fr):
+def plot_all(si, t, fr, ea, eb, ec, pa, pb, pc, th, om, el):
     plot(t, th, 'r-', label='theta')
     plot(t, om, 'b-', label='omega')
     plot([t[si], t[si]], [-180, 180], 'k--')
@@ -48,9 +48,12 @@ def plot_all(si, t, th, om, a, b, c, el, fr):
     savefig('angle.pdf')
     close()
 
-    plot(t, a, 'r-', label='a')
-    plot(t, b, 'g-', label='b')
-    plot(t, c, 'b-', label='c')
+    plot(t, pa, 'r-', label='pa')
+    plot(t, pb, 'g-', label='pb')
+    plot(t, pc, 'b-', label='pc')
+    plot(t, ea, 'r--', label='ea')
+    plot(t, eb, 'g--', label='eb')
+    plot(t, ec, 'b--', label='ec')
     plot([t[si], t[si]], [0, 3], 'k--')
     legend()
     savefig('diam.pdf')
@@ -69,31 +72,23 @@ def plot_all(si, t, th, om, a, b, c, el, fr):
     close()
 
 
-def print_all(si, fr, a, b, c, th, el, a_, b_, c_):
-    a,  au  = np.mean( a[si:]), np.std( a[si:])
-    b,  bu  = np.mean( b[si:]), np.std( b[si:])
-    c,  cu  = np.mean( c[si:]), np.std( c[si:])
-    el, elu = np.mean(el[si:]), np.std(el[si:])
-    th, thu = np.mean(th[si:]), np.std(th[si:])
-    a_, au_ = np.mean(a_[si:]), np.std(a_[si:])
-    b_, bu_ = np.mean(b_[si:]), np.std(b_[si:])
-    c_, cu_ = np.mean(c_[si:]), np.std(c_[si:])
-    fr, fru = np.mean(fr[si:]), np.std(fr[si:])
+def print_all(si, sh, t, fr, ea, eb, ec, pa, pb, pc, th, om, el):
+    t = {}
+    t['sh'] = sh
+    t['ea'], t['eau'] = np.mean(ea[si:]), np.std(ea[si:])
+    t['eb'], t['ebu'] = np.mean(eb[si:]), np.std(eb[si:])
+    t['ec'], t['ecu'] = np.mean(ec[si:]), np.std(ec[si:])
+    t['el'], t['elu'] = np.mean(el[si:]), np.std(el[si:])
+    t['th'], t['thu'] = np.mean(th[si:]), np.std(th[si:])
+    t['pa'], t['pau'] = np.mean(pa[si:]), np.std(pa[si:])
+    t['pb'], t['pbu'] = np.mean(pb[si:]), np.std(pb[si:])
+    t['pc'], t['pcu'] = np.mean(pc[si:]), np.std(pc[si:])
+    t['fr'], t['fru'] = np.mean(fr[si:]), np.std(fr[si:])
     # fr, fru = get_fr(t[si:], om[si:]); fr *= 2.*np.pi/sh; fru /= sh
 
-    sep = '\t'
     with open('post.txt', 'w') as f:
-        t = '#', 'fr', 'fru', 'a', 'au', 'b', 'bu', 'c', 'cu', 'th', 'thu', 'el', 'elu', 'a_', 'au_', 'c_', 'cu_'
-        fmt = '%s'
-        tm = map(lambda e: fmt % e, t)
-        tm = sep.join(tm)
-        f.write('%s\n' % tm)
-
-        t = fr, fru, a, au, b, bu, c, cu, th, thu, el, elu, a_, au_, b_, bu_, c_, cu_
-        fmt = '%.6f'
-        tm = map(lambda e: fmt % e, t)
-        tm = sep.join(tm)
-        f.write('%s\n' % tm)
+        for key, value in sorted(t.iteritems()):
+            f.write('%s\t%.16f\n' % (key, value))
 
 
 def get_angle_btw_vectors(v1, v2):
@@ -118,7 +113,7 @@ def fit_sk1(r, v, ab):
 def fit_sk2(r, v, ab):
     """
     Mean squarer fit of Keller-Skalak frequency (`fr').
-    ab = a/b, [vx, vy] ~ [fr*a/b*y, -fr*b/a*x]
+    ab = ea/eb, [vx, vy] ~ [fr*ea/eb*y, -fr*eb/ea*x]
     """
     sm = np.sum
     svxy, svyx = sm(v[:, X]*r[:, Y]), sm(v[:, Y]*r[:, X])
@@ -188,8 +183,8 @@ def process_data(plydir, dt, ntspd, sh):
     om = np.zeros(n)  # angle of the marker with the current RBC axis
     el = np.zeros(n)  # ellipticity
     fr = np.zeros(n)  # tanktreading frequency
-    a  = np.zeros(n); b  = np.zeros(n); c  = np.zeros(n)
-    a_ = np.zeros(n); b_ = np.zeros(n); c_ = np.zeros(n)
+    ea = np.zeros(n); eb = np.zeros(n); ec = np.zeros(n)
+    pa = np.zeros(n); pb = np.zeros(n); pc = np.zeros(n)
     ch = int(0.05*n); steady = False; si = int(0.5*n); ave = 0
 
     tstart = time()
@@ -203,12 +198,12 @@ def process_data(plydir, dt, ntspd, sh):
             b0 = np.max(xyz[:, B]) - np.min(xyz[:, B])
             c0 = np.max(xyz[:, C]) - np.min(xyz[:, C])
 
-        a[i] = 2*radii[A]/a0
-        b[i] = 2*radii[B]/b0
-        c[i] = 2*radii[C]/c0
-        a_[i] = (np.max(xyz[:, A]) - np.min(xyz[:, A]))/a0
-        b_[i] = (np.max(xyz[:, B]) - np.min(xyz[:, B]))/b0
-        c_[i] = (np.max(xyz[:, C]) - np.min(xyz[:, C]))/c0
+        ea[i] = 2*radii[A]/a0
+        eb[i] = 2*radii[B]/b0
+        ec[i] = 2*radii[C]/c0
+        pa[i] = (np.max(xyz[:, A]) - np.min(xyz[:, A]))/a0
+        pb[i] = (np.max(xyz[:, B]) - np.min(xyz[:, B]))/b0
+        pc[i] = (np.max(xyz[:, C]) - np.min(xyz[:, C]))/c0
         th[i] = get_angle_btw_vectors(rot[:, A], np.array([1, 0, 0]))
         om[i] = get_om(xyz, mi, th[i])
         el[i] = chi2 / xyz.shape[0]
@@ -216,7 +211,7 @@ def process_data(plydir, dt, ntspd, sh):
 
         # check whether we're in a steady state
         if ch > 0 and i >= si and i % ch == 0:
-            cur = np.mean(a[i-ch+1:i])
+            cur = np.mean(ea[i-ch+1:i])
             if not steady and np.abs(ave-cur) < 0.02*ave:
                 steady = True; si = i
                 if verbose: print 'Steady state reached after %d/%d steps' % (i, n)
@@ -227,9 +222,10 @@ def process_data(plydir, dt, ntspd, sh):
     print 'Elapsed time: %.1f sec' % (time()-tstart)
 
     t = dt*ntspd*np.arange(n)  # DPD time
-    save_txt('result.txt', (t, th, om, a, b, c, el, a_, b_, c_, fr))
-    plot_all(si, t, th, om, a, b, c, el, fr)
-    print_all(si, fr, a, b, c, th, el, a_, b_, c_)
+    save_txt('result.txt', '#t\tfr\tea\teb\tec\tpa\tpb\tpc\tth\tom\tel',
+                            (t, fr, ea, eb, ec, pa, pb, pc, th, om, el))
+    plot_all(si, t, fr, ea, eb, ec, pa, pb, pc, th, om, el)
+    print_all(si, sh, t, fr, ea, eb, ec, pa, pb, pc, th, om, el)
 
 
 if __name__ == '__main__':

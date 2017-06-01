@@ -33,16 +33,6 @@ static const int display = 1;
 static const int debug = 1;
 static const double fail = -1e12;
 
-// gamma_dot acth_s std_acth_s c_s std_c_s f std_f
-static const double exp_data[] = {
-    28.6 , 5.5, 0.5, 3.2, 0.2, 6.22, 0.31,
-    42.9 , 5.9, 0.7, 3.0, 0.5, 9.42, 0.57,
-    57.1 , 6.5, 0.8, 2.5, 0.3, 12.7, 0.57,
-    114.3, 7.3, 0.4, 2.3, 0.5, 24.6, 1.07,
-    171.4, 7.6, 0.4, 2.1, 0.3, 37.4, 1.45
-};
-static const int exp_n = 5;
-static const int exp_d = 7;
 static const int sim_n = 8;
 static const int sim_d = 7;
 
@@ -72,25 +62,6 @@ void pre_task(char *taskdir, double *par, int n) {
 
     getcwd(cwd, sizeof(cwd));
     chdir(taskdir);
-#if 0
-    int rf, fd, status;
-    char line[BUF_LEN], *largv[2];
-    while (pthread_mutex_trylock(&fork_mutex) == EBUSY) {printf("Trying hard\n"); usleep(1e6);}
-    rf = fork();
-    if (rf < 0) {
-        printf("Fork failed\n"); fflush(0);
-    } else if (rf == 0) {
-        sprintf(line, "./pre.py");
-        parse(line, largv);
-        fd = open("out_pre.txt", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-        dup2(fd, 1); dup2(fd, 2);  // make stdout and stderr go to file
-        close(fd);
-        execvp(*largv, largv);
-    }
-    pthread_mutex_unlock(&fork_mutex);
-    waitpid(rf, &status, 0);
-    sync();
-#endif
 
     snprintf(from_dir, BUF_LEN, "%s/../../to_copy", taskdir);
     if (copy_from_dir(from_dir) != 0) {
@@ -136,6 +107,7 @@ void rm_files_from_taskdir(char *taskdir) {
     chdir(cwd);
 }
 
+#if 0
 void post_task(char *taskdir, double *sim_data) {
     int rf, fd, i, status;
     char line[BUF_LEN], *largv[2], fname[BUF_LEN], cwd[BUF_LEN];
@@ -177,6 +149,7 @@ void post_task(char *taskdir, double *sim_data) {
     chdir(cwd);
     if (!debug) rm_files_from_taskdir(taskdir);
 }
+#endif
 
 void fitfuntask(const char *fitdir, double *par, int *n, double *sim_data) {
     char taskdir[BUF_LEN];
@@ -185,26 +158,6 @@ void fitfuntask(const char *fitdir, double *par, int *n, double *sim_data) {
     write_task_file(taskdir, par, *n);
     pre_task(taskdir, par, *n);
     run_task(taskdir, par, *n);
-    post_task(taskdir, sim_data);
-}
-
-void plot_fit(char *fitdir) {
-    int rf, status;
-    char line[BUF_LEN], *largv[BUF_LEN], cwd[BUF_LEN];
-
-    getcwd(cwd, sizeof(cwd));
-    chdir(fitdir);
-    rf = fork();
-    if (rf < 0) {
-        printf("spawner(%d): fork failed!\n", getpid()); fflush(0);
-    } else if (rf == 0) {
-        snprintf(line, BUF_LEN, "./plot.gp");
-        parse(line, largv);
-        execvp(*largv, largv);
-    }
-    waitpid(rf, &status, 0);
-    sync();
-    chdir(cwd);
 }
 
 void print_summary_start(double *input, int n, char *fitdir) {
@@ -283,7 +236,60 @@ void copy_output(double *output, double *sim_data) {
                 output[i*sim_d+j] = S(i, j);
 }
 
-double compute_fitness(double *sim_data_orig, double sigma) {
+void plot_fit(char *fitdir) {
+    int rf, status;
+    char line[BUF_LEN], *largv[BUF_LEN], cwd[BUF_LEN];
+
+    getcwd(cwd, sizeof(cwd));
+    chdir(fitdir);
+    rf = fork();
+    if (rf < 0) {
+        printf("spawner(%d): fork failed!\n", getpid()); fflush(0);
+    } else if (rf == 0) {
+        snprintf(line, BUF_LEN, "./plot.gp");
+        parse(line, largv);
+        execvp(*largv, largv);
+    }
+    waitpid(rf, &status, 0);
+    sync();
+    chdir(cwd);
+}
+
+double compute_fitness(char *fitdir, double *sim_data, double sigma) {
+    int i, j, rf, fd, status; 
+    char line[BUF_LEN], *largv[2], cwd[BUF_LEN];
+
+    getcwd(cwd, sizeof(cwd));
+    chdir(fitdir);
+
+    FILE *fp = fopen("sim_data.txt", "w");
+    if (!fp) {
+        printf("Can't create file.\n"); fflush(0);
+        abort();
+    }
+    for (i = 0; i < sim_n; ++i) {
+        for (j = 0; j < sim_d; ++j)
+            fprintf(fp, "%.16lf ", S(i,j));
+        fprintf(fp, "\n");
+    }
+
+    while (pthread_mutex_trylock(&fork_mutex) == EBUSY) usleep(1e6);
+    rf = fork();
+    if (rf < 0) {
+        printf("Fork failed\n"); fflush(0);
+    } else if (rf == 0) {
+        sprintf(line, "fit.py");
+        parse(line, largv);
+        fd = open("out_fit.txt", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+        dup2(fd, 1); dup2(fd, 2);  // make stdout and stderr go to file
+        close(fd);
+        execvp(*largv, largv);
+    }
+    pthread_mutex_unlock(&fork_mutex);
+    waitpid(rf, &status, 0);
+    sync();
+    chdir(cwd);
+#if 0
     int i, j;
     double s2, d2, ss2, se2, loglik = 0, sigma2 = pow(sigma, 2);
     double sim_data[sim_n*sim_d];
@@ -302,6 +308,7 @@ double compute_fitness(double *sim_data_orig, double sigma) {
     loglik *= -0.5;
 
     return loglik;
+#endif
 }
 
 void print_summary_end(double *input, int n, char *fitdir, double res, double t) {
@@ -345,8 +352,7 @@ double fitfun(double *input, int n, void *output, int *info) {
     }
 
     if (ok) {
-        plot_fit(fitdir);
-        res = compute_fitness(sim_data, sigma);
+        res = compute_fitness(fitdir, sim_data, sigma);
     } else {
         res = fail;
     }
