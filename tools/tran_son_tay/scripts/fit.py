@@ -86,9 +86,9 @@ if __name__ == '__main__':
     for i in range(0, n/4):
         p  = sim_data[4*i, 0]
         x  = sim_data[4*i:4*(i+1), 1]
-        y1 = sim_data[4*i:4*(i+1), 2]
-        y2 = sim_data[4*i:4*(i+1), 3]
-        y3 = sim_data[4*i:4*(i+1), 4]
+        y1 = sim_data[4*i:4*(i+1), 2] # a
+        y2 = sim_data[4*i:4*(i+1), 3] # c
+        fr = np.mean(sim_data[4*i:4*(i+1), 4])
         a1, t1, r1 = fit_diam(x, y1, 2, 0.02)
         a2, t2, r2 = fit_diam(x, y2, 0, 0.02)
 
@@ -118,6 +118,6 @@ if __name__ == '__main__':
         # print 'a2\t%.16f' % a2
         # print 't2\t%.16f' % t2
         # print 'r2\t%.16f' % r2
-        # print 'fr\t%.16f' % np.mean(y3)
+        # print 'fr\t%.16f' % fr
         # print 'tsc\t%.16f' % tsc
-        print '%d\t%.16f\t%.16f\t%.16f\t%.16f\t%.16f\t%.16f' % (p, a1, t1, a2, t2, np.mean(y3), tsc)
+        print '%d\t%.16f\t%.16f\t%.16f\t%.16f\t%.16f\t%.16f' % (p, a1, t1, a2, t2, fr, tsc)
