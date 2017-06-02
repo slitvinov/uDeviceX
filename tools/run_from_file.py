@@ -148,7 +148,7 @@ def gen_dir():
     m = 1; dd = os.listdir(res_dir)
     for d in dd: m = max(m, 1+int(d.split('_')[1]))
     print 'Creating directory #', m
-    d0 = '%s/run_%d' % (res_dir, m)
+    d0 = '%s/run_%03d' % (res_dir, m)
     if not os.path.exists(d0): os.makedirs(d0)
     return d0
 

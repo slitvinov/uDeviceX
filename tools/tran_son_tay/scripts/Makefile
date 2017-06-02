@@ -1,5 +1,5 @@
 BIN = $(HOME)/bin
-PROG = post.py
+PROG = post.py fit.py
 UDX = $(HOME)/.udx
 S = sphere.ply
 
