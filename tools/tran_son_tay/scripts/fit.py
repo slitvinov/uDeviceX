@@ -92,15 +92,6 @@ if __name__ == '__main__':
         a1, t1, r1 = fit_diam(x, y1, 2, 0.02)
         a2, t2, r2 = fit_diam(x, y2, 0, 0.02)
 
-        xp = np.linspace(0, 1.1*np.max(x), num=200)
-        plot(xp, fd(xp, a1, t1), 'b-', label='simulation fit')
-        plot(xp, fd(xp, a2, t2), 'b-')
-        plot(x, y1, 'r-o', label='simulation')
-        plot(x, y2, 'r-o')
-        legend()
-        savefig('fit_s_%d.pdf' % p)
-        close()
-
         xe = exp_data[:, 0]
         ye = exp_data[:, [1, 3]]
         tsc = fit_tsc(xe, ye, a1, t1, a2, t2)
@@ -108,10 +99,12 @@ if __name__ == '__main__':
         xp = np.linspace(0, 1.1*np.max(exp_data[:, 0]), num=200)
         plot(xp, fds(xp, a1, t1, tsc), 'b-', label='simulation fit')
         plot(xp, fds(xp, a2, t2, tsc), 'b-')
+        plot(tsc*x, y1, 'bo', label='simulation')
+        plot(tsc*x, y2, 'bo')
         plot(xe, exp_data[:, 1], 'r-o', label='experiment')
         plot(xe, exp_data[:, 3], 'r-o')
         legend()
-        savefig('fit_e_%d.pdf' % p)
+        savefig('fit_%d.pdf' % p)
         close()
 
         # ll = loglike(sim_data, a1, t1, r1, a2, t2, r2, tsc)
