@@ -74,7 +74,7 @@ __global__ void setup_kernel() {
     }
 }
 
-__device__ __forceinline__ float3 _frnd(float3 r1, float3 r2, int i1, int i2) {
+__device__ __forceinline__ float3 frnd(float3 r1, float3 r2, int i1, int i2) {
   /* see (3.25) in Fedosov, D. A. Multiscale modeling of blood flow
      and soft matter. Brown Uni, 2010 */
   enum {d = 3}; /* dimension */
@@ -184,7 +184,7 @@ __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
 
     float3 f = _fangle(v1, v2, v3, av[2 * idrbc], av[2 * idrbc + 1]);
     f += _fvisc(v1, v2, u1, u2);
-    f += _frnd(v1, v2, pid, neighid);
+    f += frnd(v1, v2, pid, neighid);
     return f;
   }
   return make_float3(-1.0e10, -1.0e10, -1.0e10);
