@@ -74,7 +74,7 @@ __global__ void setup_kernel() {
     }
 }
 
-__device__ __forceinline__ float3 frnd(float3 r1, float3 r2, int i1, int i2) {
+__device__ __forceinline__ float3 frnd0(float3 r1, float3 r2, int i1, int i2) {
   /* see (3.25) in Fedosov, D. A. Multiscale modeling of blood flow
      and soft matter. Brown Uni, 2010 */
   enum {d = 3}; /* dimension */
@@ -102,6 +102,10 @@ __device__ __forceinline__ float3 frnd(float3 r1, float3 r2, int i1, int i2) {
   f.x = k*wex; f.y = k*wey; f.z = k*wez; /* assume 3*gC - gT == 0 */
   
   return f;
+}
+
+__device__ __forceinline__ float3 frnd(float3 r1, float3 r2, int i1, int i2) {
+  return frnd0(r1, r2, i1, i2);
 }
 
 __device__ __forceinline__ float3 _fvisc(float3 r1, float3 r2,
