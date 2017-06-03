@@ -57,8 +57,7 @@ __device__ float3 _fangle(float3 a, float3 b, float3 c,
 __device__ float rnd(int i1, int i2) {
     int id = i1*RBCnv + i2;
     curandState *state = &rrnd[id];
-    float t = curand_normal(state);
-    return t;
+    return curand_normal(state);
 }
 
 __global__ void setup_kernel() {
@@ -84,7 +83,7 @@ __device__ __forceinline__ float3 _frnd(float3 r1, float3 r2, int i1, int i2) {
   int c;
   double W[d*(d+1)/2]; /* traceless symmetric part of Wiener proceses */
   double trW; /* trace */
-  double gT, kbT; /* gammaT and temperature */
+  double gT = 3 * RBCgammaC, kbT = RBCkbT;
   double k; /* aux scalar */
   double wex, wey, wez; /* dot(W, e) */
   double dx = r1.x - r2.x, dy = r1.y - r2.y, dz = r1.z - r2.z;
@@ -93,15 +92,15 @@ __device__ __forceinline__ float3 _frnd(float3 r1, float3 r2, int i1, int i2) {
 
   for (c = 0; c < d*(d+1)/2; c++) W[c] = rnd(i1, i2);
   trW = W[XX] + W[YY] + W[ZZ];
-  W[XX] -= trW/3; W[YY] -= trW/3; W[ZZ] -= trW/3;
+  W[XX] -= trW/d; W[YY] -= trW/d; W[ZZ] -= trW/d;
 
   wex = W[XX]*ex + W[XY]*ey + W[XZ]*ez;
   wey = W[XY]*ex + W[YY]*ey + W[YZ]*ez;
   wez = W[XZ]*ex + W[YZ]*ey + W[ZZ]*ez;
 
-  gT = 3 * RBCgammaC; kbT = RBCkbT;
-  k = 2 * sqrt(kbT * gT);
-  f.x = k*wex; f.y = k*wey; f.z = k*wez;
+  k = 2 * sqrt(kbT * gT) / sqrt(dt);
+  f.x = k*wex; f.y = k*wey; f.z = k*wez; /* assume 3*gC - gT == 0 */
+  
   return f;
 }
 
