@@ -64,7 +64,7 @@ __device__ float rnd(int i1, int i2) {
 __global__ void setup_kernel() {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     if (i < RBCnv) {
-        for (int j = 0; j < RBCnv; ++j) {
+        for (int j = i + 1; j < RBCnv; ++j) {
             unsigned long long seed = 1, sequence = i*RBCnv+j, offset = 0;
             curandState *state;
             state = &rrnd[i*RBCnv+j];
