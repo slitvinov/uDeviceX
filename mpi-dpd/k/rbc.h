@@ -76,41 +76,42 @@ __global__ void setup_kernel() {
 }
 
 __device__ __forceinline__ float3 _frnd(float3 r1, float3 r2, int i1, int i2) {
-  float t = rnd(i1, i2);
-
-  float3 dr = r1 - r2;
-  float3 e = rsqrt(dot(dr, dr)) * dr;
-  double gammaT = 3.0 * RBCgammaC, kBT = RBCkbT;
-
-  return 2.0*sqrt(gammaT*kBT) * t * e;
-}
-
-__device__ __forceinline__ float3 _frnd(float3 r1, float3 r2, int i1, int i2) {
   /* see (3.25) in Fedosov, D. A. Multiscale modeling of blood flow
      and soft matter. Brown Uni, 2010 */
-  enum {XX, XY, XZ,   YX, YY, YZ,   ZX, ZY, ZZ};
-  enum {d = 3};
+  enum {d = 3}; /* dimension */
+  enum {XX, YY, ZZ,   XY, XZ, YZ};
+  float3 f; /* output: force */
   int c;
-  float t = rnd(i1, i2);
-  float W[d*d], Ws[d*d]; /* increments of Wiener proceses and
-			    traceless symmetric part of `W' */
-  float trW; /* trace */
+  double W[d*(d+1)/2]; /* traceless symmetric part of Wiener proceses */
+  double trW; /* trace */
+  double gT, kbT; /* gammaT and temperature */
+  double k; /* aux scalar */
+  double wex, wey, wez; /* dot(W, e) */
+  double dx = r1.x - r2.x, dy = r1.y - r2.y, dz = r1.z - r2.z;
+  k = rsqrt(dx*dx + dy*dy + dz*dz);
+  double ex = k*dx, ey = k*dy, ez = k*dz;
 
-  for (c = 0; c < d*d; c++) W[c] = rnd(i1, i2);
+  for (c = 0; c < d*(d+1)/2; c++) W[c] = rnd(i1, i2);
   trW = W[XX] + W[YY] + W[ZZ];
-  Ws[XY] = Ws[YX] = (W[XY] + W[YX]) / 2; /* make symmetric */
-  Ws[XZ] = Ws[ZX] = (W[XZ] + W[ZX]) / 2;
-  Ws[YZ] = Ws[ZY] = (W[YZ] + W[ZY]) / 2;
+  W[XX] -= trW/3; W[YY] -= trW/3; W[ZZ] -= trW/3;
 
-  Ws[XX] = W[XX] - trW / 3;             /* make  traceless */
-  Ws[YY] = W[YY] - trW / 3;
-  Ws[ZZ] = W[ZZ] - trW / 3;
+  wex = W[XX]*ex + W[XY]*ey + W[XZ]*ez;
+  wey = W[XY]*ex + W[YY]*ey + W[YZ]*ez;
+  wez = W[XZ]*ex + W[YZ]*ey + W[ZZ]*ez;
 
-  float3 dr = r1 - r2;
-  float3 e = rsqrt(dot(dr, dr)) * dr;
-  double gammaT = 3.0 * RBCgammaC, kBT = RBCkbT;
+  gT = 3 * RBCgammaC; kbT = RBCkbT;
+  k = 2 * sqrt(kbT * gT);
+  f.x = k*wex; f.y = k*wey; f.z = k*wez;
+  return f;
+}
 
-  return 2.0*sqrt(gammaT*kBT) * t * e;
+__device__ __forceinline__ float3 _fvisc(float3 r1, float3 r2,
+					 float3 u1, float3 u2) {
+  float3 du = u2 - u1, dr = r1 - r2;
+  double gC = RBCgammaC, gT = 3*RBCgammaC;
+
+  return gT                             * du +
+         gC * dot(du, dr) / dot(dr, dr) * dr;
 }
 
 template <int update>
