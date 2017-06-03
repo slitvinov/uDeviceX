@@ -54,22 +54,29 @@ __device__ float3 _fangle(float3 a, float3 b, float3 c,
 		     );
 }
 
-__device__ float rnd() {
-    int id = blockDim.x * blockIdx.x + threadIdx.x;
+__device__ float rnd(int i1, int i2) {
+    int id = i1*RBCnv + i2;
     curandState *state = &rrnd[id];
     float t = curand_normal(state);
     return t;
 }
 
 __global__ void setup_kernel() {
-    int id = threadIdx.x + blockIdx.x * blockDim.x;
-    unsigned long long seed = 1, sequence = id, offset = 0;
-    curandState *state = &rrnd[id];
-    curand_init(seed, sequence, offset, state);
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    if (i < RBCnv) {
+        for (int j = 0; j < RBCnv; ++j) {
+            unsigned long long seed = 1, sequence = i*RBCnv+j, offset = 0;
+            curandState *state;
+            state = &rrnd[i*RBCnv+j];
+            curand_init(seed, sequence, offset, state);
+            state = &rrnd[j*RBCnv+i];
+            curand_init(seed, sequence, offset, state);
+        }
+    }
 }
 
-__device__ __forceinline__ float3 _frnd(float3 r1, float3 r2) {
-  float t = rnd();
+__device__ __forceinline__ float3 _frnd(float3 r1, float3 r2, int i1, int i2) {
+  float t = rnd(i1, i2);
 
   float3 dr = r1 - r2;
   float3 e = rsqrt(dot(dr, dr)) * dr;
@@ -158,7 +165,7 @@ __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
 
     float3 f = _fangle(v1, v2, v3, av[2 * idrbc], av[2 * idrbc + 1]);
     f += _fvisc(v1, v2, u1, u2);
-    f += _frnd(v1, v2);
+    f += _frnd(v1, v2, pid, neighid);
     return f;
   }
   return make_float3(-1.0e10, -1.0e10, -1.0e10);

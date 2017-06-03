@@ -10,7 +10,7 @@ const int   numberdensity = _numberdensity * (rc * rc * rc);
 #define MAX_FACE_NUM 5000000
 
 /* maximum number of random states per one RBC */
-#define MAX_RND_NUM 20000
+#define MAX_RND_NUM 4000000
 
 /* ceiling `m' to `n' (returns the smallest `A' such n*A is not less
    than `m') */
