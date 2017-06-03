@@ -85,13 +85,32 @@ __device__ __forceinline__ float3 _frnd(float3 r1, float3 r2, int i1, int i2) {
   return 2.0*sqrt(gammaT*kBT) * t * e;
 }
 
-__device__ __forceinline__ float3 _fvisc(float3 v1, float3 v2,
-					 float3 u1, float3 u2) {
-  float3 du = u2 - u1, dr = v1 - v2;
-  double gammaC = RBCgammaC, gammaT = 3.0 * RBCgammaC;
+__device__ __forceinline__ float3 _frnd(float3 r1, float3 r2, int i1, int i2) {
+  /* see (3.25) in Fedosov, D. A. Multiscale modeling of blood flow
+     and soft matter. Brown Uni, 2010 */
+  enum {XX, XY, XZ,   YX, YY, YZ,   ZX, ZY, ZZ};
+  enum {d = 3};
+  int c;
+  float t = rnd(i1, i2);
+  float W[d*d], Ws[d*d]; /* increments of Wiener proceses and
+			    traceless symmetric part of `W' */
+  float trW; /* trace */
 
-  return gammaT                             * du +
-	 gammaC * dot(du, dr) / dot(dr, dr) * dr;
+  for (c = 0; c < d*d; c++) W[c] = rnd(i1, i2);
+  trW = W[XX] + W[YY] + W[ZZ];
+  Ws[XY] = Ws[YX] = (W[XY] + W[YX]) / 2; /* make symmetric */
+  Ws[XZ] = Ws[ZX] = (W[XZ] + W[ZX]) / 2;
+  Ws[YZ] = Ws[ZY] = (W[YZ] + W[ZY]) / 2;
+
+  Ws[XX] = W[XX] - trW / 3;             /* make  traceless */
+  Ws[YY] = W[YY] - trW / 3;
+  Ws[ZZ] = W[ZZ] - trW / 3;
+
+  float3 dr = r1 - r2;
+  float3 e = rsqrt(dot(dr, dr)) * dr;
+  double gammaT = 3.0 * RBCgammaC, kBT = RBCkbT;
+
+  return 2.0*sqrt(gammaT*kBT) * t * e;
 }
 
 template <int update>
