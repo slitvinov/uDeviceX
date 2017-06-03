@@ -4,6 +4,7 @@ texture<int, 1, cudaReadModeElementType> texAdjVert;
 texture<int, 1, cudaReadModeElementType> texAdjVert2;
 texture<int4, cudaTextureType1D> texTriangles4;
 __constant__ float A[4][4];
+__device__ curandState rrnd[MAX_RND_NUM];
 
 __device__ float3 _fangle(float3 a, float3 b, float3 c,
 			  float area, float volume) {
@@ -51,6 +52,30 @@ __device__ float3 _fangle(float3 a, float3 b, float3 c,
 		     FA.y + FV.y + (b_wlc + b_pow) * ab.y,
 		     FA.z + FV.z + (b_wlc + b_pow) * ab.z
 		     );
+}
+
+__device__ float rnd() {
+    int id = blockDim.x * blockIdx.x + threadIdx.x;
+    curandState *state = &rrnd[id];
+    float t = curand_normal(state);
+    return t;
+}
+
+__global__ void setup_kernel() {
+    int id = threadIdx.x + blockIdx.x * blockDim.x;
+    unsigned long long seed = 1, sequence = id, offset = 0;
+    curandState *state = &rrnd[id];
+    curand_init(seed, sequence, offset, state);
+}
+
+__device__ __forceinline__ float3 _frnd(float3 r1, float3 r2) {
+  float t = rnd();
+
+  float3 dr = r1 - r2;
+  float3 e = rsqrt(dot(dr, dr)) * dr;
+  double gammaT = 3.0 * RBCgammaC, kBT = RBCkbT;
+
+  return 2.0*sqrt(gammaT*kBT) * t * e;
 }
 
 __device__ __forceinline__ float3 _fvisc(float3 v1, float3 v2,
@@ -133,6 +158,7 @@ __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
 
     float3 f = _fangle(v1, v2, v3, av[2 * idrbc], av[2 * idrbc + 1]);
     f += _fvisc(v1, v2, u1, u2);
+    f += _frnd(v1, v2);
     return f;
   }
   return make_float3(-1.0e10, -1.0e10, -1.0e10);

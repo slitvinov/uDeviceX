@@ -1,4 +1,5 @@
 #include <cuda-dpd.h>
+#include <curand_kernel.h>
 #include <sys/stat.h>
 #include <map>
 
