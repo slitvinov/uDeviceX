@@ -146,7 +146,9 @@ def gen_ic(d0):
 
 def gen_dir():
     m = 1; dd = os.listdir(res_dir)
-    for d in dd: m = max(m, 1+int(d.split('_')[1]))
+    for d in dd:
+        w = d.split('_')
+        if (w[0] == 'run'): m = max(m, 1+int(w[1]))
     print 'Creating directory #', m
     d0 = '%s/run_%03d' % (res_dir, m)
     if not os.path.exists(d0): os.makedirs(d0)
@@ -218,6 +220,10 @@ def run_falcon(d0):
     os.system('cd %s && ./test' % d0)
 
 
+def run_daint_i(d0):
+    os.system('cd %s && srun ./test' % d0)
+
+
 def run_daint(d0):
     with open('%s/runme.sh' % d0, 'w') as f:
         f.write('#!/bin/bash -l\n')
@@ -241,6 +247,8 @@ def run(d0, machine):
         run_falcon(d0)
     elif machine == 'daint':
         run_daint(d0)
+    elif machine == 'daint_i':
+        run_daint_i(d0)
     else:
         print 'Unknown machine'
 
