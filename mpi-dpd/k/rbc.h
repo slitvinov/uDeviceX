@@ -201,9 +201,9 @@ __device__ float3 _fangle_device(float2 t0, float2 t1, float *av) {
     tt2r(t0, t1, /**/ &r3);
 
     area = av[2*cid]; volume = av[2*cid + 1];
-    f = fangle(r1, r2, r3, area, volume);
-    f += fvisc(r1, r2, u1, u2);
-    f += frnd(r1, r2, i1, i2);
+    f  = fangle(r1, r2, r3, area, volume);
+    f +=  fvisc(r1, r2,     u1, u2);
+    f +=   frnd(r1, r2,     i1, i2);
     return f;
   }
   return make_float3(-1.0e10, -1.0e10, -1.0e10);
