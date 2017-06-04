@@ -200,10 +200,10 @@ void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {
   texTriangles4.mipmapFilterMode = cudaFilterModePoint;
   texTriangles4.normalized = 0;
 
-  texVertices.channelDesc = cudaCreateChannelDesc<float2>();
-  texVertices.filterMode = cudaFilterModePoint;
-  texVertices.mipmapFilterMode = cudaFilterModePoint;
-  texVertices.normalized = 0;
+  texV.channelDesc = cudaCreateChannelDesc<float2>();
+  texV.filterMode = cudaFilterModePoint;
+  texV.mipmapFilterMode = cudaFilterModePoint;
+  texV.normalized = 0;
 
   size_t textureoffset;
   CC(cudaBindTexture(&textureoffset, &texTriangles4, devtrs4,
@@ -234,9 +234,9 @@ void forces_nohost(int nc, float *device_xyzuvw,
   if (nc == 0) return;
   
   size_t textureoffset;
-  CC(cudaBindTexture(&textureoffset, &texVertices,
+  CC(cudaBindTexture(&textureoffset, &texV,
 		     (float2 *)device_xyzuvw,
-		     &texVertices.channelDesc,
+		     &texV.channelDesc,
 		     nc * RBCnv * sizeof(float) * 6));
 
   dim3 avThreads(256, 1);

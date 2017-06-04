@@ -2,7 +2,7 @@ namespace rbc {
 enum {nd = 3};   /* [n]umber of [d]imensions */
 enum {X, Y, Z};
 
-texture<float2, 1, cudaReadModeElementType> texVertices;
+texture<float2, 1, cudaReadModeElementType> texV;
 texture<int, 1, cudaReadModeElementType> texAdjVert;
 texture<int, 1, cudaReadModeElementType> texAdjVert2;
 texture<int4, cudaTextureType1D> texTriangles4;
@@ -163,7 +163,7 @@ __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
   int offset = idrbc * nvertices * 3;
   int neighid = (threadIdx.x + blockDim.x * blockIdx.x) % degreemax;
 
-  float2 tmp2 = tex1Dfetch(texVertices, pid * 3 + 2);
+  float2 tmp2 = tex1Dfetch(texV, pid * 3 + 2);
   float3 v1 = make_float3(tmp0.x, tmp0.y, tmp1.x);
   float3 u1 = make_float3(tmp1.y, tmp2.x, tmp2.y);
 
@@ -176,11 +176,11 @@ __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
   if (idv3 == -1 && valid) idv3 = tex1Dfetch(texAdjVert, 0 + degreemax * lid);
 
   if (valid) {
-    float2 tmp0 = tex1Dfetch(texVertices, offset + idv2 * 3 + 0);
-    float2 tmp1 = tex1Dfetch(texVertices, offset + idv2 * 3 + 1);
-    float2 tmp2 = tex1Dfetch(texVertices, offset + idv2 * 3 + 2);
-    float2 tmp3 = tex1Dfetch(texVertices, offset + idv3 * 3 + 0);
-    float2 tmp4 = tex1Dfetch(texVertices, offset + idv3 * 3 + 1);
+    float2 tmp0 = tex1Dfetch(texV, offset + idv2 * 3 + 0);
+    float2 tmp1 = tex1Dfetch(texV, offset + idv2 * 3 + 1);
+    float2 tmp2 = tex1Dfetch(texV, offset + idv2 * 3 + 2);
+    float2 tmp3 = tex1Dfetch(texV, offset + idv3 * 3 + 0);
+    float2 tmp4 = tex1Dfetch(texV, offset + idv3 * 3 + 1);
 
     float3 v2 = make_float3(tmp0.x, tmp0.y, tmp1.x);
     float3 u2 = make_float3(tmp1.y, tmp2.x, tmp2.y);
@@ -233,14 +233,14 @@ __device__ float3 _fdihedral_device(float2 tmp0, float2 tmp1) {
   idv4 = tex1Dfetch(texAdjVert2, neighid + degreemax * lid);
 
   if (valid) {
-    float2 tmp0 = tex1Dfetch(texVertices, offset + idv1 * 3 + 0);
-    float2 tmp1 = tex1Dfetch(texVertices, offset + idv1 * 3 + 1);
-    float2 tmp2 = tex1Dfetch(texVertices, offset + idv2 * 3 + 0);
-    float2 tmp3 = tex1Dfetch(texVertices, offset + idv2 * 3 + 1);
-    float2 tmp4 = tex1Dfetch(texVertices, offset + idv3 * 3 + 0);
-    float2 tmp5 = tex1Dfetch(texVertices, offset + idv3 * 3 + 1);
-    float2 tmp6 = tex1Dfetch(texVertices, offset + idv4 * 3 + 0);
-    float2 tmp7 = tex1Dfetch(texVertices, offset + idv4 * 3 + 1);
+    float2 tmp0 = tex1Dfetch(texV, offset + idv1 * 3 + 0);
+    float2 tmp1 = tex1Dfetch(texV, offset + idv1 * 3 + 1);
+    float2 tmp2 = tex1Dfetch(texV, offset + idv2 * 3 + 0);
+    float2 tmp3 = tex1Dfetch(texV, offset + idv2 * 3 + 1);
+    float2 tmp4 = tex1Dfetch(texV, offset + idv3 * 3 + 0);
+    float2 tmp5 = tex1Dfetch(texV, offset + idv3 * 3 + 1);
+    float2 tmp6 = tex1Dfetch(texV, offset + idv4 * 3 + 0);
+    float2 tmp7 = tex1Dfetch(texV, offset + idv4 * 3 + 1);
 
     float3 v1 = make_float3(tmp0.x, tmp0.y, tmp1.x);
     float3 v2 = make_float3(tmp2.x, tmp2.y, tmp3.x);
@@ -259,8 +259,8 @@ __global__ void fall_kernel(int nc, float *__restrict__ av,
   int pid = (threadIdx.x + blockDim.x * blockIdx.x) / degreemax;
 
   if (pid < nc * nvertices) {
-    float2 tmp0 = tex1Dfetch(texVertices, pid * 3 + 0);
-    float2 tmp1 = tex1Dfetch(texVertices, pid * 3 + 1);
+    float2 tmp0 = tex1Dfetch(texV, pid * 3 + 0);
+    float2 tmp1 = tex1Dfetch(texV, pid * 3 + 1);
 
     float3 f = _fangle_device<nvertices>(tmp0, tmp1, av);
     f += _fdihedral_device<nvertices>(tmp0, tmp1);
@@ -279,8 +279,8 @@ __global__ void addKernel(float* axayaz, float* __restrict__ addfrc, int n) {
 }
 
 __device__ __forceinline__ float3 tex2vec(int id) {
-  float2 tmp0 = tex1Dfetch(texVertices, id + 0);
-  float2 tmp1 = tex1Dfetch(texVertices, id + 1);
+  float2 tmp0 = tex1Dfetch(texV, id + 0);
+  float2 tmp1 = tex1Dfetch(texV, id + 1);
   return make_float3(tmp0.x, tmp0.y, tmp1.x);
 }
 
