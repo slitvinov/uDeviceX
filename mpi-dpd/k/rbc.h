@@ -114,7 +114,7 @@ __device__ __forceinline__ float3 _fvisc(float3 r1, float3 r2,
   double gC = RBCgammaC, gT = 3*RBCgammaC;
 
   return gT                             * du +
-         gC * dot(du, dr) / dot(dr, dr) * dr;
+	 gC * dot(du, dr) / dot(dr, dr) * dr;
 }
 
 template <int update>
@@ -158,21 +158,19 @@ __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
 				 float *av) {
   int md = 7; /* was degreemax */
   int i1 = (threadIdx.x + blockDim.x * blockIdx.x) / md;
-  int lid = i1 % nv;
-  int idrbc = i1 / nv;
-  int offset = idrbc * nv * 3;
-  int neighid = (threadIdx.x + blockDim.x * blockIdx.x) % md;
+  int ne = (threadIdx.x + blockDim.x * blockIdx.x) % md; /* neighbor id */
+  int cid = i1 / nv; /* cell  id */
+  int lid = i1 % nv; /* local id */
+  int offset = cid * nv * 3;
 
   float2 tmp2 = tex1Dfetch(texV, i1 * 3 + 2);
   float3 r1 = make_float3(tmp0.x, tmp0.y, tmp1.x);
   float3 u1 = make_float3(tmp1.y, tmp2.x, tmp2.y);
 
-  int i2 = tex1Dfetch(texAdjV, neighid + md * lid);
+  int i2 = tex1Dfetch(texAdjV,   ne            + md * lid);
+  int i3 = tex1Dfetch(texAdjV, ((ne + 1) % md) + md * lid);
+
   bool valid = i2 != -1;
-
-  int i3 =
-      tex1Dfetch(texAdjV, ((neighid + 1) % md) + md * lid);
-
   if (i3 == -1 && valid) i3 = tex1Dfetch(texAdjV, 0 + md * lid);
 
   if (valid) {
@@ -184,9 +182,9 @@ __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
 
     float3 r2 = make_float3(tmp0.x, tmp0.y, tmp1.x);
     float3 u2 = make_float3(tmp1.y, tmp2.x, tmp2.y);
-    float3 v3 = make_float3(tmp3.x, tmp3.y, tmp4.x);
+    float3 r3 = make_float3(tmp3.x, tmp3.y, tmp4.x);
 
-    float3 f = _fangle(r1, r2, v3, av[2 * idrbc], av[2 * idrbc + 1]);
+    float3 f = _fangle(r1, r2, r3, av[2 * cid], av[2 * cid + 1]);
     f += _fvisc(r1, r2, u1, u2);
     f += frnd(r1, r2, i1, i2);
     return f;
