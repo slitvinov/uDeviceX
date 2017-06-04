@@ -156,24 +156,24 @@ __device__ __forceinline__ float3 _fdihedral(float3 v1, float3 v2, float3 v3,
 template <int nvertices>
 __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
 				 float *av) {
-  int degreemax = 7;
-  int i1 = (threadIdx.x + blockDim.x * blockIdx.x) / degreemax;
+  int md = 7; /* was degreemax */
+  int i1 = (threadIdx.x + blockDim.x * blockIdx.x) / md;
   int lid = i1 % nvertices;
   int idrbc = i1 / nvertices;
   int offset = idrbc * nvertices * 3;
-  int neighid = (threadIdx.x + blockDim.x * blockIdx.x) % degreemax;
+  int neighid = (threadIdx.x + blockDim.x * blockIdx.x) % md;
 
   float2 tmp2 = tex1Dfetch(texV, i1 * 3 + 2);
-  float3 v1 = make_float3(tmp0.x, tmp0.y, tmp1.x);
+  float3 r1 = make_float3(tmp0.x, tmp0.y, tmp1.x);
   float3 u1 = make_float3(tmp1.y, tmp2.x, tmp2.y);
 
-  int i2 = tex1Dfetch(texAdjV, neighid + degreemax * lid);
+  int i2 = tex1Dfetch(texAdjV, neighid + md * lid);
   bool valid = i2 != -1;
 
   int i3 =
-      tex1Dfetch(texAdjV, ((neighid + 1) % degreemax) + degreemax * lid);
+      tex1Dfetch(texAdjV, ((neighid + 1) % md) + md * lid);
 
-  if (i3 == -1 && valid) i3 = tex1Dfetch(texAdjV, 0 + degreemax * lid);
+  if (i3 == -1 && valid) i3 = tex1Dfetch(texAdjV, 0 + md * lid);
 
   if (valid) {
     float2 tmp0 = tex1Dfetch(texV, offset + i2 * 3 + 0);
@@ -182,13 +182,13 @@ __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
     float2 tmp3 = tex1Dfetch(texV, offset + i3 * 3 + 0);
     float2 tmp4 = tex1Dfetch(texV, offset + i3 * 3 + 1);
 
-    float3 v2 = make_float3(tmp0.x, tmp0.y, tmp1.x);
+    float3 r2 = make_float3(tmp0.x, tmp0.y, tmp1.x);
     float3 u2 = make_float3(tmp1.y, tmp2.x, tmp2.y);
     float3 v3 = make_float3(tmp3.x, tmp3.y, tmp4.x);
 
-    float3 f = _fangle(v1, v2, v3, av[2 * idrbc], av[2 * idrbc + 1]);
-    f += _fvisc(v1, v2, u1, u2);
-    f += frnd(v1, v2, i1, i2);
+    float3 f = _fangle(r1, r2, v3, av[2 * idrbc], av[2 * idrbc + 1]);
+    f += _fvisc(r1, r2, u1, u2);
+    f += frnd(r1, r2, i1, i2);
     return f;
   }
   return make_float3(-1.0e10, -1.0e10, -1.0e10);
