@@ -5,6 +5,7 @@ enum {X, Y, Z};
 #define fst(t) ( (t).x )
 #define scn(t) ( (t).y )
 #define thr(t) ( (t).z )
+#define __dfi__ __device__ __forceinline__
 
 texture<float2, 1, cudaReadModeElementType> texV;
 texture<int, 1, cudaReadModeElementType> texAdjV;
@@ -13,9 +14,8 @@ texture<int4, cudaTextureType1D> texTriangles4;
 __constant__ float A[4][4];
 __device__ curandState rrnd[MAX_RND_NUM];
 
-__device__ float3 _fangle(float3 a, float3 b, float3 c,
-			  float area, float volume) {
-#include "params/rbc.inc0.h"
+__device__ float3 fangle(float3 a, float3 b, float3 c, float area, float volume) {
+  #include "params/rbc.inc0.h"
   double Ak, A0, n_2, cA, cV,
 	r, xx, b_wlc, kp, b_pow, ka0, kv0, x0, l0, lmax,
 	kbToverp;
@@ -81,7 +81,7 @@ __global__ void setup_kernel() {
     }
 }
 
-__device__ __forceinline__ void frnd0(double dx, double dy, double dz, double W[], /**/ double f[]) {
+__dfi__ void frnd0(double dx, double dy, double dz, double W[], /**/ double f[]) {
   /* see (3.25) in Fedosov, D. A. Multiscale modeling of blood flow
      and soft matter. Brown Uni, 2010 */
   enum {XX, YY, ZZ,   XY, XZ, YZ};
@@ -103,7 +103,7 @@ __device__ __forceinline__ void frnd0(double dx, double dy, double dz, double W[
   f[X] = k*wex; f[Y] = k*wey; f[Z] = k*wez; /* assume 3*gC - gT == 0 */
 }
 
-__device__ __forceinline__ float3 frnd(float3 r1, float3 r2, int i1, int i2) {
+__dfi__ float3 frnd(float3 r1, float3 r2, int i1, int i2) {
   double f[nd], W[nd*(nd+1)/2]; /* symmetric part of Wiener processes increments */
   double dx = r1.x - r2.x, dy = r1.y - r2.y, dz = r1.z - r2.z;
   int c;
@@ -112,8 +112,7 @@ __device__ __forceinline__ float3 frnd(float3 r1, float3 r2, int i1, int i2) {
   return make_float3(f[X], f[Y], f[Z]);
 }
 
-__device__ __forceinline__ float3 _fvisc(float3 r1, float3 r2,
-					 float3 u1, float3 u2) {
+__dfi__ float3 fvisc(float3 r1, float3 r2, float3 u1, float3 u2) {
   float3 du = u2 - u1, dr = r1 - r2;
   double gC = RBCgammaC, gT = 3*RBCgammaC;
 
@@ -122,7 +121,7 @@ __device__ __forceinline__ float3 _fvisc(float3 r1, float3 r2,
 }
 
 template <int update>
-__device__ __forceinline__ float3 _fdihedral(float3 v1, float3 v2, float3 v3,
+__dfi__ float3 _fdihedral(float3 v1, float3 v2, float3 v3,
 					     float3 v4) {
   double overIksiI, overIdzeI, cosTheta, IsinThetaI2, sinTheta_1,
     beta, b11, b12, phi, sint0kb, cost0kb;
@@ -202,8 +201,8 @@ __device__ float3 _fangle_device(float2 t0, float2 t1, float *av) {
     tt2r(t0, t1, /**/ &r3);
 
     area = av[2*cid]; volume = av[2*cid + 1]);
-    f = _fangle(r1, r2, r3, area, volume);
-    f += _fvisc(r1, r2, u1, u2);
+    f = fangle(r1, r2, r3, area, volume);
+    f += fvisc(r1, r2, u1, u2);
     f += frnd(r1, r2, i1, i2);
     return f;
   }
@@ -294,13 +293,13 @@ __global__ void addKernel(float* axayaz, float* __restrict__ addfrc, int n) {
   if (pid < n) axayaz[3*pid + 0] += addfrc[pid];
 }
 
-__device__ __forceinline__ float3 tex2vec(int id) {
+__dfi__ float3 tex2vec(int id) {
   float2 tmp0 = tex1Dfetch(texV, id + 0);
   float2 tmp1 = tex1Dfetch(texV, id + 1);
   return make_float3(tmp0.x, tmp0.y, tmp1.x);
 }
 
-__device__ __forceinline__ float2 warpReduceSum(float2 val) {
+__dfi__ float2 warpReduceSum(float2 val) {
   for (int offset = warpSize / 2; offset > 0; offset /= 2) {
     val.x += __shfl_down(val.x, offset);
     val.y += __shfl_down(val.y, offset);
