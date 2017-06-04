@@ -67,7 +67,7 @@ __device__ float rnd(int i1, int i2) {
     return curand_normal(state);
 }
 
-__global__ void rnd_ini () {
+__global__ void rnd_ini() {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     if (i >= RBCnv) return;
     for (int j = i + 1; j < RBCnv; ++j) {
