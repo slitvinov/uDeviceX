@@ -226,7 +226,7 @@ void initialize(float *device_xyzuvw,
 		D2D));
   transformKernel<<<blocks, threads>>>(device_xyzuvw, RBCnv);
   fprintf(stderr, "rbc.impl: rnd_ini\n");
-  rnd_ini<<<k_cnf(RBCnv)>>>();
+  rnd_ini<<<k_cnf(RBCnv*RBCnv)>>>();
   CC(cudaPeekAtLastError());
 }
 

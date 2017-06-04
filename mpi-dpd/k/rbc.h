@@ -68,16 +68,19 @@ __device__ float rnd(int i1, int i2) {
 }
 
 __global__ void rnd_ini() {
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    if (i >= RBCnv) return;
-    for (int j = i + 1; j < RBCnv; ++j) {
-      unsigned long long seed = 1, sequence = i*RBCnv+j, offset = 0;
-      curandState *state;
-      state = &rrnd[i*RBCnv+j];
-      curand_init(seed, sequence, offset, state);
-      state = &rrnd[j*RBCnv+i];
-      curand_init(seed, sequence, offset, state);
-    }
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int nv = RBCnv;
+  int i1 = tid % nv, i2 = tid / nv;
+  unsigned long long seed = 1, sequence = i1*nv+i2, offset = 0;
+  curandState *state;
+
+  if (i1 >= nv) return;
+  if (i2 >= i1) return;
+
+  state = &rrnd[i1*nv+i2];
+  curand_init(seed, sequence, offset, state);
+  state = &rrnd[i2*nv+i1];
+  curand_init(seed, sequence, offset, state);
 }
 
 __dfi__ void frnd0(double dx, double dy, double dz, double W[], /**/ double f[]) {
