@@ -27,13 +27,13 @@ std::vector<int> extract_neighbors(std::vector<int> adjVert, int degreemax, int 
 }
 
 void setup_support(int *data, int *data2, int nentries) {
-  texAdjVert.channelDesc = cudaCreateChannelDesc<int>();
-  texAdjVert.filterMode = cudaFilterModePoint;
-  texAdjVert.mipmapFilterMode = cudaFilterModePoint;
-  texAdjVert.normalized = 0;
+  texAdjV.channelDesc = cudaCreateChannelDesc<int>();
+  texAdjV.filterMode = cudaFilterModePoint;
+  texAdjV.mipmapFilterMode = cudaFilterModePoint;
+  texAdjV.normalized = 0;
 
   size_t textureoffset;
-  CC(cudaBindTexture(&textureoffset, &texAdjVert, data, &texAdjVert.channelDesc,
+  CC(cudaBindTexture(&textureoffset, &texAdjV, data, &texAdjV.channelDesc,
 		     sizeof(int) * nentries));
 
   texAdjVert2.channelDesc = cudaCreateChannelDesc<int>();
@@ -42,7 +42,7 @@ void setup_support(int *data, int *data2, int nentries) {
   texAdjVert2.normalized = 0;
 
   CC(cudaBindTexture(&textureoffset, &texAdjVert2, data2,
-		     &texAdjVert.channelDesc, sizeof(int) * nentries));
+		     &texAdjV.channelDesc, sizeof(int) * nentries));
 }
 
 void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {

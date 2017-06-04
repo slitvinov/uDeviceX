@@ -3,7 +3,7 @@ enum {nd = 3};   /* [n]umber of [d]imensions */
 enum {X, Y, Z};
 
 texture<float2, 1, cudaReadModeElementType> texV;
-texture<int, 1, cudaReadModeElementType> texAdjVert;
+texture<int, 1, cudaReadModeElementType> texAdjV;
 texture<int, 1, cudaReadModeElementType> texAdjVert2;
 texture<int4, cudaTextureType1D> texTriangles4;
 __constant__ float A[4][4];
@@ -167,13 +167,13 @@ __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
   float3 v1 = make_float3(tmp0.x, tmp0.y, tmp1.x);
   float3 u1 = make_float3(tmp1.y, tmp2.x, tmp2.y);
 
-  int idv2 = tex1Dfetch(texAdjVert, neighid + degreemax * lid);
+  int idv2 = tex1Dfetch(texAdjV, neighid + degreemax * lid);
   bool valid = idv2 != -1;
 
   int idv3 =
-      tex1Dfetch(texAdjVert, ((neighid + 1) % degreemax) + degreemax * lid);
+      tex1Dfetch(texAdjV, ((neighid + 1) % degreemax) + degreemax * lid);
 
-  if (idv3 == -1 && valid) idv3 = tex1Dfetch(texAdjVert, 0 + degreemax * lid);
+  if (idv3 == -1 && valid) idv3 = tex1Dfetch(texAdjV, 0 + degreemax * lid);
 
   if (valid) {
     float2 tmp0 = tex1Dfetch(texV, offset + idv2 * 3 + 0);
@@ -216,18 +216,18 @@ __device__ float3 _fdihedral_device(float2 tmp0, float2 tmp1) {
   */
 
   int idv1, idv2, idv3, idv4;
-  idv1 = tex1Dfetch(texAdjVert, neighid + degreemax * lid);
+  idv1 = tex1Dfetch(texAdjV, neighid + degreemax * lid);
   bool valid = idv1 != -1;
 
-  idv2 = tex1Dfetch(texAdjVert, ((neighid + 1) % degreemax) + degreemax * lid);
+  idv2 = tex1Dfetch(texAdjV, ((neighid + 1) % degreemax) + degreemax * lid);
 
   if (idv2 == -1 && valid) {
-    idv2 = tex1Dfetch(texAdjVert, 0 + degreemax * lid);
-    idv3 = tex1Dfetch(texAdjVert, 1 + degreemax * lid);
+    idv2 = tex1Dfetch(texAdjV, 0 + degreemax * lid);
+    idv3 = tex1Dfetch(texAdjV, 1 + degreemax * lid);
   } else {
     idv3 =
-	tex1Dfetch(texAdjVert, ((neighid + 2) % degreemax) + degreemax * lid);
-    if (idv3 == -1 && valid) idv3 = tex1Dfetch(texAdjVert, 0 + degreemax * lid);
+	tex1Dfetch(texAdjV, ((neighid + 2) % degreemax) + degreemax * lid);
+    if (idv3 == -1 && valid) idv3 = tex1Dfetch(texAdjV, 0 + degreemax * lid);
   }
 
   idv4 = tex1Dfetch(texAdjVert2, neighid + degreemax * lid);
