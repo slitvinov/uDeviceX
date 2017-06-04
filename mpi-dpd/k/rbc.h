@@ -1,4 +1,7 @@
 namespace rbc {
+enum {nd = 3};   /* [n]umber of [d]imensions */
+enum {X, Y, Z};
+
 texture<float2, 1, cudaReadModeElementType> texVertices;
 texture<int, 1, cudaReadModeElementType> texAdjVert;
 texture<int, 1, cudaReadModeElementType> texAdjVert2;
@@ -74,38 +77,35 @@ __global__ void setup_kernel() {
     }
 }
 
-__device__ __forceinline__ float3 frnd0(float3 r1, float3 r2, int i1, int i2) {
+__device__ __forceinline__ void frnd0(double dx, double dy, double dz, double W[], /**/ double f[]) {
   /* see (3.25) in Fedosov, D. A. Multiscale modeling of blood flow
      and soft matter. Brown Uni, 2010 */
-  enum {d = 3}; /* dimension */
   enum {XX, YY, ZZ,   XY, XZ, YZ};
-  float3 f; /* output: force */
-  int c;
-  double W[d*(d+1)/2]; /* traceless symmetric part of Wiener proceses */
   double trW; /* trace */
   double gT = 3 * RBCgammaC, kbT = RBCkbT;
   double k; /* aux scalar */
   double wex, wey, wez; /* dot(W, e) */
-  double dx = r1.x - r2.x, dy = r1.y - r2.y, dz = r1.z - r2.z;
   k = rsqrt(dx*dx + dy*dy + dz*dz);
   double ex = k*dx, ey = k*dy, ez = k*dz;
 
-  for (c = 0; c < d*(d+1)/2; c++) W[c] = rnd(i1, i2);
   trW = W[XX] + W[YY] + W[ZZ];
-  W[XX] -= trW/d; W[YY] -= trW/d; W[ZZ] -= trW/d;
+  W[XX] -= trW/nd; W[YY] -= trW/nd; W[ZZ] -= trW/nd;
 
   wex = W[XX]*ex + W[XY]*ey + W[XZ]*ez;
   wey = W[XY]*ex + W[YY]*ey + W[YZ]*ez;
   wez = W[XZ]*ex + W[YZ]*ey + W[ZZ]*ez;
 
   k = 2 * sqrt(kbT * gT) / sqrt(dt);
-  f.x = k*wex; f.y = k*wey; f.z = k*wez; /* assume 3*gC - gT == 0 */
-  
-  return f;
+  f[X] = k*wex; f[Y] = k*wey; f[Z] = k*wez; /* assume 3*gC - gT == 0 */
 }
 
 __device__ __forceinline__ float3 frnd(float3 r1, float3 r2, int i1, int i2) {
-  return frnd0(r1, r2, i1, i2);
+  double f[nd], W[nd*(nd+1)/2]; /* symmetric part of Wiener processes increments */
+  double dx = r1.x - r2.x, dy = r1.y - r2.y, dz = r1.z - r2.z;
+  int c;
+  for (c = 0; c < nd*(nd+1)/2; c++) W[c] = rnd(i1, i2);
+  frnd0(dx, dy, dz, W, /**/ f);
+  return make_float3(f[X], f[Y], f[Z]);
 }
 
 __device__ __forceinline__ float3 _fvisc(float3 r1, float3 r2,
@@ -188,7 +188,7 @@ __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
 
     float3 f = _fangle(v1, v2, v3, av[2 * idrbc], av[2 * idrbc + 1]);
     f += _fvisc(v1, v2, u1, u2);
-    f += frnd(v1, v2, pid, neighid);
+    f += frnd(v1, v2, pid, idv2);
     return f;
   }
   return make_float3(-1.0e10, -1.0e10, -1.0e10);
