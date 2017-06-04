@@ -2,6 +2,10 @@ namespace rbc {
 enum {nd = 3};   /* [n]umber of [d]imensions */
 enum {X, Y, Z};
 
+#define fst(t) ( (t).x )
+#define scn(t) ( (t).y )
+#define thr(t) ( (t).z )
+
 texture<float2, 1, cudaReadModeElementType> texV;
 texture<int, 1, cudaReadModeElementType> texAdjV;
 texture<int, 1, cudaReadModeElementType> texAdjV2;
@@ -153,38 +157,52 @@ __device__ __forceinline__ float3 _fdihedral(float3 v1, float3 v2, float3 v3,
     return make_float3(0, 0, 0);
 }
 
+__device__ void tt2r(float2 t1, float2 t2, /**/ float3 *r) {
+  r->x = fst(t1); r->y = scn(t1); r->z = fst(t2);
+}
+
+__device__ void ttt2ru(float2 t1, float2 t2, float2 t3, /**/ float3 *r, float3 *u) {
+  r->x = fst(t1); r->y = scn(t1); r->z = fst(t2);
+  u->x = scn(t2); u->y = fst(t3); u->z = scn(t3);
+}
+
 template <int nv>
-__device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
-				 float *av) {
+__device__ float3 _fangle_device(float2 t0, float2 t1, float *av) {
   int md = 7; /* was degreemax */
-  int i1 = (threadIdx.x + blockDim.x * blockIdx.x) / md;
-  int ne = (threadIdx.x + blockDim.x * blockIdx.x) % md; /* neighbor id */
-  int cid = i1 / nv; /* cell  id */
-  int lid = i1 % nv; /* local id */
-  int offset = cid * nv * 3;
+  int i1, i2, i3, ne, cid, lid, off;
+  bool valid;
+  float2 t2;
+  float3 r1, u1, r2, u2, r3; /* no `u3' */
+  float3 f; /* force */
+  float area, volume;
 
-  float2 tmp2 = tex1Dfetch(texV, i1 * 3 + 2);
-  float3 r1 = make_float3(tmp0.x, tmp0.y, tmp1.x);
-  float3 u1 = make_float3(tmp1.y, tmp2.x, tmp2.y);
+  i1 = (threadIdx.x + blockDim.x * blockIdx.x) / md;
+  ne = (threadIdx.x + blockDim.x * blockIdx.x) % md; /* neighbor id */
+  cid = i1 / nv; /* cell  id */
+  lid = i1 % nv; /* local id */
 
-  int i2 = tex1Dfetch(texAdjV,   ne            + md * lid);
-  int i3 = tex1Dfetch(texAdjV, ((ne + 1) % md) + md * lid);
+  t2 = tex1Dfetch(texV, i1 * 3 + 2);
+  ttt2ru(t0, t1, t2, /**/ &r1, &u1);
 
-  bool valid = i2 != -1;
+  i2 = tex1Dfetch(texAdjV,   ne            + md * lid);
+  i3 = tex1Dfetch(texAdjV, ((ne + 1) % md) + md * lid);
+
+  valid = i2 != -1;
   if (i3 == -1 && valid) i3 = tex1Dfetch(texAdjV, 0 + md * lid);
 
   if (valid) {
-    float2 tmp0 = tex1Dfetch(texV, offset + i2 * 3 + 0);
-    float2 tmp1 = tex1Dfetch(texV, offset + i2 * 3 + 1);
-    float2 tmp2 = tex1Dfetch(texV, offset + i2 * 3 + 2);
-    float2 tmp3 = tex1Dfetch(texV, offset + i3 * 3 + 0);
-    float2 tmp4 = tex1Dfetch(texV, offset + i3 * 3 + 1);
+    off = cid * nv * 3; /* offset */
+    t0 = tex1Dfetch(texV, off + i2 * 3 + 0);
+    t1 = tex1Dfetch(texV, off + i2 * 3 + 1);
+    t2 = tex1Dfetch(texV, off + i2 * 3 + 2);
+    ttt2ru(t0, t1, t2, /**/ &r2, &u2);
 
-    float3 r2 = make_float3(tmp0.x, tmp0.y, tmp1.x);
-    float3 u2 = make_float3(tmp1.y, tmp2.x, tmp2.y);
-    float3 r3 = make_float3(tmp3.x, tmp3.y, tmp4.x);
+    t0 = tex1Dfetch(texV, off + i3 * 3 + 0);
+    t1 = tex1Dfetch(texV, off + i3 * 3 + 1);
+    tt2r(t0, t1, /**/ &r3);
 
-    float3 f = _fangle(r1, r2, r3, av[2 * cid], av[2 * cid + 1]);
+    area = av[2*cid]; volume = av[2*cid + 1]);
+    f = _fangle(r1, r2, r3, area, volume);
     f += _fvisc(r1, r2, u1, u2);
     f += frnd(r1, r2, i1, i2);
     return f;
@@ -338,4 +356,7 @@ __global__ void transformKernel(float *xyzuvw, int n) {
   xyzuvw[6 * i + 2] = A[2][0] * x + A[2][1] * y + A[2][2] * z + A[2][3];
 }
 
+#undef fst
+#undef scn
+#undef thr
 } /* namespace rbc */
