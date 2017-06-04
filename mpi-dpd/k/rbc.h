@@ -4,7 +4,7 @@ enum {X, Y, Z};
 
 texture<float2, 1, cudaReadModeElementType> texV;
 texture<int, 1, cudaReadModeElementType> texAdjV;
-texture<int, 1, cudaReadModeElementType> texAdjVert2;
+texture<int, 1, cudaReadModeElementType> texAdjV2;
 texture<int4, cudaTextureType1D> texTriangles4;
 __constant__ float A[4][4];
 __device__ curandState rrnd[MAX_RND_NUM];
@@ -230,7 +230,7 @@ __device__ float3 _fdihedral_device(float2 tmp0, float2 tmp1) {
     if (idv3 == -1 && valid) idv3 = tex1Dfetch(texAdjV, 0 + degreemax * lid);
   }
 
-  idv4 = tex1Dfetch(texAdjVert2, neighid + degreemax * lid);
+  idv4 = tex1Dfetch(texAdjV2, neighid + degreemax * lid);
 
   if (valid) {
     float2 tmp0 = tex1Dfetch(texV, offset + idv1 * 3 + 0);

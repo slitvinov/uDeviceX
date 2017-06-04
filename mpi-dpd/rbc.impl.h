@@ -36,12 +36,12 @@ void setup_support(int *data, int *data2, int nentries) {
   CC(cudaBindTexture(&textureoffset, &texAdjV, data, &texAdjV.channelDesc,
 		     sizeof(int) * nentries));
 
-  texAdjVert2.channelDesc = cudaCreateChannelDesc<int>();
-  texAdjVert2.filterMode = cudaFilterModePoint;
-  texAdjVert2.mipmapFilterMode = cudaFilterModePoint;
-  texAdjVert2.normalized = 0;
+  texAdjV2.channelDesc = cudaCreateChannelDesc<int>();
+  texAdjV2.filterMode = cudaFilterModePoint;
+  texAdjV2.mipmapFilterMode = cudaFilterModePoint;
+  texAdjV2.normalized = 0;
 
-  CC(cudaBindTexture(&textureoffset, &texAdjVert2, data2,
+  CC(cudaBindTexture(&textureoffset, &texAdjV2, data2,
 		     &texAdjV.channelDesc, sizeof(int) * nentries));
 }
 
