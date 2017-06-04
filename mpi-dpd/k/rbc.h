@@ -153,14 +153,14 @@ __device__ __forceinline__ float3 _fdihedral(float3 v1, float3 v2, float3 v3,
     return make_float3(0, 0, 0);
 }
 
-template <int nvertices>
+template <int nv>
 __device__ float3 _fangle_device(float2 tmp0, float2 tmp1,
 				 float *av) {
   int md = 7; /* was degreemax */
   int i1 = (threadIdx.x + blockDim.x * blockIdx.x) / md;
-  int lid = i1 % nvertices;
-  int idrbc = i1 / nvertices;
-  int offset = idrbc * nvertices * 3;
+  int lid = i1 % nv;
+  int idrbc = i1 / nv;
+  int offset = idrbc * nv * 3;
   int neighid = (threadIdx.x + blockDim.x * blockIdx.x) % md;
 
   float2 tmp2 = tex1Dfetch(texV, i1 * 3 + 2);
