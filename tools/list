@@ -1,0 +1,39 @@
+#!/bin/bash
+
+get_par () { # get from param.txt
+    awk -v k=$k \
+	'$1 == k {v = $2; exit} END {if (length(v)) print v; else exit 1}' \
+	"$f"
+}
+
+get_pst () ( # get from post.txt
+    d=`dirname "$f"`
+    p=$d/post.txt
+    if ! test -r "$p"; then return 1; fi
+    
+    awk -v k=$k '
+    NR == 1 { for (i = 1; i < NF; i++) kk[i-1] = $i }
+    NR == 2 { for (i = 1; i < NF; i++) if (kk[i] == k) {v = $i; exit} }
+    END     { if (length(v)) print v; else exit 1}
+    ' "$p"
+)
+
+get_nan () { echo NaN; }
+
+get () (
+    if   test $k == d; then dirname "$f"; return; fi
+    get_par || get_pst || get_nan
+)
+
+while ! test -r "$1"; do keys="$keys $1"; shift; done
+
+for f
+do
+    sep=''
+    for k in $keys; do # key and value
+	v=`get`
+	printf '%s%s' "$sep" "$v"
+	sep=' '
+    done
+    printf '\n'
+done
