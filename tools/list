@@ -15,9 +15,10 @@ get () (
 
 while ! test -r "$1"; do keys="$keys $1"; shift; done
 
-for f
+for d
 do
-    d=`dirname $f`; p=$d/post.txt
+    p=$d/post.txt
+    f=$d/params.txt
     sep=''
     for k in $keys; do # key and value
 	v=`get`
