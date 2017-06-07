@@ -1,14 +1,15 @@
-d=grid
+d=simulations
 
-for i in `seq 28 -1 1`; do
-    ii=`printf '%03d\n' $i`
+for i in `seq 138 -1 135`; do
+    # ii=`printf '%03d\n' $i`
+    ii=$i
     dd=$d/run_$ii
 
     m=`awk -v i=$i 'BEGIN {print i % 4}'`
-    if [[ m -eq 0 ]]; then
-        sc=`sh get_sc.sh $dd/diag.txt`
-        gc=`awk '$1 == "RBCgammaC" {print $2}' $dd/params.txt`
-    fi
+    # if [[ m -eq 0 ]]; then
+    #     sc=`sh get_sc.sh $dd/diag.txt`
+    # fi
+    gc=`awk '$1 == "RBCgammaC" {print $2}' $dd/params.txt`
 
     sh run_post.parallel.sh $dd $sc
     res=`awk '$1 == "pa" {a = $2}
