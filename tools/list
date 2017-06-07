@@ -1,0 +1,29 @@
+#!/bin/bash
+
+get_par () { # get from param.txt
+    awk -v k=$k \
+	'$1 == k {v = $2; exit} END {if (length(v)) print v; else exit 1}' \
+	"$1"
+}
+
+get_nan () { echo NaN; }
+
+get () (
+    if   test $k == d; then dirname "$f"; return; fi
+    get_par $f || get_par $p || get_nan
+)
+
+while ! test -r "$1"; do keys="$keys $1"; shift; done
+
+for d
+do
+    p=$d/post.txt
+    f=$d/params.txt
+    sep=''
+    for k in $keys; do # key and value
+	v=`get`
+	printf '%s%s' "$sep" "$v"
+	sep=' '
+    done
+    printf '\n'
+done
