@@ -25,7 +25,7 @@ static std::vector<Particle> ic_pos() { /* generate particle position */
 static void redistribute() {
   sdstr::pack(s_pp, s_n);
   if (rbcs) rdstr::extent(r_pp, r_nc, r_nv);
-  dsync();
+  dSync();
   sdstr::send();
   if (rbcs) rdstr::pack_sendcnt(r_pp, r_nc, r_nv);
   sdstr::bulk(s_n, cells->start, cells->count);
