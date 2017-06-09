@@ -4,7 +4,7 @@ ARGS=("$@")
 NARGS=$#
 
 lwd=links
-echo mkdir -p $lwd
+mkdir -p $lwd
 
 gen_dir () {
     awk -v lwd="$1" -v name="$2" -v par="$3" '
@@ -38,9 +38,9 @@ for i in `seq 1 $NARGS`; do
     ii=`awk -v i=$i 'BEGIN {print i-1}'`
     name="$name ${ARGS[$ii]}"
     par=`list "$name" run_*`
-    gen_dir "$lwd" "$name" "$par"
+    gen_dir "$lwd" "$name" "$par" | sh
 done
 
 cwd=`pwd`
 par=`list d "$ARGS" sh run_*`
-gen_links "$lwd" "$ARGS" "$par" "$cwd"
+gen_links "$lwd" "$ARGS" "$par" "$cwd" | sh
