@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Usage: rename.sh <par1> <par2> ... <parN>
+# Result: creates sybmolic links in the `links` folder
+
 ARGS=("$@")
 NARGS=$#
 
