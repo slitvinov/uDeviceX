@@ -42,5 +42,5 @@ for i in `seq 1 $NARGS`; do
 done
 
 cwd=`pwd`
-par=`list d "$ARGS" sh run_*`
-gen_links "$lwd" "$ARGS" "$par" "$cwd" | sh
+par=`list d "$name" sh run_*`
+gen_links "$lwd" "$name" "$par" "$cwd" | sh
