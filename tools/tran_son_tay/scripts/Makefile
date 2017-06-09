@@ -1,5 +1,5 @@
 BIN = $(HOME)/bin
-PROG = post.py fit.py get_sc.sh
+PROG = post.py fit.py get_sc.sh rename.sh
 UDX = $(HOME)/.udx
 S = sphere.ply
 
