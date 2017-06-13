@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
     eta_m = fit_sk1(fr0)
     fr, an = fr_an(ca1, ca2, ca3, eta_m)
-    print '%.6f %.6f %.6f' % (fr, an, eta_m)
+    print '%.6f (%.6f) %.6f (%.6f) %.6f' % (fr, fr0, an, an0, eta_m)
 
     def fit_sk2(an0):
         def func(eta_m):
@@ -125,4 +125,4 @@ if __name__ == '__main__':
 
     eta_m = fit_sk2(an0)
     fr, an = fr_an(ca1, ca2, ca3, eta_m)
-    print '%.6f %.6f %.6f' % (fr, an, eta_m)
+    print '%.6f (%.6f) %.6f (%.6f) %.6f' % (fr, fr0, an, an0, eta_m)
