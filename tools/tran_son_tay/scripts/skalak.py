@@ -3,19 +3,17 @@
 from math import sqrt
 from sys import argv
 from scipy.integrate import odeint
+from scipy.optimize import bisect
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as integrate
 import scipy.special as special
 
+plt = False
 
-if __name__ == '__main__':
-    ca1 = float(argv[1])
-    ca2 = float(argv[2])
-    ca3 = float(argv[3])
-    eta_m = float(argv[4]) # Pa*s, the bigger, the bigger shear rate is needed fot TT
 
+def fr_an(ca1, ca2, ca3, eta_m):
     gamma = 1 # 1/s
     eta_i = 10e-3 # Pa*s
     eta_0 = 3*eta_i # Pa*s
@@ -75,25 +73,56 @@ if __name__ == '__main__':
     for i in range(1,len(t)):
         if psoln[i-1, 0] < psoln[i, 0]: peakind.append(i)
     per = t[peakind[1:]] - t[peakind[:-1]]
-    fr = 2.*np.pi*np.mean(1./per)
-    print 'Normalized frequency:', fr/gamma
-    print 'Angle:', np.mean(psoln[len(t)//2:,1])
+    fr = 2.*np.pi*np.mean(1./per) / gamma
+    an = np.mean(psoln[len(t)//2:,1])
 
-    # Plot results
-    fig = plt.figure(1, figsize=(8,8))
+    if plt:
+        # Plot results
+        fig = plt.figure(1, figsize=(8,8))
 
-    # Plot theta as a function of time
-    ax1 = fig.add_subplot(211)
-    ax1.plot(t, psoln[:,0])
-    ax1.set_xlabel('time')
-    ax1.set_ylabel('theta')
+        # Plot theta as a function of time
+        ax1 = fig.add_subplot(211)
+        ax1.plot(t, psoln[:,0])
+        ax1.set_xlabel('time')
+        ax1.set_ylabel('theta')
 
-    # Plot omega as a function of time
-    ax2 = fig.add_subplot(212)
-    ax2.plot(t, psoln[:,1])
-    ax2.set_xlabel('time')
-    ax2.set_ylabel('omega')
+        # Plot omega as a function of time
+        ax2 = fig.add_subplot(212)
+        ax2.plot(t, psoln[:,1])
+        ax2.set_xlabel('time')
+        ax2.set_ylabel('omega')
 
-    # plt.savefig('angles.png')
-    # plt.tight_layout()
-    plt.show()
+        # plt.savefig('angles.png')
+        # plt.tight_layout()
+        plt.show()
+
+    return fr, an
+
+
+if __name__ == '__main__':
+    ca1 = float(argv[1])
+    ca2 = float(argv[2])
+    ca3 = float(argv[3])
+    fr0 = float(argv[4])
+    an0 = float(argv[5])
+    eta_m = 0 # Pa*s, the bigger, the bigger shear rate is needed fot TT
+
+    def fit_sk1(fr0):
+        def func(eta_m):
+            fr, _ = fr_an(ca1, ca2, ca3, eta_m)
+            return fr-fr0
+        return bisect(func, 0, 0.5)
+
+    eta_m = fit_sk1(fr0)
+    fr, an = fr_an(ca1, ca2, ca3, eta_m)
+    print '%.6f %.6f %.6f' % (fr, an, eta_m)
+
+    def fit_sk2(an0):
+        def func(eta_m):
+            _, an = fr_an(ca1, ca2, ca3, eta_m)
+            return an-an0
+        return bisect(func, 0, 0.5)
+
+    eta_m = fit_sk2(an0)
+    fr, an = fr_an(ca1, ca2, ca3, eta_m)
+    print '%.6f %.6f %.6f' % (fr, an, eta_m)
