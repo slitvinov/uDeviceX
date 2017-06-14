@@ -101,8 +101,8 @@ def fr_an(ca1, ca2, ca3, eta_m):
 
 if __name__ == '__main__':
     ca1 = float(argv[1])
-    ca2 = float(argv[2])
-    ca3 = float(argv[3])
+    ca2 = 1. # float(argv[2])
+    ca3 = 1./ca1 # float(argv[3])
     fr0 = float(argv[4])
     an0 = float(argv[5])
     eta_m = 0 # Pa*s, the bigger, the bigger shear rate is needed fot TT
@@ -112,7 +112,7 @@ if __name__ == '__main__':
             fr, _ = fr_an(ca1, ca2, ca3, eta_m)
             return fr-fr0
         return bisect(func, 0, 0.5)
-
+    
     eta_m = fit_sk1(fr0)
     fr, an = fr_an(ca1, ca2, ca3, eta_m)
     print '%.6f (%.6f) %.6f (%.6f) %.6f' % (fr, fr0, an, an0, eta_m)
