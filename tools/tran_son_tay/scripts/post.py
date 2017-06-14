@@ -199,15 +199,15 @@ def process_data(plydir, dt, ntspd, sh):
             c0 = np.max(xyz[:, C]) - np.min(xyz[:, C])
 
         ea[i] = 2*radii[A]/a0
-        eb[i] = 2*radii[B]/b0
-        ec[i] = 2*radii[C]/c0
+        eb[i] = 1.       # 2*radii[B]/b0
+        ec[i] = 1./ea[i] # 2*radii[C]/c0
         pa[i] = (np.max(xyz[:, A]) - np.min(xyz[:, A]))/a0
         pb[i] = (np.max(xyz[:, B]) - np.min(xyz[:, B]))/b0
         pc[i] = (np.max(xyz[:, C]) - np.min(xyz[:, C]))/c0
         th[i] = get_angle_btw_vectors(rot[:, A], np.array([1, 0, 0]))
         om[i] = get_om(xyz, mi, th[i])
         el[i] = chi2 / xyz.shape[0]
-        fr[i] = get_fr_sk(xyz, uvw, rot, radii[A]/radii[B], i) / sh
+        fr[i] = get_fr_sk(xyz, uvw, rot, (ea[i]*a0)/(eb[i]*b0), i) / sh
 
         # check whether we're in a steady state
         if ch > 0 and i >= si and i % ch == 0:
