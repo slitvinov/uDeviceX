@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 
+'''
+    Formulas from:
+    Abkarian, Manouk, Magalie Faivre, and Annie Viallat. \
+    "Swinging of red blood cells under shear flow." \
+    Physical review letters 98.18 (2007): 188302.
+
+    Usage: ./skalak.py <elongation along x> <target TTF> <target angle>
+'''
+
 from math import sqrt
 from sys import argv
 from scipy.integrate import odeint
@@ -13,6 +22,26 @@ import scipy.special as special
 plt = False
 
 
+def plot_res(t, psoln):
+    fig = plt.figure(1, figsize=(8,8))
+
+    # Plot theta as a function of time
+    ax1 = fig.add_subplot(211)
+    ax1.plot(t, psoln[:,0])
+    ax1.set_xlabel('time')
+    ax1.set_ylabel('theta')
+
+    # Plot omega as a function of time
+    ax2 = fig.add_subplot(212)
+    ax2.plot(t, psoln[:,1])
+    ax2.set_xlabel('time')
+    ax2.set_ylabel('omega')
+
+    # plt.savefig('angles.png')
+    # plt.tight_layout()
+    plt.show()
+
+
 def fr_an(ca1, ca2, ca3, eta_m):
     gamma = 1 # 1/s
     eta_i = 10e-3 # Pa*s
@@ -22,7 +51,6 @@ def fr_an(ca1, ca2, ca3, eta_m):
     a2 = ca2*0.86e-6 # m
     a3 = ca3*2.60e-6 # m
     e = 50e-9 # m
-
 
     inva = 1./((a1*a2*a3)**(1./3.))
     alpha1 = a1*inva
@@ -42,6 +70,7 @@ def fr_an(ca1, ca2, ca3, eta_m):
     Sigma = 4 * np.pi * ( ( (a1*a2)**1.6 + (a1*a3)**1.6 + (a2*a3)**1.6 )/ 3 )**(1./1.6) # m^2
     Omega = Sigma*e # m^3
 
+    # Now solve the ODE
     def f(y, t):
         omega, theta = y      # unpack current values of y
 
@@ -76,37 +105,18 @@ def fr_an(ca1, ca2, ca3, eta_m):
     fr = 2.*np.pi*np.mean(1./per) / gamma
     an = np.mean(psoln[len(t)//2:,1])
 
-    if plt:
-        # Plot results
-        fig = plt.figure(1, figsize=(8,8))
-
-        # Plot theta as a function of time
-        ax1 = fig.add_subplot(211)
-        ax1.plot(t, psoln[:,0])
-        ax1.set_xlabel('time')
-        ax1.set_ylabel('theta')
-
-        # Plot omega as a function of time
-        ax2 = fig.add_subplot(212)
-        ax2.plot(t, psoln[:,1])
-        ax2.set_xlabel('time')
-        ax2.set_ylabel('omega')
-
-        # plt.savefig('angles.png')
-        # plt.tight_layout()
-        plt.show()
-
-    return fr, an
+    return fr, an, t, psoln
 
 
 if __name__ == '__main__':
     ca1 = float(argv[1])
-    ca2 = 1. # float(argv[2])
-    ca3 = 1./ca1 # float(argv[3])
-    fr0 = float(argv[4])
-    an0 = float(argv[5])
+    ca2 = 1.
+    ca3 = 1./ca1
+    fr0 = float(argv[2])
+    an0 = float(argv[3])
     eta_m = 0 # Pa*s, the bigger, the bigger shear rate is needed fot TT
 
+    # Fit TTF
     def fit_sk1(fr0):
         def func(eta_m):
             fr, _ = fr_an(ca1, ca2, ca3, eta_m)
@@ -114,9 +124,11 @@ if __name__ == '__main__':
         return bisect(func, 0, 0.5)
     
     eta_m = fit_sk1(fr0)
-    fr, an = fr_an(ca1, ca2, ca3, eta_m)
+    fr, an, t, psoln = fr_an(ca1, ca2, ca3, eta_m)
+    if plt: plot_res(t, psoln)
     print '%.6f (%.6f) %.6f (%.6f) %.6f' % (fr, fr0, an, an0, eta_m)
 
+    # Fit angle
     def fit_sk2(an0):
         def func(eta_m):
             _, an = fr_an(ca1, ca2, ca3, eta_m)
@@ -124,5 +136,6 @@ if __name__ == '__main__':
         return bisect(func, 0, 0.5)
 
     eta_m = fit_sk2(an0)
-    fr, an = fr_an(ca1, ca2, ca3, eta_m)
+    fr, an, t, psoln = fr_an(ca1, ca2, ca3, eta_m)
+    if plt: plot_res(t, psoln)
     print '%.6f (%.6f) %.6f (%.6f) %.6f' % (fr, fr0, an, an0, eta_m)
