@@ -1,0 +1,160 @@
+#!/usr/bin/env octave-qf
+
+1;
+global PLY_FMT
+PLY_FMT = "bin";
+
+function ini()
+  global PLY_FMT fmt
+  if eq(PLY_FMT, "ascii"); fmt = "ascii"; else fmt = "binary_little_endian"; endif
+endfunction
+
+function varargout = fscn(f, fmt) # simpler fscanf
+  l = fgets(f);
+  [varargout{1:nargout}] = strread(l, fmt);
+endfunction
+
+function e = dbl(e); e = double(e); endfunction
+
+function read_header(f)
+  global nv nf ne
+  fscn(f, "%s"); # skip OFF
+  [nv, nf, ne] = fscn(f, "%d %d %d\n");
+  nv = dbl(nv); nf = dbl(nf); ne = dbl(ne);
+endfunction
+
+function read_data(f)
+  global nv nf xx yy zz
+  global ff1 ff2 ff3
+  
+  ndim = 3; nfp = 3;
+  X = 1; Y = 2; Z = 3;
+  D = dlmread(f, ' ', [0, 0,   nv - 1, ndim - 1]); D = D';
+  xx = D(X, :); yy = D(Y, :); zz = D(Z, :);
+  
+  F = dlmread(f, ' ', [0, 0,   nf - 1, nfp     ]); F = F';
+  i = 2; ff1 = F(i++, :); ff2 = F(i++, :); ff3 = F(i++, :);
+endfunction
+
+function read(fn)
+  f = fopen(fn);
+  read_header(f);
+  read_data(f);
+  fclose(f);
+endfunction
+
+function write_header(f)
+  global nv nf fmt
+  w = @(fmt, varargin) fprintf(f, fmt, [varargin{:}]);
+  w("ply\n")
+  w("format %s 1.0\n", fmt);
+  w("element vertex %d\n", nv);
+  w("property float x\n");
+  w("property float y\n");
+  w("property float z\n");
+  w("property float u\n");
+  w("property float v\n");
+  w("property float w\n");
+  w("element face %d\n", nf);
+  w("property list int int vertex_index\n");
+  w("end_header\n");
+endfunction
+
+function r = eq(a, b); r = strcmp(a, b); endfunction
+
+function write_ascii(f, D)
+  dlmwrite(f, D', ' ')
+endfunction
+
+function write_bin(f, D, type); fwrite(f, D, type); endfunction
+
+function dwrite(f, D, type) # data write
+  global PLY_FMT
+  if eq(PLY_FMT, "ascii"); write_ascii(f, D); else write_bin(f, D, type); endif
+endfunction
+
+function write_vert(f)
+  global xx yy zz
+  global vvx vvy vvz
+  D = vertcat(xx, yy, zz, vvx, vvy, vvz);
+  dwrite(f, D, 'float32');
+endfunction
+
+function write_face(f)
+  global ff1 ff2 ff3
+  s = size(ff1); nvp0 = 3;
+  nvp = 3 * ones(s);
+  F = vertcat(nvp, ff1, ff2, ff3);
+  dwrite(f, F, 'int32');
+endfunction
+
+function write(fn)
+  f = fopen(fn, "w");
+  write_header(f);
+  write_vert(f);
+  write_face(f);  
+  fclose(f);
+endfunction
+
+function vel_ini()
+  global xx yy zz vvx vvy vvz
+  s = size(xx);
+  vvx = vvy = vvz = zeros(s);
+endfunction
+
+function vel_sk(ax, az, fr)
+  global xx zz   vvx vvz
+  vvx =   ax/az * zz;
+  vvz =  -az/ax * xx;
+  vvx *= fr; vvz *= fr;
+endfunction
+
+function sc()
+  global xx yy zz
+  xx -= mean(xx); yy -= mean(yy); zz -= mean(zz);
+  
+  r = xx.^2 + yy.^2 + zz.^2;
+  r = sqrt(r);
+  xx ./= r; yy ./= r; zz ./= r;
+endfunction
+
+function def(ax, ay, az) # deform
+  global xx yy zz
+  xx = ax * xx;
+  yy = ay * yy;
+  zz = az * zz;
+endfunction
+
+function [x, y] = rot0(x, y, t)
+  x0 = x; y0 = y;
+  x = cos(t)*x0 - sin(t)*y0;
+  y = sin(t)*x0 + cos(t)*y0;
+endfunction
+
+function rot(t)
+  global xx zz
+  global vvx vvz
+  xx0 = xx; zz0 = zz;
+  [xx, zz] = rot0(xx0, zz0, t);
+
+  dx = xx0 + vvx; dz = zz0 + vvz;
+  [dx, dz] = rot0(dx, dz, t);
+
+  vvx = dx - xx; vvz = dz - zz;
+endfunction
+
+ini();
+fi = argv(){1};
+fo = argv(){2};
+
+read(fi);
+sc();
+vel_ini();
+def(ax=3, ay=2, az=1);
+vel_sk(ax, az, fr=42);
+rot(theta=0.35);
+write(fo);
+
+# TEST: sk.t0
+# sk.el test_data/sph.498.off sk.out.ply
+#

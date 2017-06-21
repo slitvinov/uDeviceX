@@ -73,22 +73,23 @@ def plot_all(si, t, fr, ea, eb, ec, pa, pb, pc, th, om, el):
 
 
 def print_all(si, sh, t, fr, ea, eb, ec, pa, pb, pc, th, om, el):
-    t = {}
-    t['sh'] = sh
-    t['ea'], t['eau'] = np.mean(ea[si:]), np.std(ea[si:])
-    t['eb'], t['ebu'] = np.mean(eb[si:]), np.std(eb[si:])
-    t['ec'], t['ecu'] = np.mean(ec[si:]), np.std(ec[si:])
-    t['el'], t['elu'] = np.mean(el[si:]), np.std(el[si:])
-    t['th'], t['thu'] = np.mean(th[si:]), np.std(th[si:])
-    t['pa'], t['pau'] = np.mean(pa[si:]), np.std(pa[si:])
-    t['pb'], t['pbu'] = np.mean(pb[si:]), np.std(pb[si:])
-    t['pc'], t['pcu'] = np.mean(pc[si:]), np.std(pc[si:])
-    t['fr'], t['fru'] = np.mean(fr[si:]), np.std(fr[si:])
+    p = {}
+    p['sh'] = sh
+    p['ea'], p['eau'] = np.mean(ea[si:]), np.std(ea[si:])
+    p['eb'], p['ebu'] = np.mean(eb[si:]), np.std(eb[si:])
+    p['ec'], p['ecu'] = np.mean(ec[si:]), np.std(ec[si:])
+    p['el'], p['elu'] = np.mean(el[si:]), np.std(el[si:])
+    p['th'], p['thu'] = np.mean(th[si:]), np.std(th[si:])
+    p['pa'], p['pau'] = np.mean(pa[si:]), np.std(pa[si:])
+    p['pb'], p['pbu'] = np.mean(pb[si:]), np.std(pb[si:])
+    p['pc'], p['pcu'] = np.mean(pc[si:]), np.std(pc[si:])
+    p['fr'], p['fru'] = np.mean(fr[si:]), np.std(fr[si:])
     # fr, fru = get_fr(t[si:], om[si:]); fr *= 2.*np.pi/sh; fru /= sh
+    # print fr, fru
 
     with open('post.txt', 'w') as f:
-        for key, value in sorted(t.iteritems()):
-            f.write('%s\t%.16f\n' % (key, value))
+        for key, value in sorted(p.iteritems()):
+            f.write('%s\p%.16f\n' % (key, value))
 
 
 def get_angle_btw_vectors(v1, v2):
