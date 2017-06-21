@@ -104,8 +104,8 @@ endfunction
 
 function vel_sk(ax, az, fr)
   global xx zz   vvx vvz
-  vvx = -ax/az * zz;
-  vvz =  az/ax * xx;
+  vvx =   ax/az * zz;
+  vvz =  -az/ax * xx;
   vvx *= fr; vvz *= fr;
 endfunction
 
@@ -125,11 +125,16 @@ function def(ax, ay, az) # deform
   zz = az * zz;
 endfunction
 
+function [x, y] = rot0(x, y, t)
+  x0 = x; y0 = y;
+  x = cos(t)*x0 - sin(t)*y0;
+  y = sin(t)*x0 + cos(t)*y0;
+endfunction
+
 function rot(t)
   global xx zz
   global vvx vvz
-  
-  
+  [xx, zz] = rot0(xx, zz, t);
 endfunction
 
 ini();
@@ -139,7 +144,7 @@ fo = argv(){2};
 read(fi);
 sc();
 vel_ini();
-def(ax=3, ay=2, az=1);
+def(ax=3, ay=2, az=0.5);
 vel_sk(ax, az, fr=42);
 rot(theta=1);
 write(fo);
