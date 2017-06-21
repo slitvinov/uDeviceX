@@ -1,6 +1,14 @@
 #!/usr/bin/env octave-qf
 
 1;
+global PLY_FMT
+PLY_FMT = "bin";
+
+function ini()
+  global PLY_FMT fmt
+  if eq(PLY_FMT, "ascii"); fmt = "ascii"; else fmt = "binary_little_endian"; endif
+endfunction
+
 function varargout = fscn(f, fmt) # simpler fscanf
   l = fgets(f);
   [varargout{1:nargout}] = strread(l, fmt);
@@ -16,10 +24,16 @@ function read_header(f)
 endfunction
 
 function read_data(f)
-  global nv nf D F
+  global nv nf xx yy zz
+  global ff1 ff2 ff3
+  
   ndim = 3; nfp = 3;
-  D = dlmread(f, ' ', [0, 0,   nv - 1, ndim - 1]);
-  F = dlmread(f, ' ', [0, 0,   nf - 1, nfp     ]);
+  X = 1; Y = 2; Z = 3;
+  D = dlmread(f, ' ', [0, 0,   nv - 1, ndim - 1]); D = D';
+  xx = D(X, :); yy = D(Y, :); zz = D(Z, :);
+  
+  F = dlmread(f, ' ', [0, 0,   nf - 1, nfp     ]); F = F';
+  i = 2; ff1 = F(i++, :); ff2 = F(i++, :); ff3 = F(i++, :);
 endfunction
 
 function read(fn)
@@ -30,27 +44,72 @@ function read(fn)
 endfunction
 
 function write_header(f)
-  
+  global nv nf fmt
+  w = @(fmt, varargin) fprintf(f, fmt, [varargin{:}]);
+  w("ply\n")
+  w("format %s 1.0\n", fmt);
+  w("element vertex %d\n", nv);
+  w("property float x\n");
+  w("property float y\n");
+  w("property float z\n");
+  w("property float u\n");
+  w("property float v\n");
+  w("property float w\n");
+  w("element face %d\n", nf);
+  w("property list int int vertex_index\n");
+  w("end_header\n");
 endfunction
 
-function write_data(f)
-  
+function r = eq(a, b); r = strcmp(a, b); endfunction
+
+function write_ascii(f, D)
+  dlmwrite(f, D', ' ')
+endfunction
+
+function write_bin(f, D, type); fwrite(f, D, type); endfunction
+
+function dwrite(f, D, type) # data write
+  global PLY_FMT
+  if eq(PLY_FMT, "ascii"); write_ascii(f, D); else write_bin(f, D, type); endif
+endfunction
+
+function write_vert(f)
+  global xx yy zz
+  global vvx vvy vvz
+  D = vertcat(xx, yy, zz, vvx, vvy, vvz);
+  dwrite(f, D, 'float32');
+endfunction
+
+function write_face(f)
+  global ff1 ff2 ff3
+  s = size(ff1); nvp0 = 3;
+  nvp = 3 * ones(s);
+  F = vertcat(nvp, ff1, ff2, ff3);
+  dwrite(f, F, 'int32');
 endfunction
 
 function write(fn)
   f = fopen(fn, "w");
   write_header(f);
-  write_data(f);
+  write_vert(f);
+  write_face(f);  
   fclose(f);
 endfunction
 
-fn = argv(){1};
-read(fn);
+function proc()
+  global xx yy zz vvx vvy vvz
+  s = size(xx);
+  vvx = vvy = vvz = zeros(s);
+endfunction
 
-fn = argv(){2};
-write(fn);
+ini();
+fi = argv(){1};
+fo = argv(){2};
 
+read(fi);
+proc();
+write(fo);
 
 # TEST: sk.t0
-# sk.el > sk.out.txt
+# sk.el test_data/sph.498.off sk.out.ply
 #
