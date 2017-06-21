@@ -129,7 +129,7 @@ vel_ini();
 def(ax=3, ay=1, az=1);
 vel_sk(ax, ay, fr=42);
 
-swap()
+swap();
 write(fo);
 
 # TEST: sk.t0
