@@ -134,7 +134,13 @@ endfunction
 function rot(t)
   global xx zz
   global vvx vvz
-  [xx, zz] = rot0(xx, zz, t);
+  xx0 = xx; zz0 = zz;
+  [xx, zz] = rot0(xx0, zz0, t);
+
+  dx = xx0 + vvx; dz = zz0 + vvz;
+  [dx, dz] = rot0(dx, dz, t);
+
+  vvx = dx - xx0; vvz = dz - zz0;
 endfunction
 
 ini();
