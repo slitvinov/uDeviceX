@@ -144,9 +144,9 @@ fo = argv(){2};
 read(fi);
 sc();
 vel_ini();
-def(ax=3, ay=2, az=0.5);
+def(ax=3, ay=2, az=1);
 vel_sk(ax, az, fr=42);
-rot(theta=1);
+rot(theta=0.35);
 write(fo);
 
 # TEST: sk.t0
