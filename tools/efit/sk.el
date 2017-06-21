@@ -102,17 +102,11 @@ function vel_ini()
   vvx = vvy = vvz = zeros(s);
 endfunction
 
-function vel_sk(ax, ay, fr)
-  global xx yy   vvx vvy
-  vvx = -ax/ay * yy;
-  vvy =  ay/ax * xx;
-endfunction
-
-function swap() # yz -> zy
-  global  yy zz
-  global vvy vvz
-  t =  yy;  yy =  zz;  zz = t;
-  t = vvy; vvy = vvz; vvz = t;
+function vel_sk(ax, az, fr)
+  global xx zz   vvx vvz
+  vvx = -ax/az * zz;
+  vvz =  az/ax * xx;
+  vvx *= fr; vvz *= fr;
 endfunction
 
 function def(ax, ay, az) # deform
@@ -135,10 +129,8 @@ fo = argv(){2};
 read(fi);
 vel_ini();
 def(ax=3, ay=1, az=1);
-vel_sk(ax, ay, fr=42);
+vel_sk(ax, az, fr=42);
 # rot(theta=1)
-
-swap();
 write(fo);
 
 # TEST: sk.t0
