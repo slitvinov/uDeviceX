@@ -109,6 +109,15 @@ function vel_sk(ax, az, fr)
   vvx *= fr; vvz *= fr;
 endfunction
 
+function sc()
+  global xx yy zz
+  xx -= mean(xx); yy -= mean(yy); zz -= mean(zz);
+  
+  r = xx.^2 + yy.^2 + zz.^2;
+  r = sqrt(r);
+  xx ./= r; yy ./= r; zz ./= r;
+endfunction
+
 function def(ax, ay, az) # deform
   global xx yy zz
   xx = ax * xx;
@@ -127,10 +136,11 @@ fi = argv(){1};
 fo = argv(){2};
 
 read(fi);
+sc();
 vel_ini();
 def(ax=3, ay=1, az=1);
 vel_sk(ax, az, fr=42);
-# rot(theta=1)
+rot(theta=1);
 write(fo);
 
 # TEST: sk.t0
