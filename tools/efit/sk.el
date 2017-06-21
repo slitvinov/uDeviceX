@@ -29,5 +29,28 @@ function read(fn)
   fclose(f);
 endfunction
 
+function write_header(f)
+  
+endfunction
+
+function write_data(f)
+  
+endfunction
+
+function write(fn)
+  f = fopen(fn, "w");
+  write_header(f);
+  write_data(f);
+  fclose(f);
+endfunction
+
 fn = argv(){1};
 read(fn);
+
+fn = argv(){2};
+write(fn);
+
+
+# TEST: sk.t0
+# sk.el > sk.out.txt
+#
