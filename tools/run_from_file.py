@@ -48,6 +48,7 @@ def gen_templates():
     pt['RBCka']                = '#define %s ( %g )\n'
     pt['RBCkd']                = '#define %s ( %g )\n'
     pt['RBCgammaC']            = '#define %s ( %g )\n'
+    pt['RBCgammaT']            = '#define %s ( %g )\n'
     pt['RBCmpow']              = '#define %s ( %g )\n'
     pt['RBCphi']               = '#define %s ( %g )\n'
     pt['RBCnv']                = '#define %s ( %d )\n'
@@ -81,7 +82,7 @@ def set_defaults():
     pv['ZMARGIN_WALL']         = 6
     pv['_numberdensity']       = 3
     pv['_kBT']                 = 0.1
-    pv['dt']                   = 5e-4
+    pv['dt']                   = 8e-4
     pv['rbc_mass']             = 0.5
     pv['_gamma_dot']           = 5
     pv['_hydrostatic_a']       = 0.05
@@ -89,10 +90,10 @@ def set_defaults():
     pv['_aij_in']              = 4
     pv['_aij_rbc']             = 4
     pv['_aij_wall']            = 4
-    pv['_gammadpd_out']        = 8
-    pv['_gammadpd_in']         = 8
-    pv['_gammadpd_rbc']        = 8
-    pv['_gammadpd_wall']       = 8
+    pv['_gammadpd_out']        = 15
+    pv['_gammadpd_in']         = 5
+    pv['_gammadpd_rbc']        = 15
+    pv['_gammadpd_wall']       = 15
     pv['_ljsigma']             = 0.3
     pv['_ljepsilon']           = 1.0
     pv['RBCrc']                = 1
@@ -102,7 +103,8 @@ def set_defaults():
     pv['RBCkb']                = 32
     pv['RBCkd']                = 200
     pv['RBCkv']                = 5000
-    pv['RBCgammaC']            = 0
+    pv['RBCgammaC']            = 15
+    pv['RBCgammaT']            = 45
     pv['RBCtotArea']           = 124.0
     pv['RBCtotVolume']         = 90.0
     pv['RBCkbT']               = 0.1
@@ -227,8 +229,8 @@ def run_daint_i(d0):
 def run_daint(d0):
     with open('%s/runme.sh' % d0, 'w') as f:
         f.write('#!/bin/bash -l\n')
-        f.write('#SBATCH --job-name=rbc_%s\n' % d0)
-        f.write('#SBATCH --time=24:00:00\n')
+        f.write('#SBATCH --job-name=%s\n' % d0)
+        f.write('#SBATCH --time=2:00:00\n')
         f.write('#SBATCH --nodes=1\n')
         f.write('#SBATCH --ntasks-per-node=1\n')
         f.write('#SBATCH --output=output.txt\n')
@@ -239,6 +241,7 @@ def run_daint(d0):
         f.write('module load cray-hdf5-parallel\n')
         f.write('export HEX_COMM_FACTOR=2\n')
         f.write('srun --export ALL ./test 1 1 1\n')
+        f.write('sh run_post.parallel.sh .\n')
     os.system('cd %s && sbatch runme.sh' % d0)
 
 

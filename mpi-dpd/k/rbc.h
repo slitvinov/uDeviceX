@@ -88,11 +88,11 @@ __dfi__ void frnd0(double dx, double dy, double dz, double W[], /**/ double f[])
      and soft matter. Brown Uni, 2010 */
   enum {XX, YY, ZZ,   XY, XZ, YZ};
   double trW; /* trace */
-  double gT = 3 * RBCgammaC, kbT = RBCkbT;
-  double k; /* aux scalar */
+  double gC = RBCgammaC, gT = RBCgammaT, kbT = RBCkbT;
+  double k1, k2; /* aux scalar */
   double wex, wey, wez; /* dot(W, e) */
-  k = rsqrt(dx*dx + dy*dy + dz*dz);
-  double ex = k*dx, ey = k*dy, ez = k*dz;
+  k1 = rsqrt(dx*dx + dy*dy + dz*dz);
+  double ex = k1*dx, ey = k1*dy, ez = k1*dz;
 
   trW = W[XX] + W[YY] + W[ZZ];
   W[XX] -= trW/nd; W[YY] -= trW/nd; W[ZZ] -= trW/nd;
@@ -101,8 +101,10 @@ __dfi__ void frnd0(double dx, double dy, double dz, double W[], /**/ double f[])
   wey = W[XY]*ex + W[YY]*ey + W[YZ]*ez;
   wez = W[XZ]*ex + W[YZ]*ey + W[ZZ]*ez;
 
-  k = 2 * sqrt(kbT * gT) / sqrt(dt);
-  f[X] = k*wex; f[Y] = k*wey; f[Z] = k*wez; /* assume 3*gC - gT == 0 */
+  k1 = 2 * sqrt(kbT * gT) / sqrt(dt);
+  f[X] = k1*wex; f[Y] = k1*wey; f[Z] = k1*wez;
+  k2 = sqrt(2 * kbT * (3 * gC - gT)) / 3 /sqrt(dt);
+  f[X] += k2*trW*ex; f[Y] += k2*trW*ey; f[Z] += k2*trW*ez;
 }
 
 __dfi__ float3 frnd(float3 r1, float3 r2, int i1, int i2) {
@@ -116,7 +118,7 @@ __dfi__ float3 frnd(float3 r1, float3 r2, int i1, int i2) {
 
 __dfi__ float3 fvisc(float3 r1, float3 r2, float3 u1, float3 u2) {
   float3 du = u2 - u1, dr = r1 - r2;
-  double gC = RBCgammaC, gT = 3*RBCgammaC;
+  double gC = RBCgammaC, gT = RBCgammaT;
 
   return gT                             * du +
 	 gC * dot(du, dr) / dot(dr, dr) * dr;
