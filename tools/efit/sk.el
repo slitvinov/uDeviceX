@@ -126,8 +126,9 @@ function def(ax, ay, az) # deform
 endfunction
 
 function rot(t)
-  global xx yy
-  global vvx vvy
+  global xx zz
+  global vvx vvz
+  
   
 endfunction
 
@@ -138,7 +139,7 @@ fo = argv(){2};
 read(fi);
 sc();
 vel_ini();
-def(ax=3, ay=1, az=1);
+def(ax=3, ay=2, az=1);
 vel_sk(ax, az, fr=42);
 rot(theta=1);
 write(fo);
