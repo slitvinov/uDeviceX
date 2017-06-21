@@ -96,10 +96,28 @@ function write(fn)
   fclose(f);
 endfunction
 
-function proc()
+function vel_ini()
   global xx yy zz vvx vvy vvz
   s = size(xx);
   vvx = vvy = vvz = zeros(s);
+endfunction
+
+function vel_sk(ax, ay, fr)
+  global xx yy   vx vy
+  vx = -ax/ay * yy;
+  vy =  ay/ax * xx;
+endfunction
+
+function swap() # yz -> zy
+  global zz yy
+  t = yy; yy = zz; zz = t;
+endfunction
+
+function def(ax, ay, az) # deform
+  global xx yy zz
+  xx = ax * xx;
+  yy = ay * yy;
+  zz = az * zz;
 endfunction
 
 ini();
@@ -107,7 +125,11 @@ fi = argv(){1};
 fo = argv(){2};
 
 read(fi);
-proc();
+vel_ini();
+def(ax=3, ay=1, az=1);
+vel_sk(ax, ay, fr=42);
+
+swap()
 write(fo);
 
 # TEST: sk.t0
