@@ -140,7 +140,7 @@ function rot(t)
   dx = xx0 + vvx; dz = zz0 + vvz;
   [dx, dz] = rot0(dx, dz, t);
 
-  vvx = dx - xx0; vvz = dz - zz0;
+  vvx = dx - xx; vvz = dz - zz;
 endfunction
 
 ini();
