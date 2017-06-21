@@ -18,7 +18,7 @@ function e = dbl(e); e = double(e); endfunction
 
 function read_header(f)
   global nv nf ne
-  fscn(f, "%s") # skip OFF
+  fscn(f, "%s"); # skip OFF
   [nv, nf, ne] = fscn(f, "%d %d %d\n");
   nv = dbl(nv); nf = dbl(nf); ne = dbl(ne);
 endfunction
