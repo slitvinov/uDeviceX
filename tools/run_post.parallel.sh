@@ -1,3 +1,5 @@
+#!/bin/bash
+
 d=$1
 m1=$2 # M for shear 1
 

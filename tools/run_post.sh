@@ -1,14 +1,14 @@
-d=simulations
+d=grid/links.mount
 
-for i in `seq 138 -1 135`; do
-    # ii=`printf '%03d\n' $i`
-    ii=$i
-    dd=$d/run_$ii
+for f in `find -L $d -mindepth 7 -maxdepth 7 -name 'params.txt' | sort`; do
+    dd=`dirname "$f"`
 
-    m=`awk -v i=$i 'BEGIN {print i % 4}'`
-    # if [[ m -eq 0 ]]; then
-    #     sc=`sh get_sc.sh $dd/diag.txt`
-    # fi
+    if [[ -f $dd/post.txt ]]; then
+        continue
+    fi
+
+    ddd=`dirname $dd.txt`
+    sc=`get_sc.sh $ddd/sh_1.0/diag.txt`
     gc=`awk '$1 == "RBCgammaC" {print $2}' $dd/params.txt`
 
     sh run_post.parallel.sh $dd $sc
@@ -21,7 +21,7 @@ for i in `seq 138 -1 135`; do
     echo $gc $res >> $d/res1.txt
 done
 
-(
-cd $d
-fit.py res1.txt | tee res2.txt
-)
+# (
+# cd $d
+# fit.py res1.txt | tee res2.txt
+# )
