@@ -84,7 +84,6 @@ void read_faces(FILE* fd) {
 }
 
 void read_file(const char* fn) {
-  fprintf(stderr, "(ply2vtk) reading: %s\n", fn);
   FILE* fd = safe_fopen(fn, "r");
   read_header(fd);
   read_vertices(fd);
@@ -171,7 +170,6 @@ void write_cells_velocity(FILE *fd, float *vv, char* name) { /* D: dimension */
 }
 
 void write_file(const char* fn) {
-  fprintf(stderr, "(rw) writing: %s\n", fn);
   FILE* fd = safe_fopen(fn, "w");
   write_file_version(fd);
   write_header(fd);
