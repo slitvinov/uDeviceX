@@ -39,12 +39,9 @@ __device__ float3 compute_dpd_force_traced(int type1, int type2,
         zr * (vel1.z - vel2.z);
 
     float gammadpd_pair = 0.5 * (gammadpd[type1] + gammadpd[type2]);
-    if (   type1 == MEMB_TYPE && type2 == OUT_TYPE
-        || type2 == MEMB_TYPE && type1 == OUT_TYPE)
-        gammadpd_pair = gammadpd_out_rbc;
-    if (   type1 == MEMB_TYPE && type2 == IN_TYPE
-        || type2 == MEMB_TYPE && type1 == IN_TYPE)
-        gammadpd_pair = gammadpd_in_rbc;
+    if (   type1 == IN_TYPE && type2 == OUT_TYPE
+        || type2 == IN_TYPE && type1 == OUT_TYPE)
+        gammadpd_pair = gammadpd_in_out;
     const float sigmaf_pair = sqrt(2*gammadpd_pair*kBT / dt);
     float strength = (-gammadpd_pair * wr * rdotv + sigmaf_pair * myrandnr) * wr;
     if (type1 == MEMB_TYPE && type2 == MEMB_TYPE) {  // membrane contact
@@ -56,12 +53,9 @@ __device__ float3 compute_dpd_force_traced(int type1, int type2,
         strength += lj;
     } else {
         float aij_pair = 0.5 * (aij[type1] + aij[type2]);
-        if (   type1 == MEMB_TYPE && type2 == OUT_TYPE
-            || type2 == MEMB_TYPE && type1 == OUT_TYPE)
-            aij_pair = aij_out_rbc;
-        if (   type1 == MEMB_TYPE && type2 == IN_TYPE
-            || type2 == MEMB_TYPE && type1 == IN_TYPE)
-            aij_pair = aij_in_rbc;
+        if (   type1 == IN_TYPE && type2 == OUT_TYPE
+            || type2 == IN_TYPE && type1 == OUT_TYPE)
+            aij_pair = aij_in_out;
         strength += aij_pair * argwr;
     }
 

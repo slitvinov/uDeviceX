@@ -1,6 +1,6 @@
-d=grid/links.mount
+d=grid/links.daint
 
-for f in `find -L $d -mindepth 7 -maxdepth 7 -name 'params.txt' | sort`; do
+for f in `find -L $d -mindepth 9 -maxdepth 9 -name 'params.txt' | sort`; do
     dd=`dirname "$f"`
 
     if [[ -f $dd/post.txt ]]; then
