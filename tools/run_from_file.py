@@ -108,11 +108,12 @@ def set_defaults():
     pv['RBCx0']                = 0.45
     pv['RBCp']                 = 0.0039
     pv['RBCka']                = 4900
-    pv['RBCkb']                = 32
+    pv['RBCkb']                = 100
     pv['RBCkd']                = 200
     pv['RBCkv']                = 5000
     pv['RBCgammaC']            = 15
-    pv['RBCgammaT']            = 45
+    pv['RBCgammaT']            = 0
+    # pv['RBCgammaT']            = 3*pv['RBCgammaC']
     pv['RBCtotArea']           = 124.0
     pv['RBCtotVolume']         = 90.0
     pv['RBCkbT']               = 0.1
@@ -167,24 +168,21 @@ def gen_dir():
 
 def write_par_file(d0):
     with open(d0+'/'+par_file, 'w') as f:
-        for key, value in sorted(pv.iteritems()): f.write('%s %s\n' % (key, str(value)))
+        for key, value in sorted(pv.iteritems()):
+            f.write('%s %s\n' % (key, str(value)))
 
 
 def cp_files(d0):
     cmd = 'cp %s/%s %s/%s'
     os.system(cmd % (dpd_dir, 'test',               d0, ''))
     os.system(cmd % (dpd_dir, 'sdf/wall1/wall.dat', d0, 'sdf.dat'))
-    if pv['RBCrc'] > 1:
-        os.system(cmd % (dpd_dir, 'rbc.r1.dat',         d0, 'rbc.dat'))
-    else:
-        os.system(cmd % (dpd_dir, 'rbc.dat',            d0, 'rbc.dat'))
+    if pv['RBCrc'] > 1: os.system(cmd % (dpd_dir, 'rbc.r1.dat', d0, 'rbc.dat'))
+    else:               os.system(cmd % (dpd_dir, 'rbc.dat',    d0, 'rbc.dat'))
 
 
 def gen_par(pn0, pv0):
     set_defaults()
     for j in range(len(pv0)): pv[pn0[j]] = float(pv0[j])
-
-    # pv['RBCgammaT'] = 3*pv['RBCgammaC']
 
     pv['gammadpd_rbc'] = pv['gammadpd_wall'] = pv['gammadpd_out']
 
@@ -204,15 +202,15 @@ def gen_par(pn0, pv0):
     pv['RBCphi'] = 180./pi * t
 
     # warning: scaling is opposite to rc
-    # pv['RBCkv']        *= RBCrc
-    # pv['RBCkb']        *= RBCrc*RBCrc
-    # pv['RBCkbT']       *= RBCrc*RBCrc
-    pv['XS']           *= RBCrc
-    pv['YS']           *= RBCrc
-    pv['ZS']           *= RBCrc
-    pv['RBCp']         *= RBCrc
-    pv['RBCtotArea']   *= RBCrc*RBCrc
-    pv['RBCtotVolume'] *= RBCrc*RBCrc*RBCrc
+    # pv['RBCkv']        *= pv['RBCrc']
+    # pv['RBCkb']        *= pv['RBCrc']*pv['RBCrc']
+    # pv['RBCkbT']       *= pv['RBCrc']*pv['RBCrc']
+    pv['XS']           *= pv['RBCrc']
+    pv['YS']           *= pv['RBCrc']
+    pv['ZS']           *= pv['RBCrc']
+    pv['RBCp']         *= pv['RBCrc']
+    pv['RBCtotArea']   *= pv['RBCrc']*pv['RBCrc']
+    pv['RBCtotVolume'] *= pv['RBCrc']*pv['RBCrc']*pv['RBCrc']
 
 
 def recompile():
@@ -269,10 +267,8 @@ def run(d0, machine):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--machine', default='falcon')
-    parser.add_argument('--RBCrc', default=1)
     args = parser.parse_args()
     machine = args.machine
-    RBCrc = float(args.RBCrc)
 
     if not os.path.exists(res_dir): os.makedirs(res_dir)
 
@@ -280,7 +276,6 @@ if __name__ == '__main__':
 
     with open(src_file, 'r') as f: lines = f.readlines()
     pn0 = lines[0].replace('#', '').split()  # user-defined parameters names
-    pn0.append('RBCrc')
 
     for l in lines:
         pv0 = l.split()  # user-defined parameters values
@@ -288,7 +283,6 @@ if __name__ == '__main__':
 
         print 'Running line %s\n' % l
 
-        pv0.append(RBCrc)
         gen_par(pn0, pv0)
         gen_cnf()
         gen_rbc()
