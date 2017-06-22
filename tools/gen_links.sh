@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Usage: rename.sh <par1> <par2> ... <parN>
+# Usage: gen_links.sh <par1> <par2> ... <parN>
 # Result: creates sybmolic links in the `links` folder
 
 ARGS=("$@")
@@ -45,5 +45,5 @@ for i in `seq 1 $NARGS`; do
 done
 
 cwd=`pwd`
-par=`list d "$name" sh run_*`
+par=`list d "$name" gamma_dot run_*`
 gen_links "$lwd" "$name" "$par" "$cwd" | sh
