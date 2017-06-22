@@ -45,5 +45,5 @@ for i in `seq 1 $NARGS`; do
 done
 
 cwd=`pwd`
-par=`list d "$name" _gamma_dot run_*`
+par=`list d "$name" gamma_dot run_*`
 gen_links "$lwd" "$name" "$par" "$cwd" | sh

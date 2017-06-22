@@ -27,22 +27,22 @@ def gen_templates():
     pt['XMARGIN_WALL']         = '#define %s ( %d )\n'
     pt['YMARGIN_WALL']         = '#define %s ( %d )\n'
     pt['ZMARGIN_WALL']         = '#define %s ( %d )\n'
-    pt['_numberdensity']       = '#define %s ( %d )\n'
-    pt['_kBT']                 = '#define %s ( %g )\n'
+    pt['numberdensity']        = '#define %s (( %d ) * (rc*rc*rc))\n'
+    pt['kBT']                  = '#define %s (( %g ) / (rc*rc))\n'
     pt['dt']                   = '#define %s ( %g )\n'
     pt['rbc_mass']             = '#define %s ( %g )\n'
-    pt['_gamma_dot']           = '#define %s ( %g )\n'
-    pt['_hydrostatic_a']       = '#define %s ( %g )\n'
-    pt['_aij_out']             = '#define %s ( %g )\n'
-    pt['_aij_in']              = '#define %s ( %g )\n'
-    pt['_aij_rbc']             = '#define %s ( %g )\n'
-    pt['_aij_wall']            = '#define %s ( %g )\n'
-    pt['_gammadpd_out']        = '#define %s ( %g )\n'
-    pt['_gammadpd_in']         = '#define %s ( %g )\n'
-    pt['_gammadpd_rbc']        = '#define %s ( %g )\n'
-    pt['_gammadpd_wall']       = '#define %s ( %g )\n'
-    pt['_ljsigma']             = '#define %s ( %g )\n'
-    pt['_ljepsilon']           = '#define %s ( %g )\n'
+    pt['gamma_dot']            = '#define %s ( %g )\n'
+    pt['hydrostatic_a']        = '#define %s (( %g ) / rc)\n'
+    pt['aij_out']              = '#define %s (( %g ) / rc)\n'
+    pt['aij_in']               = '#define %s (( %g ) / rc)\n'
+    pt['aij_rbc']              = '#define %s (( %g ) / rc)\n'
+    pt['aij_wall']             = '#define %s (( %g ) / rc)\n'
+    pt['gammadpd_out']         = '#define %s ( %g )\n'
+    pt['gammadpd_in']          = '#define %s ( %g )\n'
+    pt['gammadpd_rbc']         = '#define %s ( %g )\n'
+    pt['gammadpd_wall']        = '#define %s ( %g )\n'
+    pt['ljsigma']              = '#define %s ( %g )\n'
+    pt['ljepsilon']            = '#define %s (( %g ) / (rc*rc))\n'
     pt['RBCrc']                = '#define %s ( %g )\n'
     pt['RBCx0']                = '#define %s ( %g )\n'
     pt['RBCka']                = '#define %s ( %g )\n'
@@ -80,22 +80,22 @@ def set_defaults():
     pv['XMARGIN_WALL']         = 6
     pv['YMARGIN_WALL']         = 6
     pv['ZMARGIN_WALL']         = 6
-    pv['_numberdensity']       = 3
-    pv['_kBT']                 = 0.1
+    pv['numberdensity']        = 3
+    pv['kBT']                  = 0.1
     pv['dt']                   = 8e-4
     pv['rbc_mass']             = 0.5
-    pv['_gamma_dot']           = 5
-    pv['_hydrostatic_a']       = 0.05
-    pv['_aij_out']             = 4
-    pv['_aij_in']              = 4
-    pv['_aij_rbc']             = 4
-    pv['_aij_wall']            = 4
-    pv['_gammadpd_out']        = 15
-    pv['_gammadpd_in']         = 5
-    pv['_gammadpd_rbc']        = 15
-    pv['_gammadpd_wall']       = 15
-    pv['_ljsigma']             = 0.3
-    pv['_ljepsilon']           = 1.0
+    pv['gamma_dot']            = 5
+    pv['hydrostatic_a']        = 0.05
+    pv['aij_out']              = 4
+    pv['aij_in']               = 4
+    pv['aij_rbc']              = 4
+    pv['aij_wall']             = 4
+    pv['gammadpd_out']         = 15
+    pv['gammadpd_in']          = 5
+    pv['gammadpd_rbc']         = 15
+    pv['gammadpd_wall']        = 15
+    pv['ljsigma']              = 0.3
+    pv['ljepsilon']            = 1.0
     pv['RBCrc']                = 1
     pv['RBCx0']                = 0.45
     pv['RBCp']                 = 0.0039
@@ -114,7 +114,7 @@ def set_defaults():
     pv['RBCnt']                = 992
     pv['contactforces']        = 'false'
     pv['doublepoiseuille']     = 'false'
-    pv['hdf5field_dumps']      = 'false'
+    pv['hdf5field_dumps']      = 'true'
     pv['hdf5part_dumps']       = 'true'
     pv['pushtheflow']          = 'false'
     pv['rbcs']                 = 'true'
@@ -176,9 +176,11 @@ def gen_par(pn0, pv0):
     set_defaults()
     for j in range(len(pv0)): pv[pn0[j]] = float(pv0[j])
 
-    pv['_gammadpd_rbc'] = pv['_gammadpd_wall'] = pv['_gammadpd_out']
+    # pv['RBCgammaT'] = 3*pv['RBCgammaC']
 
-    sh = pv['_gamma_dot']
+    pv['gammadpd_rbc'] = pv['gammadpd_wall'] = pv['gammadpd_out']
+
+    sh = pv['gamma_dot']
     pv['tend'] = 800/sh
     pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(800/sh)
 
