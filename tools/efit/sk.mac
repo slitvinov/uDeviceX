@@ -1,0 +1,17 @@
+ay: 1;
+ax: a;
+f : 1;
+
+vx:   ax/ay * y  * f;
+vy:  -ay/ax * x  * f;
+
+gradef(x, t, vx);
+gradef(y, t, vy);
+
+depends(x, t);
+p: (x/ax)^2 + y^2 -  1;
+so: solve(p, y^2);
+
+q: subst(so, expand(vx^2 + vy^2));
+
+fullratsimp(q);
