@@ -89,7 +89,7 @@ def print_all(si, sh, t, fr, ea, eb, ec, pa, pb, pc, th, om, el):
 
     with open('post.txt', 'w') as f:
         for key, value in sorted(p.iteritems()):
-            f.write('%s\p%.16f\n' % (key, value))
+            f.write('%s\t%.16f\n' % (key, value))
 
 
 def get_angle_btw_vectors(v1, v2):
@@ -135,15 +135,20 @@ def get_fr_sk(xyz, uvw, rot, ab, it):
     uvw = np.dot(xyz+uvw, rot) - xyz
 
     # fit
+    idx = np.logical_and(
+            np.abs(xyz[:, C]) < 0.1*np.max(xyz[:, C]),
+            np.abs(xyz[:, A]) < 0.3*np.max(xyz[:, A]) )
+    xyz = xyz[idx, :]; uvw = uvw[idx, :]
     r = xyz[:, [A, B]]; v = uvw[:, [A, B]]
     f = fit_sk2(r, v, ab)
 
-    # # plot
-    # ve = f*np.array([ab, -1./ab])*r[:,[Y, X]]
-    # quiver(r[:, X], r[:, Y], v [:, X], v [:, Y], color='r')
-    # quiver(r[:, X], r[:, Y], ve[:, X], ve[:, Y], color='b')
-    # axis('equal')
-    # savefig('fit.pdf'); close()
+    if (it % 100 == 0):
+        # plot
+        ve = f*np.array([ab, -1./ab])*r[:,[Y, X]]
+        quiver(r[:, X], r[:, Y], ve[:, X], ve[:, Y], color='b')
+        quiver(r[:, X], r[:, Y], v [:, X], v [:, Y], color='r')
+        axis('equal')
+        savefig('fit_%d.pdf' % it); close()
 
     return f
 
