@@ -184,6 +184,7 @@ def process_data(plydir, dt, ntspd, sh):
 
     # initialization
     files = glob(plydir+"/rbcs-*.ply"); files.sort()
+	files = files[::10]
     n = len(files)
     th = np.zeros(n)  # angle with the projection on Ox
     om = np.zeros(n)  # angle of the marker with the current RBC axis
