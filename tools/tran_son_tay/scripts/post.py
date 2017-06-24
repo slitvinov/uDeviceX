@@ -178,12 +178,13 @@ def get_fr(x, y):
     return fr, fru/fr
 
 
-def process_data(plydir, dt, ntspd, sh):
+def process_data(plydir, dtf, sh):
     ed = 'e' # directory for ellipsoid dumps
     if not exists(ed): makedirs(ed)
 
     # initialization
     files = glob(plydir+"/rbcs-*.ply"); files.sort()
+    files = files[::10]; dtf *= 10
     n = len(files)
     th = np.zeros(n)  # angle with the projection on Ox
     om = np.zeros(n)  # angle of the marker with the current RBC axis
@@ -227,7 +228,7 @@ def process_data(plydir, dt, ntspd, sh):
 
     print 'Elapsed time: %.1f sec' % (time()-tstart)
 
-    t = dt*ntspd*np.arange(n)  # DPD time
+    t = dtf*np.arange(n)  # DPD time
     save_txt('result.txt', '#t\tfr\tea\teb\tec\tpa\tpb\tpc\tth\tom\tel',
                             (t, fr, ea, eb, ec, pa, pb, pc, th, om, el))
     plot_all(si, t, fr, ea, eb, ec, pa, pb, pc, th, om, el)
@@ -238,12 +239,10 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--ply', default='ply')
     parser.add_argument('--sh',  default=1)
-    parser.add_argument('--st',  default=1)
-    parser.add_argument('--dt',  default=1)
+    parser.add_argument('--dtf',  default=1) # dt between two files
     args = parser.parse_args()
     plydir = args.ply
     sh     = float(args.sh)
-    ntspd  = int(args.st)  # number of t steps per dump
-    dt     = float(args.dt)
+    dtf    = float(args.dtf)
 
-    process_data(plydir, dt, ntspd, sh)
+    process_data(plydir, dtf, sh)
