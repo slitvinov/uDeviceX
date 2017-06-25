@@ -9,5 +9,3 @@ sh_1.0
 sh_6.0
 sh_12.0
 
-
-for f in ply/*.ply; do v=`basename $f .ply`.vtk; nb=498 ply2vtk $f vtk/$v; done

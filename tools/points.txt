@@ -1,4 +1,4 @@
-#   _gammadpd_out	_gammadpd_in  _gamma_dot  RBCgammaC	RBCkb	RBCp		RBCx0		RBCkd  
+#   gammadpd_out	gammadpd_in  gamma_dot  RBCgammaC	RBCkb	RBCp		RBCx0		RBCkd  
     30	15 	5    30	40	0.0045	0.45	200 
     30	10 	5    30	40	0.0045	0.45	200 
     30	20 	5    30	40	0.0045	0.45	200 

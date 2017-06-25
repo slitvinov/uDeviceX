@@ -12,7 +12,7 @@
 
 h5part = 1
 h5 = 1
-gwrp = 0
+gwrp = 1
 
 ARCH_VAL = compute_60
 CODE_VAL = sm_60

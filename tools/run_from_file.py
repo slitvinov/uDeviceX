@@ -8,9 +8,9 @@ pt = {}  # parameters templates
 pv = {}  # parameters values
 
 # files and directories
-home = os.path.expanduser('~')
-dpd_dir = home+'/rbc_uq/mpi-dpd'
-tools = home+'/rbc_uq/tools'
+home = os.path.expanduser('/scratch/snx3000/lisergey')
+dpd_dir = home+'/uq/mpi-dpd'
+tools = home+'/uq/tools'
 cnf_file = dpd_dir+'/.conf.h'
 rbc_file = dpd_dir+'/params/rbc.inc0.h'
 ic_file = 'rbcs-ic.txt'
@@ -210,7 +210,7 @@ def gen_par(pn0, pv0):
 
 
 def recompile():
-    cmd = 'cd %s && make clean && make -j > make.log'
+    cmd = 'cd %s && u.make clean && u.make -j > make.log'
     os.system(cmd % dpd_dir)
 
 
