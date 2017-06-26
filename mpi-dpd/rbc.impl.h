@@ -209,7 +209,7 @@ void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {
 		     RBCnt * 4 * sizeof(int)));
 
 
-  CC(cudaFuncSetCacheConfig(fall_kernel<RBCnv>, cudaFuncCachePreferL1));
+  CC(cudaFuncSetCacheConfig(force<RBCnv>, cudaFuncCachePreferL1));
 }
 
 void initialize(float *device_xyzuvw,
@@ -248,7 +248,7 @@ void forces_nohost(int nc, float *device_xyzuvw,
   int threads = 128;
   int blocks = (nc * RBCnv * 7 + threads - 1) / threads;
 
-  fall_kernel<RBCnv><<<blocks, threads, 0>>>(nc, host_av, device_axayaz);
+  force<RBCnv><<<blocks, threads, 0>>>(nc, host_av, device_axayaz);
   addKernel<<<(RBCnv + 127) / 128, 128, 0>>>(device_axayaz, addfrc,
 					     RBCnv);
 }
