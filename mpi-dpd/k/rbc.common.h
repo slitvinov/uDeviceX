@@ -110,7 +110,7 @@ __device__ void ttt2ru(float2 t1, float2 t2, float2 t3, /**/ float3 *r, float3 *
 }
 
 template <int nv>
-__device__ float3 _fangle_device(float2 t0, float2 t1, float *av) {
+__device__ float3 adj_tris(float2 t0, float2 t1, float *av) {
   int md = 7; /* was degreemax */
   int i1, i2, i3, ne, cid, lid, off;
   bool valid;
@@ -221,7 +221,8 @@ __global__ void force(int nc, float *__restrict__ av,
     float2 tmp0 = tex1Dfetch(texV, pid * 3 + 0);
     float2 tmp1 = tex1Dfetch(texV, pid * 3 + 1);
 
-    float3 f = _fangle_device<nvertices>(tmp0, tmp1, av);
+    /* all triangles and dihedrals adjusting to `pid` */
+    float3 f = adj_tris<nvertices>(tmp0, tmp1, av);
     f += _fdihedral_device<nvertices>(tmp0, tmp1);
 
     if (f.x > -1.0e9) {
