@@ -42,7 +42,7 @@
 #endif
 #include "k/rbc.common.h"
 
-#include "rbc.impl.h"
+#include "rbc/common.h"
 #undef __dfi__
 
 #include "rdstr.decl.h"
