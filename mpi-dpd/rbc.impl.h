@@ -144,7 +144,6 @@ void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {
   }
 
   // Find stretching points
-  float stretchingForce = 0;
   std::vector<std::pair<float, int> > tmp(RBCnv);
   for (int i = 0; i < RBCnv; i++) {
     tmp[i].first = rv[i].r[0];
@@ -154,7 +153,6 @@ void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {
 
   float hAddfrc[RBCnv];
   memset(hAddfrc, 0, RBCnv * sizeof(float));
-  int strVerts = 3; // 10
   for (int i = 0; i < strVerts; i++) {
     hAddfrc[tmp[i].second] = -stretchingForce / strVerts;
     hAddfrc[tmp[RBCnv - 1 - i].second] = +stretchingForce / strVerts;

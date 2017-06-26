@@ -8,9 +8,9 @@ pt = {}  # parameters templates
 pv = {}  # parameters values
 
 # files and directories
-home = os.path.expanduser('/scratch/snx3000/lisergey')
-dpd_dir = home+'/uq/mpi-dpd'
-tools = home+'/uq/tools'
+home = os.path.expanduser('~')
+dpd_dir = home+'/rbc_uq/mpi-dpd'
+tools = home+'/rbc_uq/tools'
 cnf_file = dpd_dir+'/.conf.h'
 rbc_file = dpd_dir+'/params/rbc.inc0.h'
 ic_file = 'rbcs-ic.txt'
@@ -72,6 +72,9 @@ def gen_templates():
     pt['tend']                 = '#define %s ( %g )\n'
     pt['wall_creation_stepid'] = '#define %s ( %d )\n'
     pt['walls']                = '#define %s ( %s )\n'
+    pt['stretchingForce']      = '#define %s (( %g ) / rc)\n'
+    pt['strVerts']             = '#define %s ( %d )\n'
+    pt['nosolvent']            = '#define %s ( %s )\n'
 
 
 def set_defaults():
@@ -97,7 +100,7 @@ def set_defaults():
     pv['gammadpd_in']          = 5
     pv['gammadpd_rbc']         = 15
     pv['gammadpd_wall']        = 15
-    pv['gammadpd_in_out']      = 0
+    pv['gammadpd_in_out']      = 10
     pv['ljsigma']              = 0.3
     pv['ljepsilon']            = 1.0
     pv['RBCrc']                = 1
@@ -107,7 +110,7 @@ def set_defaults():
     pv['RBCkb']                = 100
     pv['RBCkd']                = 200
     pv['RBCkv']                = 5000
-    pv['RBCgammaC']            = 15
+    pv['RBCgammaC']            = 10
     pv['RBCgammaT']            = 0
     # pv['RBCgammaT']            = 3*pv['RBCgammaC']
     pv['RBCtotArea']           = 124.0
@@ -128,6 +131,9 @@ def set_defaults():
     pv['tend']                 = 800
     pv['wall_creation_stepid'] = 100
     pv['walls']                = 'true'
+    pv['stretchingForce']      = 0
+    pv['strVerts']             = 5
+    pv['nosolvent']            = 'true'
 
 
 def gen_cnf():
@@ -172,8 +178,13 @@ def cp_files(d0):
     cmd = 'cp %s/%s %s/%s'
     os.system(cmd % (dpd_dir, 'test',               d0, ''))
     os.system(cmd % (dpd_dir, 'sdf/wall1/wall.dat', d0, 'sdf.dat'))
-    if pv['RBCrc'] > 1: os.system(cmd % (dpd_dir, 'rbc.r1.dat', d0, 'rbc.dat'))
-    else:               os.system(cmd % (dpd_dir, 'rbc.dat',    d0, 'rbc.dat'))
+    rc = pv['RBCrc']
+    if   rc == 1: rf = 'rbc.r1.dat'
+    elif rc == 2: rf = 'rbc.r2.dat'
+    elif rc == 4: rf = 'rbc.r4.dat'
+    elif rc == 8: rf = 'rbc.r8.dat'
+    else: print 'Resolution not found!'; sys.exit()
+    os.system(cmd % (dpd_dir, rf, d0, 'rbc.dat'))
 
 
 def gen_par(pn0, pv0):
@@ -183,34 +194,32 @@ def gen_par(pn0, pv0):
     pv['gammadpd_rbc'] = pv['gammadpd_wall'] = pv['gammadpd_out']
 
     sh = pv['gamma_dot']
-    pv['tend'] = 800/sh
-    pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(800/sh)
+    if sh > 0:
+        pv['tend'] = 3*800/sh
+        pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(3*800/sh)
 
-    if pv['RBCrc'] > 1:
-        pv['RBCnv'] = 1986
-        pv['RBCnt'] = 3968
-    else:
-        pv['RBCnv'] = 498
-        pv['RBCnt'] = 992
+    rc = pv['RBCrc']
+    if   rc == 1: nv = 498;   nt = 992
+    elif rc == 2: nv = 1986;  nt = 3968
+    elif rc == 4: nv = 7938;  nt = 15872
+    elif rc == 8: nv = 31746; nt = 63488
+    pv['RBCnv'] = nv; pv['RBCnt'] = nt
 
     t = sqrt(3.)*(pv['RBCnv']-2)
     t = acos((t - 5*pi) / (t - 3*pi))
     pv['RBCphi'] = 180./pi * t
 
     # warning: scaling is opposite to rc
-    # pv['RBCkv']        *= pv['RBCrc']
-    # pv['RBCkb']        *= pv['RBCrc']*pv['RBCrc']
-    # pv['RBCkbT']       *= pv['RBCrc']*pv['RBCrc']
-    pv['XS']           *= pv['RBCrc']
-    pv['YS']           *= pv['RBCrc']
-    pv['ZS']           *= pv['RBCrc']
-    pv['RBCp']         *= pv['RBCrc']
-    pv['RBCtotArea']   *= pv['RBCrc']*pv['RBCrc']
-    pv['RBCtotVolume'] *= pv['RBCrc']*pv['RBCrc']*pv['RBCrc']
+    pv['XS']           *= rc
+    pv['YS']           *= rc
+    pv['ZS']           *= rc
+    pv['RBCp']         *= rc
+    pv['RBCtotArea']   *= rc*rc
+    pv['RBCtotVolume'] *= rc*rc*rc
 
 
 def recompile():
-    cmd = 'cd %s && u.make clean && u.make -j > make.log'
+    cmd = 'cd %s && make clean && make -j > make.log'
     os.system(cmd % dpd_dir)
 
 
@@ -234,7 +243,7 @@ def run_daint(d0):
     with open('%s/runme.sh' % d0, 'w') as f:
         f.write('#!/bin/bash -l\n')
         f.write('#SBATCH --job-name=%s\n' % d0)
-        f.write('#SBATCH --time=2:00:00\n')
+        f.write('#SBATCH --time=6:00:00\n')
         f.write('#SBATCH --nodes=1\n')
         f.write('#SBATCH --ntasks-per-node=1\n')
         f.write('#SBATCH --output=output.txt\n')
