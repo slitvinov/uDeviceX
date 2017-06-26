@@ -42,6 +42,7 @@
 #endif
 #include "k/rbc.common.h"
 
+#include "rbc/sfree1.h"  /* stress-free */
 #include "rbc/common.h"
 #undef __dfi__
 

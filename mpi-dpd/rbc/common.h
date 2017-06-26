@@ -74,10 +74,6 @@ void setup_file(std::vector<Particle>& rv, std::vector<int3>& triangles) {
   fclose(f);
 }
 
-void sfree_ini(const std::vector<Particle>& rv, const std::vector<int3>& triangles) {
-
-}
-
 void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {
   std::vector<Particle> rv;
   std::vector<int3> triangles;
