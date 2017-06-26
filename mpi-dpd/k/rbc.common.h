@@ -10,7 +10,7 @@ texture<int, 1, cudaReadModeElementType> texAdjV2;
 texture<int4, cudaTextureType1D> texTriangles4;
 __constant__ float A[4][4];
 
-__device__ float3 fangle(float3 a, float3 b, float3 c, float area, float volume) {
+__device__ float3 tri(float3 a, float3 b, float3 c, float area, float volume) {
   double Ak, A0, n_2, cA, cV,
 	r, xx, b_wlc, kp, b_pow, ka0, kv0, x0, l0, lmax,
 	kbToverp;
@@ -145,7 +145,7 @@ __device__ float3 adj_tris(float2 t0, float2 t1, float *av) {
     tt2r(t0, t1, /**/ &r3);
 
     area = av[2*cid]; volume = av[2*cid + 1];
-    f  = fangle(r1, r2, r3, area, volume);
+    f  = tri(r1, r2, r3, area, volume);
     f +=  fvisc(r1, r2,     u1, u2);
     f +=   frnd(r1, r2,     i1, i2);
     return f;
