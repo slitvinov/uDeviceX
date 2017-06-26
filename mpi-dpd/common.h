@@ -4,6 +4,9 @@
 /* maximum number of faces per one RBC */
 #define MAX_FACE_NUM 5000000
 
+/* maximum number vertices in one RBC */
+#define MAX_VERT 500000
+
 /* maximum number of random states per one RBC */
 #define MAX_RND_NUM 4000000
 
