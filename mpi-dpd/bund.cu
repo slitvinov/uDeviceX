@@ -34,7 +34,7 @@
 
 #define __dfi__ __device__ __forceinline__
 #include "params/rbc.inc0.h"
-#ifdef RBCrnd
+#if RBCrnd == 1
 #include "k/rbc.rnd1.h"
 #else
 #include "k/rbc.rnd0.h"
