@@ -200,6 +200,10 @@ def gen_par(pn0, pv0):
         pv['tend'] = 3*800/sh
         pv['steps_per_dump'] = pv['steps_per_hdf5dump'] = int(3*800/sh)
 
+    if pv['stretchingForce'] > 0:
+        pv['nosolvent'] = 1
+        pv['RBCrnd'] = 0
+
     rc = pv['RBCrc']
     if   rc == 1: nv = 498;   nt = 992
     elif rc == 2: nv = 1986;  nt = 3968
