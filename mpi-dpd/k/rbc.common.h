@@ -10,9 +10,22 @@ texture<int, 1, cudaReadModeElementType> texAdjV2;
 texture<int4, cudaTextureType1D> texTriangles4;
 __constant__ float A[4][4];
 
-__device__ float3 tri(float3 a, float3 b, float3 c, float area, float volume) {
-  double Ak, A0, n_2, cA, cV,
-	r, xx, b_wlc, kp, b_pow, ka0, kv0, x0, l0, lmax,
+__device__ float3 tri0(float3, float3, float3,
+		       float, float, float, float);
+__device__ float3 tri(float3 a, float3 b, float3 c,
+		      int i1, int i2, int i3,
+		      float area, float volume) {
+  float l0, A0;
+  A0 = RBCtotArea / (2.0 * RBCnv - 4.);
+  l0 = sqrt(A0 * 4.0 / sqrt(3.0));
+  return tri0(a, b, c,   l0, A0,   area, volume);
+}
+
+__device__ float3 tri0(float3 a, float3 b, float3 c,
+		      float l0, float A0,
+		      float area, float volume) {
+  double Ak, n_2, cA, cV,
+	r, xx, b_wlc, kp, b_pow, ka0, kv0, x0, lmax,
 	kbToverp;
 
   float3 ab = b - a, ac = c - a, bc = c - b;
@@ -20,7 +33,6 @@ __device__ float3 tri(float3 a, float3 b, float3 c, float area, float volume) {
 
   Ak = 0.5 * sqrt(dot(nn, nn));
 
-  A0 = RBCtotArea / (2.0 * RBCnv - 4.);
   n_2 = 1.0 / Ak;
   ka0 = RBCka / RBCtotArea;
   cA =
@@ -34,7 +46,6 @@ __device__ float3 tri(float3 a, float3 b, float3 c, float area, float volume) {
 
   r = sqrt(dot(ab, ab));
   r = r < 0.0001 ? 0.0001 : r;
-  l0 = sqrt(A0 * 4.0 / sqrt(3.0));
   lmax = l0 / RBCx0;
   xx = r / lmax;
 
@@ -145,7 +156,9 @@ __device__ float3 adj_tris(float2 t0, float2 t1, float *av) {
     tt2r(t0, t1, /**/ &r3);
 
     area = av[2*cid]; volume = av[2*cid + 1];
-    f  = tri(r1, r2, r3, area, volume);
+    f  = tri(r1, r2, r3,
+	     i1, i2, i3,
+	     area, volume);
     f +=  visc(r1, r2,     u1, u2);
     f +=   frnd(r1, r2,     i1, i2);
     return f;
