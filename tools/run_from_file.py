@@ -61,6 +61,7 @@ def gen_templates():
     pt['RBCtotArea']           = '#define %s (( %g ) / (rc*rc))\n'
     pt['RBCkbT']               = '#define %s (( %g ) / (rc*rc))\n'
     pt['RBCtotVolume']         = '#define %s (( %g ) / (rc*rc*rc))\n'
+    pt['RBCrnd']               = '#define %s ( %d )\n'
     pt['contactforces']        = '#define %s ( %s )\n'
     pt['doublepoiseuille']     = '#define %s ( %s )\n'
     pt['hdf5field_dumps']      = '#define %s ( %s )\n'
@@ -120,9 +121,10 @@ def set_defaults():
     pv['RBCphi']               = 6.97
     pv['RBCnv']                = 498
     pv['RBCnt']                = 992
+    pv['RBCrnd']               = 1
     pv['contactforces']        = 'false'
     pv['doublepoiseuille']     = 'false'
-    pv['hdf5field_dumps']      = 'true'
+    pv['hdf5field_dumps']      = 'false'
     pv['hdf5part_dumps']       = 'true'
     pv['pushtheflow']          = 'false'
     pv['rbcs']                 = 'true'
