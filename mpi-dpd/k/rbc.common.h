@@ -1,4 +1,4 @@
-namespace rbc {
+namespace k_rbc {
 #define fst(t) ( (t).x )
 #define scn(t) ( (t).y )
 #define thr(t) ( (t).z )
@@ -316,4 +316,4 @@ __global__ void transformKernel(float *xyzuvw, int n) {
 #undef fst
 #undef scn
 #undef thr
-} /* namespace rbc */
+} /* namespace k_rbc */

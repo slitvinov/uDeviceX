@@ -27,22 +27,22 @@ std::vector<int> extract_neighbors(std::vector<int> adjVert, int degreemax, int 
 }
 
 void setup_support(int *data, int *data2, int nentries) {
-  texAdjV.channelDesc = cudaCreateChannelDesc<int>();
-  texAdjV.filterMode = cudaFilterModePoint;
-  texAdjV.mipmapFilterMode = cudaFilterModePoint;
-  texAdjV.normalized = 0;
+  k_rbc::texAdjV.channelDesc = cudaCreateChannelDesc<int>();
+  k_rbc::texAdjV.filterMode = cudaFilterModePoint;
+  k_rbc::texAdjV.mipmapFilterMode = cudaFilterModePoint;
+  k_rbc::texAdjV.normalized = 0;
 
   size_t textureoffset;
-  CC(cudaBindTexture(&textureoffset, &texAdjV, data, &texAdjV.channelDesc,
+  CC(cudaBindTexture(&textureoffset, &k_rbc::texAdjV, data, &k_rbc::texAdjV.channelDesc,
 		     sizeof(int) * nentries));
 
-  texAdjV2.channelDesc = cudaCreateChannelDesc<int>();
-  texAdjV2.filterMode = cudaFilterModePoint;
-  texAdjV2.mipmapFilterMode = cudaFilterModePoint;
-  texAdjV2.normalized = 0;
+  k_rbc::texAdjV2.channelDesc = cudaCreateChannelDesc<int>();
+  k_rbc::texAdjV2.filterMode = cudaFilterModePoint;
+  k_rbc::texAdjV2.mipmapFilterMode = cudaFilterModePoint;
+  k_rbc::texAdjV2.normalized = 0;
 
-  CC(cudaBindTexture(&textureoffset, &texAdjV2, data2,
-		     &texAdjV.channelDesc, sizeof(int) * nentries));
+  CC(cudaBindTexture(&textureoffset, &k_rbc::texAdjV2, data2,
+		     &k_rbc::texAdjV.channelDesc, sizeof(int) * nentries));
 }
 
 void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {
@@ -193,23 +193,23 @@ void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {
 
   setup_support(ptr, ptr2, nentries);
 
-  texTriangles4.channelDesc = cudaCreateChannelDesc<int4>();
-  texTriangles4.filterMode = cudaFilterModePoint;
-  texTriangles4.mipmapFilterMode = cudaFilterModePoint;
-  texTriangles4.normalized = 0;
+  k_rbc::texTriangles4.channelDesc = cudaCreateChannelDesc<int4>();
+  k_rbc::texTriangles4.filterMode = cudaFilterModePoint;
+  k_rbc::texTriangles4.mipmapFilterMode = cudaFilterModePoint;
+  k_rbc::texTriangles4.normalized = 0;
 
-  texV.channelDesc = cudaCreateChannelDesc<float2>();
-  texV.filterMode = cudaFilterModePoint;
-  texV.mipmapFilterMode = cudaFilterModePoint;
-  texV.normalized = 0;
+  k_rbc::texV.channelDesc = cudaCreateChannelDesc<float2>();
+  k_rbc::texV.filterMode = cudaFilterModePoint;
+  k_rbc::texV.mipmapFilterMode = cudaFilterModePoint;
+  k_rbc::texV.normalized = 0;
 
   size_t textureoffset;
-  CC(cudaBindTexture(&textureoffset, &texTriangles4, devtrs4,
-		     &texTriangles4.channelDesc,
+  CC(cudaBindTexture(&textureoffset, &k_rbc::texTriangles4, devtrs4,
+		     &k_rbc::texTriangles4.channelDesc,
 		     RBCnt * 4 * sizeof(int)));
 
 
-  CC(cudaFuncSetCacheConfig(force<RBCnv>, cudaFuncCachePreferL1));
+  CC(cudaFuncSetCacheConfig(k_rbc::force<RBCnv>, cudaFuncCachePreferL1));
 }
 
 void initialize(float *device_xyzuvw,
@@ -218,13 +218,13 @@ void initialize(float *device_xyzuvw,
   int threads = 128;
   int blocks = (RBCnv + threads - 1) / threads;
 
-  CC(cudaMemcpyToSymbol(A, transform, 16 * sizeof(float)));
+  CC(cudaMemcpyToSymbol(k_rbc::A, transform, 16 * sizeof(float)));
   CC(cudaMemcpy(device_xyzuvw, orig_xyzuvw,
 		6 * RBCnv * sizeof(float),
 		D2D));
-  transformKernel<<<blocks, threads>>>(device_xyzuvw, RBCnv);
+  k_rbc::transformKernel<<<blocks, threads>>>(device_xyzuvw, RBCnv);
   fprintf(stderr, "rbc.impl: rnd_ini\n");
-  rnd_ini<<<k_cnf(RBCnv*RBCnv)>>>();
+  k_rbc::rnd_ini<<<k_cnf(RBCnv*RBCnv)>>>();
   CC(cudaPeekAtLastError());
 }
 
@@ -233,24 +233,23 @@ void forces_nohost(int nc, float *device_xyzuvw,
   if (nc == 0) return;
   
   size_t textureoffset;
-  CC(cudaBindTexture(&textureoffset, &texV,
+  CC(cudaBindTexture(&textureoffset, &k_rbc::texV,
 		     (float2 *)device_xyzuvw,
-		     &texV.channelDesc,
+		     &k_rbc::texV.channelDesc,
 		     nc * RBCnv * sizeof(float) * 6));
 
   dim3 avThreads(256, 1);
   dim3 avBlocks(1, nc);
 
   CC(cudaMemsetAsync(host_av, 0, nc * 2 * sizeof(float)));
-  areaAndVolumeKernel<<<avBlocks, avThreads, 0>>>(host_av);
+  k_rbc::areaAndVolumeKernel<<<avBlocks, avThreads, 0>>>(host_av);
   CC(cudaPeekAtLastError());
 
   int threads = 128;
   int blocks = (nc * RBCnv * 7 + threads - 1) / threads;
 
-  force<RBCnv><<<blocks, threads, 0>>>(nc, host_av, device_axayaz);
-  addKernel<<<(RBCnv + 127) / 128, 128, 0>>>(device_axayaz, addfrc,
-					     RBCnv);
+  k_rbc::force<RBCnv><<<blocks, threads, 0>>>(nc, host_av, device_axayaz);
+  k_rbc::addKernel<<<(RBCnv + 127) / 128, 128, 0>>>(device_axayaz, addfrc, RBCnv);
 }
 
 }

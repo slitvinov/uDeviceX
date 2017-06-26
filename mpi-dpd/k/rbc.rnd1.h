@@ -1,4 +1,4 @@
-namespace rbc {
+namespace k_rbc {
 __device__ curandState rrnd[MAX_RND_NUM];
 
 __device__ float rnd(int i1, int i2) {
@@ -59,4 +59,4 @@ __dfi__ float3 frnd(float3 r1, float3 r2, int i1, int i2) {
   frnd0(dx, dy, dz, W, /**/ f);
   return make_float3(f[X], f[Y], f[Z]);
 }
-} /* namespace rbc */
+} /* namespace k_rbc */
