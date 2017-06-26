@@ -45,16 +45,13 @@ void setup_support(int *data, int *data2, int nentries) {
 		     &k_rbc::texAdjV.channelDesc, sizeof(int) * nentries));
 }
 
-void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {
+void setup_file(std::vector<Particle>& rv, std::vector<int3>& triangles) {
   FILE *f = fopen("rbc.dat", "r");
   if (!f) {
     printf("Error in cuda-rbc: data file not found!\n");
     exit(1);
   }
-
   eat_until(f, "Atoms\n");
-
-  std::vector<Particle> rv;
   while (!feof(f)) {
     Particle p = {0, 0, 0, 0, 0, 0};
     int dummy[3];
@@ -65,20 +62,22 @@ void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {
     if (retval != 6) break;
     rv.push_back(p);
   }
-
   eat_until(f, "Angles\n");
-
-  std::vector<int3> triangles;
-
   while (!feof(f)) {
     int dummy[2];
     int3 tri;
     int retval = fscanf(f, "%d %d %d %d %d\n", dummy + 0, dummy + 1,
-			      &tri.x, &tri.y, &tri.z);
+			&tri.x, &tri.y, &tri.z);
     if (retval != 5) break;
     triangles.push_back(tri);
   }
   fclose(f);
+}
+
+void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {
+  std::vector<Particle> rv;
+  std::vector<int3> triangles;
+  setup_file(rv, triangles); /* ACHTUNG: passing by references */
 
   int *trs4 = new int[4 * triangles.size()];
   for (int i = 0; i < triangles.size(); i++) {
