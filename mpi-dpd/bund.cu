@@ -34,12 +34,14 @@
 
 #define __dfi__ __device__ __forceinline__
 #include "params/rbc.inc0.h"
+
 #if RBCrnd == 1
-#include "k/rbc.rnd1.h"
+  #include "k/rbc.rnd1.h"
 #else
-#include "k/rbc.rnd0.h"
+  #include "k/rbc.rnd0.h"
 #endif
 #include "k/rbc.common.h"
+
 #include "rbc.impl.h"
 #undef __dfi__
 
