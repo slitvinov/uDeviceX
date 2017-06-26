@@ -109,7 +109,7 @@ def set_defaults():
     pv['RBCp']                 = 0.0039
     pv['RBCka']                = 4900
     pv['RBCkb']                = 100
-    pv['RBCkd']                = 200
+    pv['RBCkd']                = 5000
     pv['RBCkv']                = 5000
     pv['RBCgammaC']            = 10
     pv['RBCgammaT']            = 0
@@ -122,20 +122,20 @@ def set_defaults():
     pv['RBCnv']                = 498
     pv['RBCnt']                = 992
     pv['RBCrnd']               = 1
-    pv['contactforces']        = 'false'
-    pv['doublepoiseuille']     = 'false'
-    pv['hdf5field_dumps']      = 'false'
-    pv['hdf5part_dumps']       = 'true'
-    pv['pushtheflow']          = 'false'
-    pv['rbcs']                 = 'true'
+    pv['contactforces']        = 0
+    pv['doublepoiseuille']     = 0
+    pv['hdf5field_dumps']      = 0
+    pv['hdf5part_dumps']       = 1
+    pv['pushtheflow']          = 0
+    pv['rbcs']                 = 1
     pv['steps_per_dump']       = 320
     pv['steps_per_hdf5dump']   = 320
     pv['tend']                 = 800
     pv['wall_creation_stepid'] = 100
-    pv['walls']                = 'true'
+    pv['walls']                = 1
     pv['stretchingForce']      = 0
-    pv['strVerts']             = 5
-    pv['nosolvent']            = 'true'
+    pv['strVerts']             = 10
+    pv['nosolvent']            = 0
 
 
 def gen_cnf():
@@ -218,6 +218,7 @@ def gen_par(pn0, pv0):
     pv['RBCp']         *= rc
     pv['RBCtotArea']   *= rc*rc
     pv['RBCtotVolume'] *= rc*rc*rc
+    pv['strVerts']     *= rc
 
 
 def recompile():
