@@ -154,7 +154,7 @@ __device__ float3 adj_tris(float2 t0, float2 t1, float *av) {
 }
 
 template <int nvertices>
-__device__ float3 _fdihedral_device(float2 tmp0, float2 tmp1) {
+__device__ float3 adj_dihedrals(float2 tmp0, float2 tmp1) {
   int degreemax = 7;
   int pid = (threadIdx.x + blockDim.x * blockIdx.x) / degreemax;
   int lid = pid % nvertices;
@@ -223,7 +223,7 @@ __global__ void force(int nc, float *__restrict__ av,
 
     /* all triangles and dihedrals adjusting to `pid` */
     float3 f = adj_tris<nvertices>(tmp0, tmp1, av);
-    f += _fdihedral_device<nvertices>(tmp0, tmp1);
+    f += adj_dihedrals<nvertices>(tmp0, tmp1);
 
     if (f.x > -1.0e9) {
       atomicAdd(&acc[3 * pid + 0], f.x);
