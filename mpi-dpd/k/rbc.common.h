@@ -65,7 +65,7 @@ __dfi__ float3 fvisc(float3 r1, float3 r2, float3 u1, float3 u2) {
 }
 
 template <int update>
-__dfi__ float3 _fdihedral(float3 v1, float3 v2, float3 v3,
+__dfi__ float3 dihedral(float3 v1, float3 v2, float3 v3,
 					     float3 v4) {
   double overIksiI, overIdzeI, cosTheta, IsinThetaI2, sinTheta_1,
     beta, b11, b12, phi, sint0kb, cost0kb;
@@ -206,7 +206,7 @@ __device__ float3 adj_dihedrals(float2 tmp0, float2 tmp1) {
     float3 v3 = make_float3(tmp4.x, tmp4.y, tmp5.x);
     float3 v4 = make_float3(tmp6.x, tmp6.y, tmp7.x);
 
-    return _fdihedral<1>(v0, v2, v1, v4) + _fdihedral<2>(v1, v0, v2, v3);
+    return dihedral<1>(v0, v2, v1, v4) + dihedral<2>(v1, v0, v2, v3);
   }
   return make_float3(-1.0e10, -1.0e10, -1.0e10);
 }
