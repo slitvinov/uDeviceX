@@ -56,7 +56,7 @@ __device__ float3 tri(float3 a, float3 b, float3 c, float area, float volume) {
 		     );
 }
 
-__dfi__ float3 fvisc(float3 r1, float3 r2, float3 u1, float3 u2) {
+__dfi__ float3 visc(float3 r1, float3 r2, float3 u1, float3 u2) {
   float3 du = u2 - u1, dr = r1 - r2;
   double gC = RBCgammaC, gT = RBCgammaT;
 
@@ -146,7 +146,7 @@ __device__ float3 adj_tris(float2 t0, float2 t1, float *av) {
 
     area = av[2*cid]; volume = av[2*cid + 1];
     f  = tri(r1, r2, r3, area, volume);
-    f +=  fvisc(r1, r2,     u1, u2);
+    f +=  visc(r1, r2,     u1, u2);
     f +=   frnd(r1, r2,     i1, i2);
     return f;
   }
