@@ -74,10 +74,15 @@ void setup_file(std::vector<Particle>& rv, std::vector<int3>& triangles) {
   fclose(f);
 }
 
+void sfree_ini(const std::vector<Particle>& rv, const std::vector<int3>& triangles) {
+
+}
+
 void setup(int* triplets, float* orig_xyzuvw, float* addfrc) {
   std::vector<Particle> rv;
   std::vector<int3> triangles;
   setup_file(rv, triangles); /* ACHTUNG: passing by references */
+  sfree_ini(rv, triangles);
 
   int *trs4 = new int[4 * triangles.size()];
   for (int i = 0; i < triangles.size(); i++) {
