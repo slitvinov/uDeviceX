@@ -1,5 +1,6 @@
 /* maximum degree */
-#define md 7
+#define md ( RBCmd )
+
 void reg_idx(int i, int j, float l0, /**/ int *idx, float *ll) {
   i *= md;
   while (idx[i] == -1) i++;
@@ -40,6 +41,10 @@ void sfree_ini(const std::vector<Particle>& pp, const std::vector<int3>& tris) {
   n = pp.size();
   for (i = 1; i < md*n; i++) idx[i] = -1;
   sfree_ini0(pp, tris, /**/ idx, ll);
+
+  int offset = 0;
+  CC(cudaMemcpyToSymbol(k_rbc::idx, idx, sizeof(idx[0])*n*md, offset, H2D));
+  CC(cudaMemcpyToSymbol(k_rbc::ll,   ll, sizeof( ll[0])*n*md, offset, H2D));
 }
 
 #undef md
