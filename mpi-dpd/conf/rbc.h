@@ -6,11 +6,13 @@
 #define ZS 12
 #define aij_in 4
 #define aij_out 4
+#define aij_in_out 4
 #define aij_rbc 4
 #define aij_wall 4
 #define gamma_dot 5.0
 #define gammadpd_in 5.0
 #define gammadpd_out 15.0
+#define gammadpd_in_out 15.0
 #define gammadpd_rbc 15.0
 #define gammadpd_wall 15.0
 #define hydrostatic_a 0.05
