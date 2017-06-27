@@ -3,8 +3,14 @@
 
 void reg_idx(int i, int j, float l0, /**/ int *idx, float *ll) {
   i *= md;
-  while (idx[i] == -1) i++;
-  idx[i] = j; ll[i] = l0;
+  int k;
+  for (;;) {
+    k = idx[i++];
+    if      (k  == j) break;
+    else if (k != -1) {
+      idx[i] = j; ll[i] = l0; break;
+    }
+  }
 }
 
 void reg(const std::vector<Particle>& pp, int i1, int i2, /**/ int *idx, float *ll) { /* register edge */
