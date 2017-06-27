@@ -24,7 +24,7 @@
 #define doublepoiseuille false
 #define dt 0.0005
 #define hdf5field_dumps false
-#define hdf5part_dumps true
+#define hdf5part_dumps false
 #define pushtheflow false
 #define rbc_mass 0.5
 #define rbcs true
