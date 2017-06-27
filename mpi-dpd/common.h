@@ -1,8 +1,8 @@
 /* maximum particle number per one processor for static allocation */
-#define MAX_PART_NUM 5000000
+#define MAX_PART_NUM 500000
 
 /* maximum number of faces per one RBC */
-#define MAX_FACE_NUM 5000000
+#define MAX_FACE_NUM 500000
 
 /* maximum number vertices in one RBC */
 #define MAX_VERT ( 50000 )
