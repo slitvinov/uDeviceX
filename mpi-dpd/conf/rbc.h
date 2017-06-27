@@ -34,3 +34,7 @@
 #define tend 0.5
 #define wall_creation_stepid 100
 #define walls true
+
+#define nosolvent 1
+#define strVerts 3
+#define stretchingForce 1e3
