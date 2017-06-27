@@ -34,7 +34,11 @@
 
 #define __dfi__ __device__ __forceinline__
 #include "params/rbc.inc0.h"
-#include "k/rbc.sfree1.h"
+#if RBCsfree == 1
+  #include "k/rbc.sfree1.h"
+#else
+  #include "k/rbc.sfree0.h"
+#endif
 
 #if RBCrnd == 1
   #include "k/rbc.rnd1.h"
@@ -43,7 +47,12 @@
 #endif
 #include "k/rbc.common.h"
 
-#include "rbc/sfree1.h"  /* stress-free */
+#if RBCsfree == 1
+  #include "rbc/sfree1.h"  /* stress-free */
+#else
+  #include "rbc/sfree0.h"
+#endif
+
 #include "rbc/common.h"
 #undef __dfi__
 
