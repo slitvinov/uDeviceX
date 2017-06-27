@@ -5,8 +5,6 @@ void reg_idx(int i, int j, float l0, /**/ int *idx, float *ll) {
   i *= md;
   while (idx[i] == -1) i++;
   idx[i] = j; ll[i] = l0;
-  fprintf(stderr, "l0: %g\n", l0);
-  fprintf(stderr, "ij: %d %d\n", i, j);
 }
 
 void reg(const std::vector<Particle>& pp, int i1, int i2, /**/ int *idx, float *ll) { /* register edge */
