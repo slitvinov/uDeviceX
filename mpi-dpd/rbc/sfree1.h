@@ -43,7 +43,7 @@ void sfree_ini(const std::vector<Particle>& pp, const std::vector<int3>& tris) {
   float ll[MAX_VERT*md]; /* array of lengths for edges */
   int i, n;
   n = pp.size();
-  for (i = 1; i < md*n; i++) idx[i] = -1;
+  for (i = 0; i < md*n; i++) idx[i] = -1;
   sfree_ini0(pp, tris, /**/ idx, ll);
 
   int offset = 0;
