@@ -6,7 +6,7 @@ void reg_idx(int i, int j, float l0, /**/ int *idx, float *ll) {
   int k;
   for (;;) {
     k = idx[i++];
-    if      (k  == j) { break; fprintf(stderr, "kj: %d %d\n", k, j); }
+    if      (k  == j) { fprintf(stderr, "kj: %d %d\n", k, j); break; }
     else if (k != -1) {
       idx[i] = j; ll[i] = l0; break;
     }
