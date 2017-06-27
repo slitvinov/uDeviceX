@@ -1,12 +1,3 @@
-#!/bin/bash
-
-# Run from this directory:
-#  > atest test.rbc.sh
-#
-# To update the test change nTEST to cTEST and run
-#  > atest test.rbc.sh
-# add files from test_data/* to git
-
 #### RBC with wall
 # nTEST: rbc.t1
 # export PATH=../tools:$PATH
