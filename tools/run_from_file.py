@@ -90,7 +90,7 @@ def set_defaults():
     pv['kBT']                  = 0.1
     pv['dt']                   = 8e-4
     pv['rbc_mass']             = 0.5
-    pv['gamma_dot']            = 5
+    pv['gamma_dot']            = 0
     pv['hydrostatic_a']        = 0.05
     pv['aij_out']              = 4
     pv['aij_in']               = 4
