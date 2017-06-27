@@ -37,4 +37,6 @@
 
 #define nosolvent 1
 #define strVerts 3
-#define stretchingForce 1e3
+#define stretchingForce ( 1e3  )
+#define RBCsfree 1
+#define RBCrnd   0
