@@ -26,6 +26,6 @@ HDF5_LDFLAGS  = -L${HDF5_DIR}/lib -Wl,-rpath -Wl,${HDF5_DIR}/lib
 HDF5_LIBS = -lhdf5
 
 NVCC_LDFALGS = -L${NVCC_DIR}/lib64 -Wl,-rpath -Wl,${NVCC_DIR}/lib64
-NVCC = ${NVCC_BIN} {HDF5_CXXFLAGS} ${MPI_CXXFLAGS}
+NVCC = ${NVCC_BIN} ${HDF5_CXXFLAGS} ${MPI_CXXFLAGS}
 LDFLAGS = ${HDF5_LDFLAGS} ${MPI_LDFLAGS} ${NVCC_LDFALGS} # (sic) passed to a linker in uDeviceX
 LIBS = ${HDF5_LIBS} ${MPI_LIBS}
