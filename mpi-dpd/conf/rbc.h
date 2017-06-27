@@ -32,8 +32,7 @@
 #define steps_per_dump 100
 #define steps_per_hdf5dump 100
 #define tend 0.5
-#define wall_creation_stepid 100
-#define walls true
+#define walls false
 
 #define nosolvent 1
 #define strVerts 3
