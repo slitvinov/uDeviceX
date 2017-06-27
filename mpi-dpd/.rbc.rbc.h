@@ -4,6 +4,7 @@
 #define RBCp (( 0.0039 ) / rc)
 #define RBCnv ( 498 )
 #define RBCgammaC ( 15.0 )
+#define RBCgammaT (  5.0 )
 #define RBCtotArea (( 124 ) / (rc*rc))
 #define RBCtotVolume (( 90 ) / (rc*rc*rc))
 #define RBCkd ( 200 )
