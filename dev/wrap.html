@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>wrappers</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body id="wrappers" class="article toc2 toc-left">
+<div id="header">
+<h1>wrappers</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#intro">intro</a></li>
+<li><a href="#mem">MEM</a></li>
+<li><a href="#val">VAL</a></li>
+<li><a href="#prof">PROF</a></li>
+<li><a href="#tim">TIM</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="intro">intro</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>u.run</code> respects several environment variables to modify the way <code>udx</code>
+is run</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="mem">MEM</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>if <code>MEM</code> is set <code>udx</code> is ran with <code>cuda-memcheck</code> and <code>MEM</code> is used as a
+list of parameters</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>MEM= u.test test/*
+MEM='--leakcheck --blocking'              u.test test/*
+MEM='--tool initcheck'                    u.test test/*</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>see also <a href="poc/memcheck">poc/memcheck</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="val">VAL</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>if <code>VAL</code> is set <code>udx</code> is ran with valgrind and <code>VAL</code> is used as a list
+of parameters.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>VAL= u.test test/*
+VAL="--leak-check=full --show-leak-kinds=all"  u.test test/*</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>u.run</code> respect <code>DRYRUN</code> : only show the commands do not execute them</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>DRYRUN= VAL=--option u.run ./udx
+
+module: load cray-hdf5-parallel cudatoolkit daint-gpu
+cmd: srun -n 1 -u valgrind --option ./udx 1 1 1</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="prof">PROF</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>if <code>PROF</code> is set is ran with <code>nvprof</code></p>
+</div>
+<div class="paragraph">
+<p>See also <a href="poc/prof/ppbandwidth">poc/ppbandwidth</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="tim">TIM</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>if <code>TIM</code> is set is ran with <code>time</code></p>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

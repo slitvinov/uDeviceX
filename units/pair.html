@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>pair unit</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>pair unit</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_intro">Intro</a></li>
+<li><a href="#_compile">Compile</a></li>
+<li><a href="#_build">Build</a></li>
+<li><a href="#_run">Run</a></li>
+<li><a href="#_source">Source</a></li>
+<li><a href="#_test">Test</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_intro">Intro</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>It is for test pair interactions.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_compile">Compile</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Run from src/</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>u.conf0 u/pair</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>or from other directorie</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>s=&lt;path to src&gt;
+echo run | u.conf $s u/pair $s/conf/test.h</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_build">Build</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre>u.make -j</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_run">Run</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Particles coordinates, velocities, kinds, and colors are provided via
+<code>stdin</code>. An example is in <a href="/src/data/pair/2">src/data/pair/2</a>.
+If <code>RND</code> is set it is used as a scale of random force for all pairs.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>s=&lt;path to src&gt;
+./udx        &lt; $s/data/pair/2
+RND=42 ./udx &lt; $s/data/pair/2</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Returns force between two particles</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>-2.4 0 0</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_source">Source</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="/src/u/pair/imp/main.h">u/pair/imp/main.h</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_test">Test</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre>u.test test/pair</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

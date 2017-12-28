@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>signed distance function (sdf) unit</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>signed distance function (sdf) unit</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_compile">compile</a></li>
+<li><a href="#_run">run</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>a unit to test sdf field.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_compile">compile</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">u.conf0 u/sdf
+u.make -j</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_run">run</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Copy sdf file</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="sh">cp  src/data/sdf/cyl1/cyl.dat sdf.dat</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Pass coordinates as arguments</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>x=2.5 y=0 z=0
+u.run ./udx $x $y $z</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Returns</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>1.45547</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

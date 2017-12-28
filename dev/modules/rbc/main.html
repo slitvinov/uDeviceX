@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>Red blood cell</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Red blood cell</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_components">components</a></li>
+<li><a href="#_cell_templates">cell templates</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Red blood cell. <a href="type.h">src/rbc/type.h</a> defines <code>struct rbc::Quants</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_components">components</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>adj adjacency list: a structure to pack mesh to read on device</p>
+</li>
+<li>
+<p>com compute center of mass</p>
+</li>
+<li>
+<p>edg store information for every edge (host)</p>
+</li>
+<li>
+<p>internal forces: <a href="forces.html">forces</a></p>
+</li>
+<li>
+<p>gen generate <code>pp</code> from cell template (<code>rbc.off</code>) and initial condition
+files (<code>rbcs-ic.txt</code>)</p>
+</li>
+<li>
+<p><a href="com">main</a> initialization, restart</p>
+</li>
+<li>
+<p>rnd random numbers for internal forces</p>
+</li>
+<li>
+<p>rnd/api low level api for random number generator</p>
+</li>
+<li>
+<p>force/area_volume compute area and volume</p>
+</li>
+<li>
+<p>stretch apply a force to every vertex of every cell, force is set from
+a file <code>rbc.stretch</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>See also <code>src/u/rbc</code>, <code>src/test/rbccom</code>, <code>src/test/rbc</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cell_templates">cell templates</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>See <code>src/data/cells</code></p>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

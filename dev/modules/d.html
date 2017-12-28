@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>generic [d]evice API</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>generic [d]evice API</h1>
+</div>
+<div id="content">
+<div class="paragraph">
+<p>The goal is to make cuda API and kernel functions generic. Meaning
+they can be replaced by CPU calls.</p>
+</div>
+<div class="paragraph">
+<p>generic files of the interface
+* <code>d/api.h</code> API calls
+* <code>d/q.h</code> function and variable type qualifiers
+* <code>d/ker.h</code></p>
+</div>
+<div class="paragraph">
+<p>Generic device can by implemented by <code>cuda</code> and by <code>cpu</code>
+* <code>d/cuda</code>
+* <code>d/cpu</code></p>
+</div>
+<div class="paragraph">
+<p>if <code>DEV_CUDA</code> defined it is <code>cuda</code>, if <code>DEV_CPU</code> is defined it is
+<code>cpu</code>. For <code>cpu</code> <code>KL_CPU</code> should be also defined.</p>
+</div>
+</div>
+</body>
+</html>

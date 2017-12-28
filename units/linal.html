@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>linal unit</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>linal unit</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_compile">compile</a></li>
+<li><a href="#_run">run</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>a unit to test linear algebra functions</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_compile">compile</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Run from src/</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>u.conf0 u/linal</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_run">run</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Invert symmetric 3x3 matrix</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>u.run ./udx -- 2 1 5   3 4   -2
+2.857143e-01 -2.857143e-01 1.428571e-01 3.766234e-01 3.896104e-02 -6.493507e-02</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>compare to octave/matlab</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>&gt;&gt; C = [2,1,5;1,3,4;5,4,-2]
+&gt;&gt; C^(-1)
+ans =
+
+   0.285714  -0.285714   0.142857
+  -0.285714   0.376623   0.038961
+   0.142857   0.038961  -0.064935</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

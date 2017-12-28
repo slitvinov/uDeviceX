@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>wvel</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>wvel</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_purpose">purpose</a></li>
+<li><a href="#_data_structures">data structures</a></li>
+<li><a href="#_interface">interface</a>
+<ul class="sectlevel2">
+<li><a href="#_host">Host</a></li>
+<li><a href="#_device">Device</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>wall velocity field</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_purpose">purpose</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>set velocity to wall particles for wall interactions</p>
+</li>
+<li>
+<p>get wall velocity for bounce back on walls</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_data_structures">data structures</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>data structures are separated into 2 kinds of data structures:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>Wvel</code>, which contains all informations needed for the velocity
+field. It is hold and maintained on host.</p>
+</li>
+<li>
+<p><code>Wvel_v</code> (<code>Wvel view</code>), containing only the information needed for one
+specific time. It is passed to device kernels.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_interface">interface</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Interface is splitted between host and device</p>
+</div>
+<div class="sect2">
+<h3 id="_host">Host</h3>
+<div class="paragraph">
+<p>Host code is responsible for initialisation of <code>Wvel</code> and convert
+<code>Wvel</code> to a view at a given timestep.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="c++">Unresolved directive in wvel.adoc - include::../../../src/wvel/imp.h[tag=interface]</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_device">Device</h3>
+<div class="paragraph">
+<p>Device code contains the functions describing the field.
+Also contains bouncer function: gives bounce back velocity from
+position and velocity.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="c++">Unresolved directive in wvel.adoc - include::../../../src/wvel/dev.h[tag=interface]</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>units</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>units</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_build_and_run">Build and run</a></li>
+<li><a href="#_update_make_file_fragments">Update make file fragments</a></li>
+<li><a href="#_create_a_new_unit">Create a new unit</a></li>
+<li><a href="#_list_of_units">list of units</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>uDeviceX consists of units. They are implemented in link::/src/u/[/src/u/].</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_build_and_run">Build and run</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Compile unit <code>A</code>: from <code>/src</code> directory</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="shell">u.conf0 ./u/A
+u.make -j</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_update_make_file_fragments">Update make file fragments</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>From <code>/src</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="shell">u.u u/A</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>updates <code>hw/make/*.mk</code> files</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_create_a_new_unit">Create a new unit</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>From <code>/src</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="shell">mkdir -p hw/make</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Add two file: <code>hw/make/i</code> and <code>hw/make/e</code>. The files are used by <code>u.u</code>
+to create a list of unit source files. <code>i</code> is a script which returns a
+list of [i]ncluded files. <code>e</code> returns a list of [e]xcluded files. The
+<code>i</code> list "minus" <code>e</code> list is used as a source. <code>e</code> file is
+optional. In other words <code>e</code> "black lists" files returned by <code>i</code>.</p>
+</div>
+<div class="paragraph">
+<p>For <code>i</code> and <code>e</code> the variable <code>$U</code> is set to <code>u/hw/hst</code>.</p>
+</div>
+<div class="paragraph">
+<p>Run</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="shell">u.u u/hw/hst</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Add <code>u/hw/hst/make/dep.mk u/hw/hst/make/obj.mk u/hw/hstmake/dir.mk
+u/hw/hst/make/rule.mk</code> to git.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_list_of_units">list of units</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="comm.html">comm</a></p>
+</li>
+<li>
+<p><a href="error.html">error</a></p>
+</li>
+<li>
+<p>hello world</p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="hw/hst.html">host</a></p>
+</li>
+<li>
+<p><a href="hw/dev.html">cuda</a></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><a href="meshbb.html">meshbb</a></p>
+</li>
+<li>
+<p><a href="mpi.html">mpi</a></p>
+</li>
+<li>
+<p><a href="pair.html">pair</a></p>
+</li>
+<li>
+<p>red blood cell units</p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="rbc/force.html">force</a></p>
+</li>
+<li>
+<p><a href="rbc/main.html">main</a></p>
+</li>
+<li>
+<p><a href="rbc/rnd.html">rnd</a></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><a href="sdf.html">sdf</a></p>
+</li>
+<li>
+<p><a href="scan.html">scan</a></p>
+</li>
+<li>
+<p><a href="x.html">x</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

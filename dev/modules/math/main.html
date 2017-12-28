@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>Math</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Math</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_linal">linal</a>
+<ul class="sectlevel2">
+<li><a href="#_interface">interface</a></li>
+</ul>
+</li>
+<li><a href="#_host_random_number_generation">Host random number generation</a>
+<ul class="sectlevel2">
+<li><a href="#_interface_2">interface</a></li>
+<li><a href="#_interface_3">interface</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Helpers for math operations and random number generation</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_linal">linal</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Linear algebra helpers on host</p>
+</div>
+<div class="sect2">
+<h3 id="_interface">interface</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="cpp">Unresolved directive in linal.inc.adoc - include::../../../../src/math/linal/imp.h[tags=interface]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>inverse symmetric 3 by 3 matrix; fails and returns an error for
+singular matrices with determinant smaller than epsilon (hardcoded
+to <code>1e-8</code>).</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>structure of the matrix is <code>xx, xy, yy, yz, zz</code>, where</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>     ( xx xy xz)
+A =  ( xy yy yz)
+     ( xz yz zz)</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_host_random_number_generation">Host random number generation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Generate uniform random numbers on host in floating point precision</p>
+</div>
+<div class="sect2">
+<h3 id="_interface_2">interface</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="cpp">Unresolved directive in rnd.inc.adoc - include::../../../../src/math/rnd/imp.h[tags=interface]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>hidden structure containing state of the rng</p>
+</li>
+<li>
+<p>allocate and initialize the rng (<code>x</code>, <code>y</code>, <code>z</code> and <code>c</code> are states of the rng)</p>
+</li>
+<li>
+<p>deallocate rng states</p>
+</li>
+<li>
+<p>generate a random number in single precision; modify the state
+== linar coordinate transformation</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_interface_3">interface</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="cpp">Unresolved directive in tform.inc.adoc - include::../../../../src/math/tform/imp.h[tags=interface]</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>body forces</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>body forces</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_data_structures">data structures</a></li>
+<li><a href="#_interface">interface</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>force applied to every particles</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_data_structures">data structures</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Defined by two structures:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>BForce</code>, contains all informations needed for the  force
+field. It is hold and maintained on host.</p>
+</li>
+<li>
+<p><code>BForce_v</code> (<code>BForce view</code>), containing only the information needed at
+a specific time. It is passed to device kernels.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The parameters are listed in the following structures:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="c++">Unresolved directive in bforce.adoc - include::../../../src/scheme/force/type.h[tag=params]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>They are used to initialise the <code>BForce</code> object:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="c++">Unresolved directive in bforce.adoc - include::../../../src/scheme/force/imp.h[tag=ini]</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_interface">interface</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Host code is responsible for initialisation of <code>BForce</code> and convert
+<code>BForce</code> to a view at a given timestep.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="c++">Unresolved directive in bforce.adoc - include::../../../src/scheme/force/imp.h[tag=interface]</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

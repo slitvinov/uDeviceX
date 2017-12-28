@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>fluforces</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>fluforces</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_interface">interface</a></li>
+<li><a href="#_data_structures">data structures</a></li>
+<li><a href="#_submodules">submodules</a>
+<ul class="sectlevel2">
+<li><a href="#_bulk">bulk</a></li>
+<li><a href="#_fluforces_halo">fluforces: halo</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>solvent forces</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_interface">interface</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>TODO</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_data_structures">data structures</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>TODO</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_submodules">submodules</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_bulk">bulk</h3>
+<div class="paragraph">
+<p>compute local interactions of solvent particles, given cell starts,
+cell counts (see <a href="clist.html">clist</a>) and particles array</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_fluforces_halo">fluforces: halo</h3>
+<div class="paragraph">
+<p>solvent forces with remote particles (fragments)</p>
+</div>
+<div class="sect3">
+<h4 id="_internals">Internals</h4>
+<div class="paragraph">
+<p>main kernel is <code>dev::forces</code> and performs all interactions:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>dispatch threads along fragments</p>
+</li>
+<li>
+<p>fetch generalized particle</p>
+</li>
+<li>
+<p>build map (how to access neighboring particles?)</p>
+</li>
+<li>
+<p>loop over neighboring particles according to map</p>
+</li>
+<li>
+<p>compute pairwise interactions</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

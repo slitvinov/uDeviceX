@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>random force</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>random force</h1>
+</div>
+<div id="content">
+<div class="paragraph">
+<p>Activate by <code>RBC_RND</code> in <code>conf.h</code>. If environment variable <code>RBC_RNC</code> is
+set it is used as seed. Magnitude of the force is</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>g = RBCgammaC; T = RBCkbT
+f0  = sqrtf(2*g*T/dt)*rnd</pre>
+</div>
+</div>
+</div>
+</body>
+</html>

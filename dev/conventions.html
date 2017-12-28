@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>coding conventions</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>coding conventions</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_naming">naming</a>
+<ul class="sectlevel2">
+<li><a href="#_variables">variables</a></li>
+<li><a href="#_functions">functions</a></li>
+</ul>
+</li>
+<li><a href="#_file_structure">file structure</a></li>
+<li><a href="#_style">style</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_naming">naming</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_variables">variables</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>names of local variables are short and understandable from the context</p>
+</li>
+<li>
+<p>names of global variables are as descriptive as possible</p>
+</li>
+<li>
+<p>arrays of simple structures <code>x</code> have names <code>xx</code>, eg. <code>pp</code> is an
+array of particles, <code>cc</code> is an array of colors, <code>ii</code> is an array of
+indices * array of small dimentionality may use an enum type for
+readability, e.g.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>enum {X, Y, Z};
+int r[3];
+r[X] = rx;
+r[Y] = ry;
+r[Z] = rz;</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_functions">functions</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>a function name is descriptive on its own or inside its namespace</p>
+</li>
+<li>
+<p>arguments are ordered as follow:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>input is at the beginning</p>
+</li>
+<li>
+<p>input/output come after input and start with a commented <code>io</code></p>
+</li>
+<li>
+<p>output comes after input/output and start with a comment or <code>o</code> depending on the context</p>
+</li>
+<li>
+<p>sizes have higher priority than arrays</p>
+</li>
+<li>
+<p>workspace comes at the end ans starts with a commented <code>w</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>do <strong>not</strong> use references, use pointers instead</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Example of valid function declarations:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="cpp"><span class="directive">void</span> read_int_from_file(<span class="directive">const</span> <span class="predefined-type">char</span> *fname, <span class="comment">/**/</span> <span class="predefined-type">int</span> *n, <span class="predefined-type">int</span> *ii);
+<span class="directive">void</span> forward_euler(<span class="predefined-type">int</span> n, <span class="directive">const</span> Force *ff, <span class="comment">/* io */</span> Particle *pp);</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_file_structure">file structure</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>no include guards; no "headers in headers" if easily avoidable.</p>
+</li>
+<li>
+<p>all cuda kernels are in a separate header <code>.h</code> file.</p>
+</li>
+<li>
+<p>a module is implemented inside its own directory <code>A</code></p>
+<div class="ulist">
+<ul>
+<li>
+<p>it has its own object <code>A/imp.cu</code> or <code>A/imp.cpp</code></p>
+</li>
+<li>
+<p>interface <code>A/imp.h</code></p>
+</li>
+<li>
+<p>implementation can be done in separate files inside <code>A/imp/</code> directory</p>
+</li>
+<li>
+<p>cuda code should be inside <code>A/dev.h</code> or, if multiple files, <code>A/dev/</code> directory</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>modules can have submodules, which follow the same structure as above, e.g. submodule <code>B</code> inside module <code>A</code> belongs to <code>A/B/</code> directory</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_style">style</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>for emacs: the following c++ mode is used</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="lisp">(defun li/c-indent-common ()
+  (setq c-basic-offset 4
+        indent-tabs-mode nil))
+
+(defun li/c++-indent ()
+  (li/c-indent-common)
+  (c-set-offset 'innamespace [0]))
+
+(defun li/c-indent () (li/c-indent-common))
+
+(add-hook 'c-mode-hook   'li/c-indent)
+(add-hook 'c++-mode-hook 'li/c++-indent)
+
+(setq c-default-style
+      '((java-mode . &quot;java&quot;)
+        (awk-mode  . &quot;awk&quot;)
+        (c-mode    . &quot;k&amp;r&quot;)
+        (cc-mode   . &quot;k&amp;r&quot;)))
+
+(add-to-list 'auto-mode-alist '(&quot;\\.cu\\'&quot; . c++-mode))
+(add-to-list 'auto-mode-alist '(&quot;\\.h\\'&quot;  . c++-mode))</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

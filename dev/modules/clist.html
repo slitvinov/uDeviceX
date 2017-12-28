@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>clist</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>clist</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_example">example</a></li>
+<li><a href="#_data_structures">data structures</a>
+<ul class="sectlevel2">
+<li><a href="#_clist">Clist</a></li>
+<li><a href="#_map">Map</a></li>
+</ul>
+</li>
+<li><a href="#_algorithm">algorithm</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>reorder data according to particle positions into cells</p>
+</li>
+<li>
+<p>access particles within a given cell</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_example">example</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>consider a 1D example of particles with positions in domain <code>[0, 4)</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>pp: 2.5 0.1 1.1 0.5 1.6</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After cell list building (we take 1 as cell size), the above data becomes</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>pp: 0.1 0.5 1.1 1.6 2.5  -
+cc: 2       2       1    0
+ss: 0       2       4    5</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where <code>pp</code> is the particle array, <code>cc</code> (counts) is the number of particles per
+cell and <code>ss</code> (starts) is the prefix sum of <code>cc</code>.</p>
+</div>
+<div class="paragraph">
+<p>Accessing all particles in cell <code>i=1</code> (<code>[1,2)</code>) can be done as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>loop: j = 0, ..., cc[i]
+      id = ss[i] + j
+      p = pp[id]
+      work(p)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The above can be easily extended in 3D, only ordering changes.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_data_structures">data structures</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_clist">Clist</h3>
+<div class="paragraph">
+<p>Helpers to find which particles are in which cells.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="cpp">Unresolved directive in clist.adoc - include::../../../src/clist/imp.h[tag=clist]</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>dims</code> dimesnsions of the grid</p>
+</li>
+<li>
+<p><code>ncells</code> number of cells</p>
+</li>
+<li>
+<p><code>counts</code> number of particles per cell</p>
+</li>
+<li>
+<p><code>starts</code> exclusive prefic scan of the above</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_map">Map</h3>
+<div class="paragraph">
+<p>Helper to build the cell lists</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="cpp">Unresolved directive in clist.adoc - include::../../../src/clist/imp.h[tag=map]</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>nA</code> number of source arrays</p>
+</li>
+<li>
+<p><code>ee</code> cell entries: one array per source array, containing a list of
+<code>uchar4</code> with entries (<code>xcid</code>, <code>ycid</code>, <code>zcid</code>, <code>sid</code>)</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>xcid</code>: x cordinate of the cell, in 0, &#8230;&#8203;, <code>dims.x</code></p>
+</li>
+<li>
+<p><code>ycid</code>: y cordinate of the cell, in 0, &#8230;&#8203;, <code>dims.y</code></p>
+</li>
+<li>
+<p><code>zcid</code>: z cordinate of the cell, in 0, &#8230;&#8203;, <code>dims.z</code></p>
+</li>
+<li>
+<p><code>sid</code>: source array id, in 0, &#8230;&#8203;, <code>nA</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><code>ii</code> indices of particles to fetch. can be decoded into the source
+array id and the particle id inside this array</p>
+</li>
+<li>
+<p><code>scan</code> scan workspace, see <a href="algo/scan.html">scan</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_algorithm">algorithm</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The cell build process is linear in number of particles <code>np</code> and <code>n log(n)</code>
+in number of cells <code>n</code>.
+The process to build cell lists is as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>- build ee and counts: O(np)
+  - set counts[i] = 0 for all i
+  - for each particle, compute its cell id cid
+  - get unique subindex k within the cell by updating cc[cid]
+- scan counts to get starts O(nlog n)
+- construct ii: O(np)
+  - for each particle with id i, compute new index j = ss[cid] + k[i]
+  - set ii[j] = i
+- Gather data: O(np)
+  - new particle vector pp1 from pp: pp1[i] = pp[ii[i]]</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

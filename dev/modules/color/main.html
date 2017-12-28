@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
+<title>color</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>color</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_purpose">purpose</a></li>
+<li><a href="#_modules">modules</a>
+<ul class="sectlevel2">
+<li><a href="#_flux">flux</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_purpose">purpose</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Each particle of the solvent has an assigned color when the
+<code>multi_solvent</code> flag is enabled.
+It is helpful for modeling different solvent with different
+viscosities, surface tensions etc.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_modules">modules</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Some utility modules are implemeted in <code>/src/color</code>.</p>
+</div>
+<div class="sect2">
+<h3 id="_flux">flux</h3>
+<div class="paragraph">
+<p>recolor particles crossing the face of the periodic domain in the
+positive direction x, y or z</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="cpp">Unresolved directive in modules.inc.adoc - include::../../../../src/color/flux.h[]</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>dir</code> is the direction x, y or z</p>
+</li>
+<li>
+<p><code>color</code> is the new color</p>
+</li>
+<li>
+<p><code>pp</code> are input particles of size <code>n</code></p>
+</li>
+<li>
+<p><code>cc</code> are output colors (stay the same if does not cross the face)</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>
